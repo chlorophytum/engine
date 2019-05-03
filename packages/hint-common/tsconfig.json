@@ -1,0 +1,15 @@
+{
+	"extends": "../../config/tsconfig.settings.json",
+	"compilerOptions": {
+		"rootDir": "src",
+		"outDir": "lib",
+		"tsBuildInfoFile": ".build-cache/src"
+	},
+	"references": [
+		{"path": "../arch"},
+		{"path": "../final-hint-format-hltt"},
+		{"path": "../hltt-next"},
+		{"path": "../hltt-next-expr"},
+		{"path": "../hltt-next-stmt"}
+	]
+}

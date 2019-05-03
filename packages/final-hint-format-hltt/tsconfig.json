@@ -1,0 +1,18 @@
+{
+	"extends": "../../config/tsconfig.settings.json",
+	"compilerOptions": {
+		"rootDir": "src",
+		"outDir": "lib",
+		"tsBuildInfoFile": ".build-cache/src"
+	},
+	"references": [
+		{"path": "../arch"},
+		{"path": "../hltt-next"},
+		{"path": "../hltt-next-backend"},
+		{"path": "../hltt-next-expr"},
+		{"path": "../hltt-next-expr-impl"},
+		{"path": "../hltt-next-stmt"},
+		{"path": "../hltt-next-tr"},
+		{"path": "../hltt-next-type-system"}
+	]
+}

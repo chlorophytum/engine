@@ -1,0 +1,26 @@
+{
+	"files": [],
+	"references": [
+		{"path": "../packages/arch"},
+		{"path": "../packages/cli"},
+		{"path": "../packages/cli-proc"},
+		{"path": "../packages/final-hint-format-hltt"},
+		{"path": "../packages/font-format-otd"},
+		{"path": "../packages/font-format-ttf"},
+		{"path": "../packages/font-opentype"},
+		{"path": "../packages/fontforge-instr"},
+		{"path": "../packages/hint-common"},
+		{"path": "../packages/hint-store-memory"},
+		{"path": "../packages/hint-store-provider-file"},
+		{"path": "../packages/hltt-next"},
+		{"path": "../packages/hltt-next-backend"},
+		{"path": "../packages/hltt-next-expr"},
+		{"path": "../packages/hltt-next-expr-impl"},
+		{"path": "../packages/hltt-next-stmt"},
+		{"path": "../packages/hltt-next-tr"},
+		{"path": "../packages/hltt-next-type-system"},
+		{"path": "../packages/hm-combine"},
+		{"path": "../packages/hm-select-glyphs"},
+		{"path": "../packages/util-json"}
+	]
+}

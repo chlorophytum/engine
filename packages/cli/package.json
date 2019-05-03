@@ -1,0 +1,33 @@
+{
+	"name": "@chlorophytum/cli",
+	"version": "0.50.0",
+	"description": "",
+	"main": "lib/index.js",
+	"typings": "lib/index.d.ts",
+	"bin": {
+		"chlorophytum": "./bin/_startup"
+	},
+	"scripts": {
+		"clean": "rimraf lib .build-cache",
+		"build": "tsc --build"
+	},
+	"author": "Renzhi Li (aka. Belleve Invis)",
+	"license": "MIT",
+	"dependencies": {
+		"@chlorophytum/arch": "0.50.0",
+		"@chlorophytum/cli-proc": "0.50.0",
+		"@chlorophytum/hint-store-memory": "0.50.0",
+		"@chlorophytum/util-json": "0.50.0",
+		"commander": "^4.1.0",
+		"json5": "^2.1.1",
+		"lodash": "^4.17.14",
+		"tslib": "^2.0.1"
+	},
+	"devDependencies": {
+		"@types/json5": "^0.0.30",
+		"@types/lodash": "^4.14.140"
+	},
+	"publishConfig": {
+		"access": "public"
+	}
+}

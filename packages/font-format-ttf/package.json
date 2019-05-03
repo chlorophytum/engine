@@ -1,0 +1,31 @@
+{
+	"name": "@chlorophytum/font-format-ttf",
+	"version": "0.50.0",
+	"description": "",
+	"main": "lib/index.js",
+	"typings": "lib/index.d.ts",
+	"scripts": {
+		"clean": "rimraf lib .build-cache",
+		"build": "tsc --build"
+	},
+	"author": "Renzhi Li (aka. Belleve Invis)",
+	"license": "MIT",
+	"dependencies": {
+		"@chlorophytum/arch": "0.50.0",
+		"@chlorophytum/final-hint-format-hltt": "0.50.0",
+		"@chlorophytum/font-opentype": "0.50.0",
+		"@chlorophytum/hltt-next": "0.50.0",
+		"@chlorophytum/hltt-next-backend": "0.50.0",
+		"@chlorophytum/hltt-next-tr": "0.50.0",
+		"@chlorophytum/util-json": "0.50.0",
+		"fs-extra": "^9.0.1",
+		"ot-builder": "^1.5.0",
+		"tslib": "^2.0.1"
+	},
+	"devDependencies": {
+		"@types/fs-extra": "^9.0.6"
+	},
+	"publishConfig": {
+		"access": "public"
+	}
+}
