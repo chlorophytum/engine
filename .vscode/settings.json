@@ -1,9 +1,12 @@
 {
 	"cSpell.words": [
+		"Chlorophytum",
 		"Hashable",
 		"Monoid",
 		"Semigroup",
-		"comparator"
+		"comparator",
+		"monolateral",
+		"ppem"
 	],
 
 	"codemetrics.nodeconfiguration.ReturnStatement": 0,

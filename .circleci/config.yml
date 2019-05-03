@@ -22,10 +22,14 @@ jobs:
       - save_cache:
           key: dependency-cache-{{ checksum "package.json" }}
           paths:
-            - ./node_modules
+            - node_modules
       - run: # build TypeScript
           name: build typescript
           command: npm run build
+      - persist_to_workspace:
+          root: /tmp
+          paths:
+            - repo
 
   ut:
     <<: *defaults
