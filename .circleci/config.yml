@@ -20,7 +20,7 @@ jobs: # a collection of steps
             - ./node_modules
       - run: # build TypeScript
           name: build typescript
-          command: npm build
+          command: npm run build
       - run: # run tests
           name: test
           command: npm test
