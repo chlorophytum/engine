@@ -1,8 +1,14 @@
+defaults: &defaults
+  working_directory: /tmp/repo
+  docker:
+    # specify the version you desire here
+    - image: circleci/node:8.12.0-browsers
+
 version: 2
+
 jobs:
   build:
-    docker:
-      - image: circleci/node:lts
+    <<: *defaults
     steps:
       - checkout
       - run:
@@ -21,11 +27,11 @@ jobs:
           name: build typescript
           command: npm run build
 
-  test:
-    docker:
-      - image: circleci/node:lts
+  ut:
+    <<: *defaults
     steps:
-      - checkout
+      - attach_workspace:
+          at: /tmp/
       - run: # run tests
           name: test
           command: npm test
@@ -35,7 +41,7 @@ workflows:
   build_and_test:
     jobs:
       - build
-      - test:
+      - ut:
           requires:
             - build
           filters:
