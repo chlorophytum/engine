@@ -5,6 +5,10 @@ export interface GlyphPoint {
 }
 export type GlyphGeometry = GlyphPoint[][];
 
+export interface IFontSourceFactory {
+	// "any"s are actually existential types
+	createFontSourceFromFile(path: string): IFontSource<any, any, any>;
+}
 export interface IFontSource<GID, VAR, MASTER> {
 	readonly format: string;
 	getCharacterSet(): Set<number>;
@@ -22,20 +26,25 @@ export interface IHintStore<GID> {
 	setGlyphHints(glyph: GID, hint: IHint[]): void;
 	setSharedHints(type: string, hint: IHint[]): void;
 }
+export interface IFontSinkFactory {
+	// "any"s are actually existential types
+	createFontSinkFromFile(path: string): IFontSink;
+}
 export interface IFontSink {
 	readonly format: string;
+	save(to: string): void;
 }
 
 // Visual hints are geometry-invariant
 export interface IHint {
 	toJSON(): any;
-	createCompiler<Sink>(font: Sink): IHintCompiler<Sink> | null | undefined;
+	createCompiler<Sink>(font: Sink): IHintCompiler | null | undefined;
 }
 export interface IHintFactory {
 	readJson(json: any): IHint | null | undefined;
 }
-export interface IHintCompiler<Sink> {
-	doCompile(font: Sink): void;
+export interface IHintCompiler {
+	doCompile(): void;
 }
 
 // Shape analysis
