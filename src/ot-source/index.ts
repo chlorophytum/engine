@@ -5,36 +5,44 @@ export type OTMaster = {
 	readonly [axis: string]: { readonly min: number; readonly peak: number; readonly max: number };
 };
 
-export abstract class IOpenType<GID> implements IFontSource<GID, OTVariation, OTMaster> {
+export abstract class IOpenType<Glyph> implements IFontSource<Glyph, OTVariation, OTMaster> {
 	abstract readonly format: string;
+
+	abstract getGlyphFromName(name: string): Glyph | undefined;
+	abstract getUniqueGlyphName(glyph: Glyph): string;
 	abstract getCharacterSet(): Set<number>;
-	abstract getGlyphSet(): Set<GID>;
-	abstract getEncodedGlyph(codePoint: number): GID | null | undefined; // Get a glyph ID from a font
-	abstract getRelatedGlyphs(from: GID): GID[] | null | undefined; // Get related glyphs
-	abstract getComponentGlyphs(from: GID): GID[] | null | undefined; // Get dependent glyphs, usually components
+	abstract getGlyphSet(): Set<Glyph>;
+	abstract getEncodedGlyph(codePoint: number): Glyph | null | undefined;
+	abstract getRelatedGlyphs(from: Glyph): Glyph[] | null | undefined;
+	abstract getComponentGlyphs(from: Glyph): Glyph[] | null | undefined;
 
-	abstract getGlyphMasters(glyph: GID): { peak: OTVariation; master: OTMaster }[]; // Get master list
-	abstract getGeometry(glyph: GID, instance: null | OTVariation): GlyphGeometry; // Get geometry
+	abstract getGlyphMasters(glyph: Glyph): { peak: OTVariation; master: OTMaster }[];
+	abstract getGeometry(glyph: Glyph, instance: null | OTVariation): GlyphGeometry;
 
-	abstract createHintStore(): OTHintStore<GID>;
+	abstract createHintStore(): OTHintStore;
 }
 
-export class OTHintStore<GID> {
-	private m_GlyphHints = new Map<string, any>();
-	private m_sharedHints = new Map<string, any>();
+export class OTHintStore {
+	private m_GlyphHints = new Map<string, IHint>();
+	private m_sharedHints = new Map<string, IHint>();
 
-	setGlyphHints(glyph: GID, hints: IHint[]) {
-		let dat: any[] = [];
-		for (const hint of hints) {
-			dat.push(hint.toJSON());
-		}
-		this.m_GlyphHints.set(glyph + "", dat);
+	listGlyphs() {
+		return this.m_GlyphHints.keys();
 	}
-	setSharedHints(type: string, hints: IHint[]) {
-		let dat: any[] = [];
-		for (const hint of hints) {
-			dat.push(hint.toJSON());
-		}
-		this.m_sharedHints.set(type + "", dat);
+	getGlyphHints(gid: string) {
+		return this.m_GlyphHints.get(gid);
+	}
+	setGlyphHints(gid: string, hints: IHint) {
+		this.m_GlyphHints.set(gid, hints);
+	}
+
+	listSharedTypes() {
+		return this.m_sharedHints.keys();
+	}
+	getSharedHints(type: string) {
+		return this.m_GlyphHints.get(type);
+	}
+	setSharedHints(type: string, hints: IHint) {
+		this.m_sharedHints.set(type + "", hints);
 	}
 }

@@ -11,7 +11,7 @@ export default function preHint<GID, VAR, MASTER>(
 		const glyphs = hm.analyzeSharedParameters();
 		if (!glyphs) continue;
 		for (const glyph of glyphs) {
-			hs.setGlyphHints(glyph, hm.analyzeGlyph(glyph));
+			hs.setGlyphHints(font.getUniqueGlyphName(glyph), hm.analyzeGlyph(glyph));
 		}
 		hs.setSharedHints(hm.type, hm.getSharedHints());
 	}

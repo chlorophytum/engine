@@ -17,9 +17,9 @@ export class EmptyHintingModel<GID> implements IHintingModel<GID> {
 		return null;
 	}
 	getSharedHints() {
-		return [];
+		return new EmptyHint();
 	}
 	analyzeGlyph(gid: GID) {
-		return [new EmptyHint()];
+		return new EmptyHint();
 	}
 }

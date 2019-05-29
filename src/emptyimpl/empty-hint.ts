@@ -1,10 +1,10 @@
-import { IHint, IHintCompiler, IHintFactory } from "../interfaces";
+import { IFinalHintSink, IHint, IHintCompiler, IHintFactory } from "../interfaces";
 
 export class EmptyHint implements IHint {
 	toJSON() {
 		return { type: "Chlorophytum::EmptyHint" };
 	}
-	createCompiler<Sink>(sink: Sink) {
+	createCompiler(sink: IFinalHintSink) {
 		return new EmptyHintCompiler();
 	}
 }
