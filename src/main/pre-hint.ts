@@ -8,18 +8,10 @@ export default function preHint<GID, VAR, MASTER>(
 	for (const mf of modelFactories) {
 		const hm = mf.adopt(font);
 		if (!hm) continue;
-		const glyphs = hm.analyzeSharedParameters(font);
+		const glyphs = hm.analyzeSharedParameters();
 		if (!glyphs) continue;
 		for (const glyph of glyphs) {
-			const gsa = hm.createGlyphAnalyzer();
-			const geom0 = font.getGeometry(glyph, null);
-			gsa.analyzeTopology(geom0);
-			const masters = font.getGlyphMasters(glyph);
-			for (const { peak, master } of masters) {
-				const geomV = font.getGeometry(glyph, peak);
-				gsa.analyzeVariance(peak, master, geomV);
-			}
-			hs.setGlyphHints(glyph, gsa.getHints());
+			hs.setGlyphHints(glyph, hm.analyzeGlyph(glyph));
 		}
 		hs.setSharedHints(hm.type, hm.getSharedHints());
 	}

@@ -51,20 +51,14 @@ export interface IHintCompiler {
 export interface IHintingModelFactory {
 	adopt<GID, VAR, MASTER>(
 		font: IFontSource<GID, VAR, MASTER>
-	): IHintingModel<GID, VAR, MASTER> | null | undefined;
+	): IHintingModel<GID> | null | undefined;
 }
-export interface IHintingModel<GID, VAR, MASTER> {
+export interface IHintingModel<GID> {
 	readonly type: string;
 	// Analyze shared parameters (usually CVT)
-	analyzeSharedParameters(font: IFontSource<GID, VAR, MASTER>): null | Set<GID>;
+	analyzeSharedParameters(): null | Set<GID>;
 	// Create glyph analyzer
-	createGlyphAnalyzer(): IGlyphShapeAnalyzer<VAR, MASTER>;
+	analyzeGlyph(gid: GID): IHint[];
 	// Create a compiler to compile shared functions / parameters
 	getSharedHints(): IHint[];
-}
-
-export interface IGlyphShapeAnalyzer<VAR, MASTER> {
-	analyzeTopology(geometry: GlyphGeometry): void;
-	analyzeVariance(instance: VAR, master: MASTER, geometry: GlyphGeometry): void;
-	getHints(): IHint[];
 }
