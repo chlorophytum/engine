@@ -18,7 +18,7 @@
 		"declaration": true,
 		"outDir": "lib",
 		"incremental": true,
-		"lib":["es6","ScriptHost"]
+		"lib": ["es6"]
 	},
 	"include": ["src/**/*"]
 }
