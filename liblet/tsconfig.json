@@ -1,0 +1,8 @@
+{
+	"files": [],
+	"references": [
+		{"path": "./arch"},
+		{"path": "./fontforge-instr"},
+		{"path": "./hltt"}
+	]
+}

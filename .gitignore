@@ -1,28 +1,8 @@
-# Logs
-logs
+dist
+.idea
+node_modules
+liblet/*/lib
 *.log
-npm-debug.log*
-
-# Dependencies
-node_modules/
-
-# Coverage
-coverage/
-
-# Transpiled files
-lib/
-
-# Temp files
-tmp/
-
-# JetBrains IDEs
-.idea/
-
-# Optional npm cache directory
-.npm
-
-# Optional eslint cache
-.eslintcache
-
-# Misc
-.DS_Store
+tmp
+payloads
+.build-cache

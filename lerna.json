@@ -1,0 +1,6 @@
+{
+  "packages": [
+    "liblet/*"
+  ],
+  "version": "3.0.2"
+}

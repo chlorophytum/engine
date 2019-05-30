@@ -1,39 +1,23 @@
 {
-	"name": "chlorophytum",
-	"version": "0.0.0",
-	"engineStrict": true,
-	"engines": {
-		"node": ">= 8.9.0"
-	},
 	"devDependencies": {
-		"@types/ansi-styles": "^3.2.1",
-		"@types/iconv-lite": "0.0.1",
-		"@types/node": "~11.13.0",
-		"ansi-styles": "^3.2.1",
-		"ava": "^1.4.1",
-		"rimraf": "~2.6.3",
-		"tslint": "^5.15.0",
-		"tsutils": "^3.10.0",
-		"typescript": "^3.4.1"
+		"json-stringify-pretty-compact": "^2.0.0",
+		"lerna": "^3.4.0",
+		"prettier": "^1.15.2",
+		"prettier-tslint": "^0.4.0",
+		"rimraf": "^2.6.2",
+		"tslint": "^5.11.0",
+		"tslint-lerna-rules": "^1.0.4",
+		"typescript": "^3.3"
 	},
 	"scripts": {
-		"clean": "rimraf coverage lib tmp *.tgz",
-		"build": "tsc -p tsconfig.json",
-		"watch": "tsc -w -p tsconfig.json",
-		"test": "node --max_old_space_size=8192 ./node_modules/ava/cli.js --verbose",
-		"prepack": "npm run clean && npm run build"
-	},
-	"author": "Belleve Invis <belleve@typeof.net>",
-	"license": "ISC",
-	"dependencies": {
-		"deepmerge": "^3.2.0",
-		"fast-equals": "^1.6.2",
-		"iconv-lite": "^0.4.24",
-		"tslib": "^1.9.3"
-	},
-	"ava": {
-		"files": [
-			"lib/**/*.test.js"
-		]
+		"init": "node common/layermap && lerna bootstrap --hoist --no-ci",
+		"build": "tsc --build liblet",
+		"watch": "tsc --build --watch liblet",
+		"lint": "tslint -c tslint.json --fix liblet/*/src/**/*.ts",
+		"reset": "lerna run clean && lerna clean --yes && npm run init",
+		"create-liblet": "node common/create-liblet",
+		"rebuild": "npm run reset && npm run build",
+		"test": "lerna run --stream test",
+		"add-dep": "lerna add"
 	}
 }

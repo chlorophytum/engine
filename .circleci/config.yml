@@ -1,8 +1,7 @@
 defaults: &defaults
   working_directory: /tmp/repo
   docker:
-    # specify the version you desire here
-    - image: circleci/node:8.12.0-browsers
+    - image: circleci/node:lts
 
 version: 2
 
@@ -14,40 +13,12 @@ jobs:
       - run:
           name: update-npm
           command: 'sudo npm install -g npm@latest'
-      - restore_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
       - run:
-          name: install-npm-wee
+          name: install-npm
           command: npm install
-      - save_cache:
-          key: dependency-cache-{{ checksum "package.json" }}
-          paths:
-            - node_modules
-      - run: # build TypeScript
+      - run:
           name: build typescript
-          command: npm run build
-      - persist_to_workspace:
-          root: /tmp
-          paths:
-            - repo
-
-  ut:
-    <<: *defaults
-    steps:
-      - attach_workspace:
-          at: /tmp/
-      - run: # run tests
-          name: test
-          command: npm test
-
-workflows:
-  version: 2
-  build_and_test:
-    jobs:
-      - build
-      - ut:
-          requires:
-            - build
-          filters:
-            branches:
-              only: master
+          command: npm run rebuild
+      - run:
+          name: unit test
+          command: npm run test

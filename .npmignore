@@ -1,7 +1,0 @@
-*.test.js
-*.test.d.ts
-*.js.map
-test.js
-payloads/
-tmp/
-src/
