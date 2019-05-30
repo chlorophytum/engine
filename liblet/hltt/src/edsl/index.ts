@@ -397,6 +397,19 @@ export function EdslDefineFunctionTemplate<A extends (number | number[])[]>(
 			G(e, ...args)
 		);
 }
+export function EdslDefineFunctionTemplateEx<A extends any[]>(
+	name: string,
+	Identity: (...from: A) => (number | number[])[],
+	G: (e: EdslProgram, ...args: A) => Iterable<Statement>
+): EdslFunctionTemplate<A> {
+	return (...args: A) => {
+		const mangleArgs = Identity(...args);
+		return (dsl: EdslGlobal) =>
+			dsl.defineFunction(dsl.mangleTemplateName(name, ...mangleArgs), (e: EdslProgram) =>
+				G(e, ...args)
+			);
+	};
+}
 export function EdslDefineLibraryFunction(
 	name: string,
 	G: (e: EdslProgram) => Iterable<Statement>

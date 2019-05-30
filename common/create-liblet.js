@@ -48,5 +48,5 @@ fs.writeFileSync(
 );
 
 console.log(
-	`Finish creating @chlorophytum/${libName}. Please run 'npm rum rebuild' to install dependencies.`
+	`Finish creating @chlorophytum/${libName}. Please run 'npm run rebuild' to install dependencies.`
 );

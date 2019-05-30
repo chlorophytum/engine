@@ -3,6 +3,7 @@
 	"references": [
 		{"path": "./arch"},
 		{"path": "./fontforge-instr"},
-		{"path": "./hltt"}
+		{"path": "./hltt"},
+		{"path": "./ideograph-programs"}
 	]
 }
