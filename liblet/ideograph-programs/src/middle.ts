@@ -239,8 +239,9 @@ function* MergeBody(
 	gapMD: number[],
 	strokeMD: number[],
 	allowMerge: number[],
-
 	mergeIndex: number,
+	mergeDown: number,
+
 	e: ProgramDsl,
 	zBot: Variable,
 	zTop: Variable,
@@ -281,7 +282,7 @@ function* MergeBody(
 			N - 1,
 			function*(): Iterable<Statement> {}
 		);
-	} else {
+	} else if (mergeDown) {
 		yield* MergeBodyMain(
 			N,
 			gapMD,
@@ -297,6 +298,24 @@ function* MergeBody(
 			function*() {
 				yield e.scfs(zMids[2 * mergeIndex], e.gc.cur(zMids[2 * (mergeIndex - 1)]));
 				yield e.scfs(zMids[2 * mergeIndex + 1], e.gc.cur(zMids[2 * (mergeIndex - 1) + 1]));
+			}
+		);
+	} else {
+		yield* MergeBodyMain(
+			N,
+			gapMD,
+			strokeMD,
+			allowMerge,
+
+			e,
+			zBot,
+			zTop,
+			zMids,
+			aZMids,
+			mergeIndex - 1,
+			function*() {
+				yield e.scfs(zMids[2 * (mergeIndex - 1)], e.gc.cur(zMids[2 * mergeIndex]));
+				yield e.scfs(zMids[2 * (mergeIndex - 1) + 1], e.gc.cur(zMids[2 * mergeIndex + 1]));
 			}
 		);
 	}
@@ -442,7 +461,11 @@ export const THintMultipleStrokes: EdslFunctionTemplate<
 	"IdeographProgram::THintMultipleStrokes",
 	(N: number, gapMD: number[], strokeMD: number[], allowMerge: number[] = []) => {
 		const { mergeIndex, mergeDown } = decideMerge(allowMerge, N);
-		return [N, gapMD, strokeMD, mergeIndex, mergeDown];
+		const { mergeIndex: mergeIndexNext, mergeDown: mergeDownNext } = decideMerge(
+			dropAllowMerge(allowMerge, Math.max(0, Math.min(N - 1, mergeIndex)), N),
+			N - 1
+		);
+		return [N, gapMD, strokeMD, mergeIndex, mergeDown, mergeIndexNext, mergeDownNext];
 	},
 	function*(e, N: number, gapMD: number[], strokeMD: number[], allowMerge: number[] = []) {
 		const { mergeIndex, mergeDown } = decideMerge(allowMerge, N);
@@ -490,6 +513,7 @@ export const THintMultipleStrokes: EdslFunctionTemplate<
 							strokeMD,
 							allowMerge || [],
 							mergeIndex,
+							mergeDown,
 
 							e,
 							zBot,

@@ -27,6 +27,7 @@ export type FunctionTemplate<A extends any[]> = EdslFunctionTemplate<A>;
 export const Template = EdslDefineFunctionTemplate;
 export const TemplateEx = EdslDefineFunctionTemplateEx;
 export const LibFunc = EdslDefineLibraryFunction;
+export { initStdLib } from "./stdlib/init-stdlib";
 
 export type NE = number | Expression;
 export type NPE = number | PointerExpression;

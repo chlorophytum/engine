@@ -1,6 +1,6 @@
 {
 	"extends": "../tsconfig.settings.json",
-	"references": [{"path": "../hltt"}],
+	"references": [{"path": "../fontforge-instr"}, {"path": "../hltt"}],
 	"compilerOptions": {
 		"outDir": "lib",
 		"rootDir": "src",
