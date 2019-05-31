@@ -35,9 +35,9 @@ export const VisCeil = LibFunc("IdeographProgram::visCeil", function*(e) {
 });
 
 export const VisDist = LibFunc("IdeographProgram::visDist", function*(e) {
-	const [zBot, zTop, fillRate] = e.args(3);
+	const [zBot, zTop, frBot, frTop] = e.args(4);
 	yield e.return(
-		e.sub(e.call(VisFloor, e.gc.cur(zTop), fillRate), e.call(VisCeil, e.gc.cur(zBot), fillRate))
+		e.sub(e.call(VisFloor, e.gc.cur(zTop), frTop), e.call(VisCeil, e.gc.cur(zBot), frBot))
 	);
 });
 

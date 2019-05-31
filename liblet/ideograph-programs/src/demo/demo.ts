@@ -124,7 +124,7 @@ const progD = dsl.program(function*(e) {
 	yield e.call(THintTopStroke, ~2, ~3, 85, 60);
 
 	yield e.call(THintMultipleStrokes(2, [1, 1, 1], [1, 1]), ...[0, 85], ...[25, 24, 7, 8]);
-	yield e.call(THintMultipleStrokes(1, [1, 1], [1]), 0, 7, 3, 4);
+	yield e.call(THintMultipleStrokes(1, [1, 0], [1]), 0, 24, 3, 4);
 	yield e.call(
 		THintMultipleStrokes(2, [1, 1, 1], [1, 1], [0, 1, 0]),
 		...[24, 7],
@@ -170,29 +170,27 @@ const progE = dsl.program(function*(e) {
 	yield e.call(
 		THintMultipleStrokes(3, [1, 1, 1, 1], [1, 1, 1]),
 		...[1, 91],
-		...[61, 21, 66, 39, 86, 87]
+		...[61, 21, 79, 81, 86, 87]
 	);
-	yield e.call(THintTopStroke, ...[21, 39], ...[52, 53]);
-	yield e.call(THintMultipleStrokes(1, [1, 1], [1]), ...[21, 86], ...[79, 81]);
 	yield e.call(
 		THintMultipleStrokes(3, [1, 1, 1, 1], [1, 1, 1], [0, 2, 1, 3]),
 		...[1, 61],
 		...[11, 12, 15, 16, 19, 3]
 	);
 	yield e.call(
-		THintMultipleStrokes(2, [1, 1, 1], [1, 1], [0, 1]),
-		...[21, 52],
-		...[44, 45, 48, 49]
+		THintMultipleStrokes(3, [1, 1, 1, 2], [1, 1, 1], [0, 2, 1]),
+		...[21, 86],
+		...[44, 45, 48, 49, 52, 53]
 	);
 	yield e.call(
-		THintMultipleStrokes(2, [1, 1, 1], [1, 1], [0, 1]),
-		...[21, 52],
-		...[36, 33, 32, 29]
+		THintMultipleStrokes(3, [1, 1, 1, 2], [1, 1, 1], [0, 2, 1]),
+		...[21, 86],
+		...[36, 33, 32, 29, 28, 23]
 	);
 	yield e.call(
-		THintMultipleStrokes(3, [1, 1, 1, 1], [1, 1, 1], [3, 1, 2, 0]),
-		...[21, 66],
-		...[67, 71, 74, 68, 75, 76]
+		THintMultipleStrokes(4, [1, 1, 1, 1, 2], [1, 1, 1, 1], [4, 2, 3, 1, 0]),
+		...[21, 86],
+		...[67, 71, 74, 68, 75, 76, 66, 39]
 	);
 
 	yield* simpleLink(e, 86, 109, 96);

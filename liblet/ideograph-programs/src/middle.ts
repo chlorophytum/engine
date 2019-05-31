@@ -46,7 +46,7 @@ const DecideRequiredGap = LibFunc(`IdeographProgram::decideRequiredGap`, functio
 const THintMultipleStrokesMidSize = Template(
 	"IdeographProgram::THintMultipleStrokes::MidSize",
 	function*(e, NMax: number) {
-		const [N, dist, fillRate, zBot, zTop, vpZMids, vpGapMD, vpStrokeMD] = e.args(8);
+		const [N, dist, frBot, zBot, zTop, vpZMids, vpGapMD, vpStrokeMD] = e.args(8);
 
 		const pxReqGap = e.local();
 		const pxReqInk = e.local();
@@ -146,7 +146,7 @@ const THintMultipleStrokesMidSize = Template(
 		yield e.call(
 			MovePointsForMiddleHint,
 			N,
-			e.call(VisCeil, e.gc.cur(zBot), fillRate),
+			e.call(VisCeil, e.gc.cur(zBot), frBot),
 			gaps.ptr,
 			inks.ptr,
 			vpZMids
@@ -166,6 +166,13 @@ function decideMerge(allowMerge: number[], N: number) {
 	}
 	let mergeDown = mergePri < 0 ? 1 : 0;
 	return { mergeIndex, mergeDown };
+}
+function decideNextMerge(allowMerge: number[], N: number, mergeIndex: number, mergeDown: number) {
+	if (mergeIndex < 0) return { mergeIndex: -1, mergeDown: 0 };
+	if (mergeIndex === 0) return decideMerge(dropAllowMerge(allowMerge, 0, N), N - 1);
+	if (mergeIndex === N) return decideMerge(dropAllowMerge(allowMerge, N - 1, N), N - 1);
+	if (mergeDown) return decideMerge(dropAllowMerge(allowMerge, mergeIndex, N), N - 1);
+	else return decideMerge(dropAllowMerge(allowMerge, mergeIndex - 1, N), N - 1);
 }
 
 function drop<A>(a: A[], index: number) {
@@ -461,9 +468,11 @@ export const THintMultipleStrokes: EdslFunctionTemplate<
 	"IdeographProgram::THintMultipleStrokes",
 	(N: number, gapMD: number[], strokeMD: number[], allowMerge: number[] = []) => {
 		const { mergeIndex, mergeDown } = decideMerge(allowMerge, N);
-		const { mergeIndex: mergeIndexNext, mergeDown: mergeDownNext } = decideMerge(
-			dropAllowMerge(allowMerge, Math.max(0, Math.min(N - 1, mergeIndex)), N),
-			N - 1
+		const { mergeIndex: mergeIndexNext, mergeDown: mergeDownNext } = decideNextMerge(
+			allowMerge,
+			N,
+			mergeIndex,
+			mergeDown
 		);
 		return [N, gapMD, strokeMD, mergeIndex, mergeDown, mergeIndexNext, mergeDownNext];
 	},
@@ -484,7 +493,10 @@ export const THintMultipleStrokes: EdslFunctionTemplate<
 		yield e.call(TInitZMids(N), aZMids.ptr, ...zMids);
 
 		yield e.set(fillRate, e.call(GetFillRate, N, zBot, zTop, aZMids.ptr));
-		yield e.set(dist, e.call(VisDist, zBot, zTop, fillRate));
+		yield e.set(
+			dist,
+			e.call(VisDist, zBot, zTop, fillRate, e.mul(e.coerce.toF26D6(2), fillRate))
+		);
 
 		// If we don't have enough pixels...
 		yield e.if(e.lt(dist, e.coerce.toF26D6(reqGap + reqInk)), function*() {

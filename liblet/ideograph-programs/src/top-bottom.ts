@@ -44,6 +44,9 @@ export const THintBottomStroke = LibFunc(`IdeographProgram::THintBottomStroke`, 
 		}
 	);
 	yield e.mdrp.black(zsBot, zsTop);
+	yield e.if(e.gt(e.coerce.toF26D6(3 / 5), e.sub(e.gc.cur(zsTop), e.gc.cur(zsBot))), function*() {
+		yield e.scfs(zsTop, e.add(e.gc.cur(zsBot), e.coerce.toF26D6(3 / 5)));
+	});
 });
 
 export const THintTopStroke = LibFunc(`IdeographProgram::THintTopStroke`, function*(e) {
@@ -71,6 +74,9 @@ export const THintTopStroke = LibFunc(`IdeographProgram::THintTopStroke`, functi
 		}
 	);
 	yield e.mdrp.black(zsTop, zsBot);
+	yield e.if(e.gt(e.coerce.toF26D6(3 / 5), e.sub(e.gc.cur(zsTop), e.gc.cur(zsBot))), function*() {
+		yield e.scfs(zsBot, e.sub(e.gc.cur(zsTop), e.coerce.toF26D6(3 / 5)));
+	});
 });
 
 export const THintBottomEdge = LibFunc(`IdeographProgram::THintBottomEdge`, function*(e) {

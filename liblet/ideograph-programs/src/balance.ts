@@ -174,14 +174,7 @@ export const BalanceOneStrokeExtUp = LibFunc("IdeographProgram::balanceOneStroke
 export const ShrinkDelta = LibFunc(`IdeographProgram::shrinkDelta`, function*(e) {
 	const [aInk, cInk] = e.args(2);
 
-	yield e.return(
-		e.neg(
-			e.min(
-				e.mul(e.coerce.toF26D6(2), e.mppem()),
-				e.min(e.coerce.toF26D6(4 / 5), e.sub(cInk, aInk))
-			)
-		)
-	);
+	yield e.return(e.neg(e.sub(cInk, e.max(e.coerce.toF26D6(3 / 5), aInk))));
 });
 
 export const BalanceOneStroke = LibFunc("IdeographProgram::balanceOneStroke", function*(e) {
