@@ -12,10 +12,12 @@
 	"author": "Renzhi Li (aka. Belleve Invis)",
 	"license": "MIT",
 	"dependencies": {
-		"tslib": "^1.9.3"
+		"tslib": "^1.9.3",
+		"json-stable-stringify": "^1.0.1"
 	},
 	"devDependencies": {
-		"ava": "^1.4.1"
+		"ava": "^1.4.1",
+		"@types/json-stable-stringify": "^1.0.32"
 	},
 	"ava": {
 		"files": [

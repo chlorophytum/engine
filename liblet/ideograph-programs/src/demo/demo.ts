@@ -69,7 +69,9 @@ const progC = dsl.program(function*(e) {
 			6,
 			[1, 1, 1, 1, 1, 1, 1],
 			[1, 1, 1, 1, 1, 1],
-			[0, 0, 2, -3, -1, -1, 0]
+			[0, 0, 2, -3, -1, -1, 0],
+			false,
+			true
 		),
 		...[17, 78],
 		...[22, 41, 44, 23, 64, 65, 75, 87, 90, 103, 106, 76]
@@ -168,12 +170,12 @@ const progE = dsl.program(function*(e) {
 	yield e.call(THintTopEdge, ~0, ~1, 91);
 
 	yield e.call(
-		THintMultipleStrokes(3, [1, 1, 1, 1], [1, 1, 1]),
+		THintMultipleStrokes(3, [1, 1, 1, 1], [1, 1, 1], [], false, true),
 		...[1, 91],
 		...[61, 21, 79, 81, 86, 87]
 	);
 	yield e.call(
-		THintMultipleStrokes(3, [1, 1, 1, 1], [1, 1, 1], [0, 2, 1, 3]),
+		THintMultipleStrokes(3, [1, 1, 1, 1], [1, 1, 1], [3, 1, 2, 4]),
 		...[1, 61],
 		...[11, 12, 15, 16, 19, 3]
 	);

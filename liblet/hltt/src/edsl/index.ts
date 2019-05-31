@@ -1,10 +1,11 @@
+import * as stringify from "json-stable-stringify";
+
 import { BinaryExpression, NullaryExpression, UnaryExpression } from "../ast/expression/arith";
 import { cExpr } from "../ast/expression/constant";
 import { InvokeExpression } from "../ast/expression/invoke";
 import { ArrayIndex, ArrayInit, CoercedVariable } from "../ast/expression/pointer";
 import {
 	ControlValueAccessor,
-	FunctionVariable,
 	VariableAccessor,
 	VariableFactory,
 	VariableSet
@@ -173,8 +174,8 @@ export class EdslGlobal {
 		this.stat.maxStorage = Math.max(this.stat.maxStorage || 0, ls.locals.base + ls.locals.size);
 	}
 
-	mangleTemplateName(base: string, ...parts: (number | number[])[]) {
-		return `${base}<${parts.map(t => JSON.stringify(t)).join(",")}>`;
+	mangleTemplateName(base: string, ...parts: any[]) {
+		return `${base}!${stringify(parts)}`;
 	}
 }
 
@@ -372,6 +373,8 @@ export class EdslProgram {
 		y: () => new GraphStateStatement(TTI.IUP_y)
 	};
 
+	emptyBlock = () => function*(): Iterable<Statement> {};
+
 	// Coercions
 	coerce = {
 		fromIndex: {
@@ -388,7 +391,7 @@ export class EdslProgram {
 export type EdslFunctionTemplate<A extends any[]> = (...args: A) => (dsl: EdslGlobal) => Variable;
 export type EdslFunctionTemplateInst = (dsl: EdslGlobal) => Variable;
 
-export function EdslDefineFunctionTemplate<A extends (number | number[])[]>(
+export function EdslDefineFunctionTemplate<A extends any[]>(
 	name: string,
 	G: (e: EdslProgram, ...args: A) => Iterable<Statement>
 ): EdslFunctionTemplate<A> {
@@ -399,7 +402,7 @@ export function EdslDefineFunctionTemplate<A extends (number | number[])[]>(
 }
 export function EdslDefineFunctionTemplateEx<A extends any[]>(
 	name: string,
-	Identity: (...from: A) => (number | number[])[],
+	Identity: (...from: A) => any,
 	G: (e: EdslProgram, ...args: A) => Iterable<Statement>
 ): EdslFunctionTemplate<A> {
 	return (...args: A) => {
