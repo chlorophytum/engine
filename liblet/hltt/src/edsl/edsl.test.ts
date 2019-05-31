@@ -108,7 +108,7 @@ test("EDSL function linking", t => {
 	t.deepEqual(
 		eg.compileProgram(glyph, TextInstr),
 		TextInstr.rectify(`
-			PUSHB_2 0 0
+			PUSHB_2 0 1
 			WS
 			PUSHB_2 1 0
 			CALL
