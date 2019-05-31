@@ -31,6 +31,10 @@ export class ProgramBeginStatement extends Statement {
 	}
 	refer(asm: Assembler) {}
 	compile(asm: Assembler) {
-		asm.push(0, 0).prim(TTI.WS, 2, 0);
+		asm.push(this.scope.globals.sp, this.scope.locals.base + this.scope.locals.size).prim(
+			TTI.WS,
+			2,
+			0
+		);
 	}
 }
