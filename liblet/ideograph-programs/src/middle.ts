@@ -1,5 +1,7 @@
 import {
 	EdslFunctionTemplate,
+	Expression,
+	LibFunc,
 	ProgramDsl,
 	Statement,
 	TemplateEx,
@@ -15,6 +17,7 @@ import {
 	CollideHangTop,
 	CollideUpTwoStrokes
 } from "./stroke-omit";
+import { OctDistOrig } from "./vis-dist";
 
 function decideMerge(allowMerge: number[], N: number) {
 	let mergeIndex = -1;
@@ -223,6 +226,66 @@ function* AlignBody(
 	}
 }
 
+function midBot(e: ProgramDsl, zMids: Variable, index: Expression) {
+	return e.part(zMids, e.mul(e.coerce.toF26D6(2), index));
+}
+function midTop(e: ProgramDsl, zMids: Variable, index: Expression) {
+	return e.part(zMids, e.add(1, e.mul(e.coerce.toF26D6(2), index)));
+}
+const AmendMinGapDist = LibFunc("IdeographProgram::AmendMinGapDist", function*(e) {
+	const [N, zBot, zTop, vpZMids, vpGapMD] = e.args(5);
+	const pZMids = e.coerce.fromIndex.variable(vpZMids);
+	const pGapMD = e.coerce.fromIndex.variable(vpGapMD);
+
+	const j = e.local();
+	const gapDist = e.local();
+
+	yield e.set(j, 0);
+	yield e.set(gapDist, 0);
+	yield e.while(e.lteq(j, N), function*() {
+		yield e.if(
+			e.eq(j, 0),
+			function*() {
+				yield e.set(gapDist, e.call(OctDistOrig, zBot, midBot(e, pZMids, j)));
+			},
+			function*() {
+				yield e.if(
+					e.eq(j, N),
+					function*() {
+						yield e.set(
+							gapDist,
+							e.call(OctDistOrig, midTop(e, pZMids, e.sub(j, 1)), zTop)
+						);
+					},
+					function*() {
+						yield e.set(
+							gapDist,
+							e.call(
+								OctDistOrig,
+								midTop(e, pZMids, e.sub(j, 1)),
+								midBot(e, pZMids, j)
+							)
+						);
+					}
+				);
+			}
+		);
+
+		yield e.set(
+			e.part(pGapMD, j),
+			e.max(
+				e.part(pGapMD, j),
+				e.mul(
+					e.min(e.coerce.toF26D6(1), e.part(pGapMD, j)),
+					e.max(0, e.floor(e.sub(gapDist, e.mul(e.coerce.toF26D6(2), e.mppem()))))
+				)
+			)
+		);
+
+		yield e.set(j, e.add(1, j));
+	});
+});
+
 const THintMultipleStrokesImpl: EdslFunctionTemplate<[number, MidHintTemplateProps]> = TemplateEx(
 	"IdeographProgram::THintMultipleStrokes",
 	(N: number, props: MidHintTemplateProps) => {
@@ -239,14 +302,16 @@ const THintMultipleStrokesImpl: EdslFunctionTemplate<[number, MidHintTemplatePro
 		const [zBot, zTop, ...zMids] = e.args(2 + 2 * N);
 
 		const aGapMD = e.local(N + 1);
-		const aStrokeMD = e.local(N);
+		const aInkMD = e.local(N);
 		const aZMids = e.local(N * 2);
 		const aRecPath = e.local(N);
 
 		yield e.call(TInitMD(N + 1, props.gapMD), aGapMD.ptr);
-		yield e.call(TInitMD(N, props.inkMD), aStrokeMD.ptr);
+		yield e.call(TInitMD(N, props.inkMD), aInkMD.ptr);
 		yield e.call(TInitZMids(N), aZMids.ptr, ...zMids);
 		yield e.call(TInitRecPath(N, getRecPath(props.allowMerge, N)), aRecPath.ptr);
+
+		yield e.call(AmendMinGapDist, N, zBot, zTop, aZMids.ptr, aGapMD.ptr);
 
 		yield e.call(
 			THintMultipleStrokesMainImpl(N),
@@ -256,7 +321,7 @@ const THintMultipleStrokesImpl: EdslFunctionTemplate<[number, MidHintTemplatePro
 			zTop,
 			aZMids.ptr,
 			aGapMD.ptr,
-			aStrokeMD.ptr,
+			aInkMD.ptr,
 			aRecPath.ptr
 		);
 	}
