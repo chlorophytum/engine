@@ -66,25 +66,23 @@ const progC = dsl.program(function*(e) {
 	yield e.call(THintTopEdge, ~0, ~1, 78);
 	yield e.call(
 		THintMultipleStrokes(
-			6,
+			7,
+			[0, 1, 1, 1, 1, 1, 1, 1],
 			[1, 1, 1, 1, 1, 1, 1],
-			[1, 1, 1, 1, 1, 1],
-			[0, 0, 2, -3, -1, -1, 0],
+			[0, 0, 0, 2, -3, -1, -1, 0],
 			false,
 			true
 		),
-		...[17, 78],
-		...[22, 41, 44, 23, 64, 65, 75, 87, 90, 103, 106, 76]
+		...[16, 78],
+		...[16, 17, 22, 41, 44, 23, 64, 65, 75, 87, 90, 103, 106, 76]
 	);
 
 	yield e.call(
-		THintMultipleStrokes(3, [1, 1, 1, 1], [1, 0, 1]),
-		37,
-		4,
-		...[40, 45, 48, 68, 63, 1]
+		THintMultipleStrokes(5, [0, 1, 1, 1, 1, 0], [1, 1, 1, 1, 1]),
+		14,
+		5,
+		...[14, 37, 40, 45, 48, 68, 63, 1, 4, 5]
 	);
-	yield e.call(THintMultipleStrokes(1, [1, 1], [1]), 37, 4, 63, 1);
-	yield e.call(THintMultipleStrokes(2, [1, 1, 1], [1, 1]), 37, 63, ...[40, 45, 48, 68]);
 	yield e.mdrp.rp0(17, 31);
 	yield e.mdrp.rp0(31, 28);
 	yield e.mdrp.rp0(22, 35);
@@ -175,9 +173,9 @@ const progE = dsl.program(function*(e) {
 		...[61, 21, 79, 81, 86, 87]
 	);
 	yield e.call(
-		THintMultipleStrokes(3, [1, 1, 1, 1], [1, 1, 1], [3, 1, 2, 4]),
-		...[1, 61],
-		...[11, 12, 15, 16, 19, 3]
+		THintMultipleStrokes(4, [0, 1, 1, 1, 1], [1, 1, 1, 1], [0, 3, 1, 2, 4]),
+		...[0, 61],
+		...[0, 1, 11, 12, 15, 16, 19, 3]
 	);
 	yield e.call(
 		THintMultipleStrokes(3, [1, 1, 1, 2], [1, 1, 1], [0, 2, 1]),
@@ -217,13 +215,13 @@ const progF = dsl.program(function*(e) {
 
 	yield e.call(
 		THintMultipleStrokes(
-			8,
-			[1, 1, 1, 1, 1, 1, 1, 1, 1],
-			[1, 1, 1, 1, 1, 1, 1, 1],
-			[0, -1, -7, -8, -2, 0, -5, -1, 0]
+			10,
+			[0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+			[1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+			[0, 0, -1, -7, -8, -2, 0, -5, -1, 0, 0]
 		),
-		...[5, 75],
-		...[9, 10, 24, 25, 52, 53, 56, 57, 30, 33, 36, 37, 64, 68, 71, 72]
+		...[4, 65],
+		...[4, 5, 9, 10, 24, 25, 52, 53, 56, 57, 30, 33, 36, 37, 64, 68, 71, 72, 75, 65]
 	);
 	yield e.call(THintMultipleStrokes(1, [0, 1], [1]), 4, 9, 2, 18);
 
@@ -253,7 +251,12 @@ const progG = dsl.program(function*(e) {
 	yield e.call(THintTopEdge, ~0, ~1, 98);
 	yield e.call(THintTopStroke, ~2, ~3, 170, 171);
 
-	yield e.call(THintMultipleStrokes(1, [1, 1], [1]), 9, 170, ...[140, 154]);
+	yield e.call(
+		THintMultipleStrokes(3, [0, 1, 1, 0], [1, 1, 1]),
+		0,
+		171,
+		...[0, 9, 140, 154, 170, 171]
+	);
 	yield e.call(
 		THintMultipleStrokes(4, [1, 1, 1, 1, 1], [1, 1, 1, 1], [0, 1, 3, 2]),
 		154,

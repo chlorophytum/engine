@@ -177,6 +177,31 @@ export const ShrinkDelta = LibFunc(`IdeographProgram::shrinkDelta`, function*(e)
 	yield e.return(e.neg(e.sub(cInk, e.max(e.coerce.toF26D6(3 / 5), aInk))));
 });
 
+export const BalanceShrinkOneStrokeDown = LibFunc(
+	`IdeographProgram::BalanceShrinkOneStrokeDown`,
+	function*(e) {
+		const [j, aInk, cInk, vpInks, vpGaps] = e.args(5);
+		const pGaps = e.coerce.fromIndex.variable(vpGaps);
+		const pInks = e.coerce.fromIndex.variable(vpInks);
+		const delta = e.local();
+		yield e.set(delta, e.call(ShrinkDelta, aInk, cInk));
+		yield e.set(e.part(pInks, j), e.add(e.part(pInks, j), delta));
+		yield e.set(e.part(pGaps, j), e.sub(e.part(pGaps, j), delta));
+	}
+);
+export const BalanceShrinkOneStrokeUp = LibFunc(
+	`IdeographProgram::BalanceShrinkOneStrokeUp`,
+	function*(e) {
+		const [j, aInk, cInk, vpInks, vpGaps] = e.args(5);
+		const pGaps = e.coerce.fromIndex.variable(vpGaps);
+		const pInks = e.coerce.fromIndex.variable(vpInks);
+		const delta = e.local();
+		yield e.set(delta, e.call(ShrinkDelta, aInk, cInk));
+		yield e.set(e.part(pInks, j), e.add(e.part(pInks, j), delta));
+		yield e.set(e.part(pGaps, e.add(1, j)), e.sub(e.part(pGaps, e.add(1, j)), delta));
+	}
+);
+
 export const BalanceOneStroke = LibFunc("IdeographProgram::balanceOneStroke", function*(e) {
 	const [j, scalar, vpGapOcc, vpInkOcc, vpGaps, vpInks, vpaGap, vpaInk] = e.args(8);
 	const pGaps = e.coerce.fromIndex.variable(vpGaps);
@@ -254,20 +279,30 @@ export const BalanceOneStroke = LibFunc("IdeographProgram::balanceOneStroke", fu
 	});
 
 	// Shrink
-	const delta = e.local();
-
 	yield e.if(e.gt(cInk, aInk), function*() {
 		yield e.if(
 			e.gt(cGapBelow, cGapAbove),
 			function*() {
-				yield e.set(delta, e.call(ShrinkDelta, aInk, cInk));
-				yield e.set(e.part(pInks, j), e.add(e.part(pInks, j), delta));
-				yield e.set(e.part(pGaps, e.add(1, j)), e.sub(e.part(pGaps, e.add(1, j)), delta));
+				yield e.if(
+					e.gt(aGapAbove, e.coerce.toF26D6(1 / 8)),
+					function*() {
+						yield e.call(BalanceShrinkOneStrokeUp, j, aInk, cInk, vpInks, vpGaps);
+					},
+					function*() {
+						yield e.call(BalanceShrinkOneStrokeDown, j, aInk, cInk, vpInks, vpGaps);
+					}
+				);
 			},
 			function*() {
-				yield e.set(delta, e.call(ShrinkDelta, aInk, cInk));
-				yield e.set(e.part(pInks, j), e.add(e.part(pInks, j), delta));
-				yield e.set(e.part(pGaps, j), e.sub(e.part(pGaps, j), delta));
+				yield e.if(
+					e.gt(aGapBelow, e.coerce.toF26D6(1 / 8)),
+					function*() {
+						yield e.call(BalanceShrinkOneStrokeDown, j, aInk, cInk, vpInks, vpGaps);
+					},
+					function*() {
+						yield e.call(BalanceShrinkOneStrokeUp, j, aInk, cInk, vpInks, vpGaps);
+					}
+				);
 			}
 		);
 	});

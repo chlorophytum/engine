@@ -31,6 +31,11 @@ export const CollideHangTop = LibFunc(`IdeographProgram::CollideHangTop`, functi
 	);
 });
 
+export const AlignTwoStrokes = LibFunc(`IdeographProgram::AlignTwoStrokes`, function*($) {
+	const [a, b, c, d] = $.args(4);
+	yield $.scfs(a, $.gc.cur(c));
+	yield $.scfs(b, $.gc.cur(d));
+});
 export const CollideDownTwoStrokes = LibFunc(`IdeographProgram::collideDownTwoStrokes`, function*(
 	e
 ) {

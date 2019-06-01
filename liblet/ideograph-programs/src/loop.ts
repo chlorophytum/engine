@@ -171,16 +171,20 @@ const PlaceStrokeDist2 = LibFunc("IdeographProgram::placeStrokeDist2", function*
 export const MovePointsForMiddleHint = LibFunc(
 	"IdeographProgram::movePointsForMiddleHint",
 	function*(e) {
-		const [N, y0, vpGaps, vpInks, vpZMids] = e.args(5);
+		const [N, zBot, zTop, y0, vpGaps, vpInks, vpZMids] = e.args(7);
 		const pGaps = e.coerce.fromIndex.variable(vpGaps);
 		const pInks = e.coerce.fromIndex.variable(vpInks);
 		const pZMids = e.coerce.fromIndex.variable(vpZMids);
 
 		const j = e.local();
 		const y = e.local();
+		const yBot = e.local();
+		const yTop = e.local();
 
 		yield e.set(j, 0);
 		yield e.set(y, y0);
+		yield e.set(yBot, e.gc.cur(zBot));
+		yield e.set(yTop, e.gc.cur(zTop));
 		yield e.while(e.lt(j, N), function*() {
 			yield e.call(
 				PlaceStrokeDist2,
@@ -192,5 +196,7 @@ export const MovePointsForMiddleHint = LibFunc(
 			);
 			yield e.set(j, e.add(1, j));
 		});
+		yield e.scfs(zBot, yBot);
+		yield e.scfs(zTop, yTop);
 	}
 );
