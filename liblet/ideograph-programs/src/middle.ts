@@ -3,21 +3,19 @@ import {
 	Expression,
 	LibFunc,
 	ProgramDsl,
-	Statement,
 	TemplateEx,
 	Variable
 } from "@chlorophytum/hltt";
 
 import { TInitMD, TInitRecPath, TInitZMids } from "./middle-array";
 import { THintMultipleStrokesMainImpl } from "./middle-main";
-import { HintMultipleStrokesGiveUp } from "./simple";
-import {
-	CollideDownTwoStrokes,
-	CollideHangBottom,
-	CollideHangTop,
-	CollideUpTwoStrokes
-} from "./stroke-omit";
 import { OctDistOrig } from "./vis-dist";
+
+function drop<A>(a: A[], index: number) {
+	let a1: A[] = [];
+	for (let j = 0; j < a.length; j++) if (j !== index) a1.push(a[j]);
+	return a1;
+}
 
 function decideMerge(allowMerge: number[], N: number) {
 	let mergeIndex = -1;
@@ -49,181 +47,12 @@ function getRecPath(a: number[], N: number): number[] {
 	}
 }
 
-function drop<A>(a: A[], index: number) {
-	let a1: A[] = [];
-	for (let j = 0; j < a.length; j++) if (j !== index) a1.push(a[j]);
-	return a1;
-}
-
-function dropMidList<A>(a: A[], index: number, N: number) {
-	let argList1: A[] = [];
-	for (let j = 0; j < N; j++) {
-		if (j !== index) argList1.push(a[2 * j], a[2 * j + 1]);
-	}
-	return argList1;
-}
-
-function decideReq(gapMD: number[], strokeMD: number[], N: number) {
-	let reqGap = 0;
-	let reqInk = 0;
-	for (let j = 0; j <= N; j++) {
-		reqInk += Math.max(0, gapMD[j]);
-	}
-	for (let j = 0; j < N; j++) {
-		reqGap += Math.max(0, strokeMD[j]);
-	}
-	return { reqGap, reqInk };
-}
-
 export interface MidHintTemplateProps {
 	gapMD: number[];
 	inkMD: number[];
 	allowMerge: number[];
 	fb: boolean;
 	ft: boolean;
-}
-
-function* MergeBodyMain(
-	N: number,
-	mh: MidHintTemplateProps,
-
-	e: ProgramDsl,
-	zBot: Variable,
-	zTop: Variable,
-	zMids: Variable[],
-	aZMids: Variable,
-	mi: number,
-	consequent: () => Iterable<Statement>
-) {
-	const props1: MidHintTemplateProps = {
-		gapMD: drop(mh.gapMD, Math.min(mi, N)),
-		inkMD: drop(mh.inkMD, Math.min(mi, N - 1)),
-		allowMerge: drop(mh.allowMerge, mi),
-		fb: mh.fb,
-		ft: mh.ft
-	};
-	yield e.if(
-		e.call(
-			THintMultipleStrokesImpl(N - 1, props1),
-			...[zBot, zTop, ...dropMidList(zMids, Math.min(mi, N - 1), N)]
-		),
-		function*() {
-			yield* consequent();
-			yield e.return(1);
-		},
-		function*() {
-			yield e.call(HintMultipleStrokesGiveUp, N, zBot, zTop, aZMids.ptr);
-			yield e.return(0);
-		}
-	);
-}
-
-function* MergeBody(
-	N: number,
-	mh: MidHintTemplateProps,
-	mergeIndex: number,
-	mergeDown: number,
-
-	e: ProgramDsl,
-	zBot: Variable,
-	zTop: Variable,
-	zMids: Variable[],
-	aZMids: Variable
-) {
-	if (mergeIndex === 0) {
-		yield e.scfs(zMids[0], e.gc.cur(zBot));
-		yield e.scfs(zMids[1], e.gc.cur(zBot));
-		yield* MergeBodyMain(N, mh, e, zBot, zTop, zMids, aZMids, 0, e.emptyBlock());
-	} else if (mergeIndex === N) {
-		yield e.scfs(zMids[2 * (N - 1) + 0], e.gc.cur(zTop));
-		yield e.scfs(zMids[2 * (N - 1) + 1], e.gc.cur(zTop));
-		yield* MergeBodyMain(N, mh, e, zBot, zTop, zMids, aZMids, N, e.emptyBlock());
-	} else if (mergeDown) {
-		yield* MergeBodyMain(N, mh, e, zBot, zTop, zMids, aZMids, mergeIndex, function*() {
-			yield e.scfs(zMids[2 * mergeIndex], e.gc.cur(zMids[2 * (mergeIndex - 1)]));
-			yield e.scfs(zMids[2 * mergeIndex + 1], e.gc.cur(zMids[2 * (mergeIndex - 1) + 1]));
-		});
-	} else {
-		yield* MergeBodyMain(N, mh, e, zBot, zTop, zMids, aZMids, mergeIndex - 1, function*() {
-			yield e.scfs(zMids[2 * (mergeIndex - 1)], e.gc.cur(zMids[2 * mergeIndex]));
-			yield e.scfs(zMids[2 * (mergeIndex - 1) + 1], e.gc.cur(zMids[2 * mergeIndex + 1]));
-		});
-	}
-}
-
-function* AlignBodyMain(
-	N: number,
-	mh: MidHintTemplateProps,
-
-	e: ProgramDsl,
-	zBot: Variable,
-	zTop: Variable,
-	zMids: Variable[],
-	aZMids: Variable,
-	mi: number,
-	consequent: () => Iterable<Statement>
-) {
-	let mdArr = drop(mh.gapMD, mi);
-	mdArr[mi] += 1;
-	const props1: MidHintTemplateProps = {
-		gapMD: mdArr,
-		inkMD: drop(mh.inkMD, mi),
-		allowMerge: [],
-		fb: mh.fb,
-		ft: mh.ft
-	};
-	yield e.if(
-		e.call(
-			THintMultipleStrokesImpl(N - 1, props1),
-			...[zBot, zTop, ...dropMidList(zMids, mi, N)]
-		),
-		function*() {
-			yield* consequent();
-			yield e.return(1);
-		},
-		function*() {
-			yield e.call(HintMultipleStrokesGiveUp, N, zBot, zTop, aZMids.ptr);
-			yield e.return(0);
-		}
-	);
-}
-
-function* AlignBody(
-	N: number,
-	mh: MidHintTemplateProps,
-
-	mergeIndex: number,
-	mergeDown: number,
-
-	e: ProgramDsl,
-	zBot: Variable,
-	zTop: Variable,
-	zMids: Variable[],
-	aZMids: Variable
-) {
-	if (mergeIndex === 0) {
-		yield e.call(CollideHangBottom, zBot, zMids[0], zMids[1]);
-		yield* AlignBodyMain(N, mh, e, zBot, zTop, zMids, aZMids, 0, e.emptyBlock());
-	} else if (mergeIndex === N) {
-		yield e.call(CollideHangTop, zTop, zMids[2 * (N - 1)], zMids[2 * (N - 1) + 1]);
-		yield* AlignBodyMain(N, mh, e, zBot, zTop, zMids, aZMids, N - 1, e.emptyBlock());
-	} else if (mergeDown) {
-		yield* AlignBodyMain(N, mh, e, zBot, zTop, zMids, aZMids, mergeIndex, function*() {
-			const botCur = zMids[2 * mergeIndex + 0],
-				topCur = zMids[2 * mergeIndex + 1];
-			const botBelow = zMids[2 * mergeIndex - 2],
-				topBelow = zMids[2 * mergeIndex - 1];
-			yield e.call(CollideDownTwoStrokes, botCur, topCur, botBelow, topBelow);
-		});
-	} else {
-		yield* AlignBodyMain(N, mh, e, zBot, zTop, zMids, aZMids, mergeIndex - 1, function*() {
-			const botCur = zMids[2 * mergeIndex - 2],
-				topCur = zMids[2 * mergeIndex - 1];
-			const botAbove = zMids[2 * mergeIndex + 0],
-				topAbove = zMids[2 * mergeIndex + 1];
-			yield e.call(CollideUpTwoStrokes, botCur, topCur, botAbove, topAbove);
-		});
-	}
 }
 
 function midBot(e: ProgramDsl, zMids: Variable, index: Expression) {
