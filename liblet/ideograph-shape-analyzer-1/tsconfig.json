@@ -1,0 +1,14 @@
+{
+	"extends": "../tsconfig.settings.json",
+	"references": [
+		{"path": "../arch"},
+		{"path": "../hint-common"},
+		{"path": "../hint-embox"},
+		{"path": "../hint-maz"}
+	],
+	"compilerOptions": {
+		"outDir": "lib",
+		"rootDir": "src",
+		"tsBuildInfoFile": ".build-cache/src"
+	}
+}

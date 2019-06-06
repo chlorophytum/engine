@@ -200,10 +200,20 @@ export class EdslProgram {
 	local(size = 1) {
 		return this.scope.locals.declare(size);
 	}
+	globalVariable(name: string, size = 1) {
+		return this.globalDsl.scope.storages.declare(name, size);
+	}
+	controlValue(name: string, size = 1) {
+		return this.globalDsl.scope.cvt.declare(name, size);
+	}
 	twilight() {
 		if (this.scope.isFunction) throw new TypeError("Cannot declare twilights for functions");
 		return this.scope.twilights.declare();
 	}
+	globalTwilight(name: string) {
+		return this.globalDsl.scope.twilights.declare(name);
+	}
+
 	part(a: Variable, b: number | Expression) {
 		return new ArrayIndex(a, b);
 	}

@@ -7,7 +7,7 @@
 		"sourceMap": true,
 		"module": "commonjs",
 		"importHelpers": true,
-		"lib": ["es2017"],
+		"lib": ["es2017", "es2018", "esnext"],
 		"moduleResolution": "node",
 		"strict": true,
 		"strictBindCallApply": true,

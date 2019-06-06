@@ -1,7 +1,12 @@
+export interface Point {
+	readonly x: number;
+	readonly y: number;
+}
 export interface GlyphPoint {
 	readonly x: number;
 	readonly y: number;
 	readonly on: boolean;
+	readonly id: number;
 }
 export type GlyphGeometry = GlyphPoint[][];
 
@@ -39,21 +44,26 @@ export interface IFinalHintFactory {
 	createFinalHintSinkFor(to: IHintStore): IFinalHintSink;
 	createFinalHintIntegratorFor(from: IHintStore, to: any): IFinalSinkIntegrator;
 }
+export interface IFinalHintProgramSink {
+	readonly format: string;
+	save(): void;
+}
 export interface IFinalHintSink {
 	readonly format: string;
-	save(to: string): Promise<void>;
+	createGlyphProgramSink(gid: string): IFinalHintProgramSink;
+	createSharedProgramSink(type: string): IFinalHintProgramSink;
 }
 export interface IFinalSinkIntegrator {
 	readonly format: string;
-	integrate(): Promise<void>;
 }
 
 // Visual hints are geometry-invariant
 export interface IHint {
 	toJSON(): any;
-	createCompiler(font: IFinalHintSink): IHintCompiler | null | undefined;
+	createCompiler(font: IFinalHintProgramSink): IHintCompiler | null | undefined;
 }
 export interface IHintFactory {
+	readonly type: string;
 	readJson(json: any, general: IHintFactory): IHint | null | undefined;
 }
 export interface IHintCompiler {

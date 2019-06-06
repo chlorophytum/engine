@@ -1,0 +1,44 @@
+import { IFinalHintProgramSink, IHint, IHintCompiler, IHintFactory } from "@chlorophytum/arch";
+import { HlttProgramSink } from "@chlorophytum/sink-hltt";
+
+export namespace WithDirection {
+	const TAG = "Chlorophytum::CommonHints::WithDirection";
+	export class Hint implements IHint {
+		constructor(private readonly y: boolean, private readonly inner: IHint) {}
+		toJSON() {
+			return { type: TAG, y: this.y, inner: this.inner };
+		}
+		createCompiler(sink: IFinalHintProgramSink): IHintCompiler | null {
+			const innerCompiler = this.inner.createCompiler(sink);
+			if (!innerCompiler) return null;
+			if (sink instanceof HlttProgramSink) {
+				return new HlttCompiler(sink, this.y, innerCompiler);
+			}
+			return null;
+		}
+	}
+
+	export class HintFactory implements IHintFactory {
+		readonly type = TAG;
+		readJson(json: any, general: IHintFactory) {
+			if (json && json.type === TAG && json.inner) {
+				const inner = general.readJson(json.inner, general);
+				if (inner) return new Hint(json.y, inner);
+			}
+			return null;
+		}
+	}
+
+	export class HlttCompiler implements IHintCompiler {
+		constructor(
+			private readonly sink: HlttProgramSink,
+			private readonly y: boolean,
+			private readonly innerCompiler: IHintCompiler
+		) {}
+		doCompile() {
+			if (this.y) this.sink.addSegment($ => [$.svtca.y()]);
+			else this.sink.addSegment($ => [$.svtca.x()]);
+			this.innerCompiler.doCompile();
+		}
+	}
+}

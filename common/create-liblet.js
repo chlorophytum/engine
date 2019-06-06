@@ -21,6 +21,15 @@ fs.mkdirSync(path.join(LIBLET_DIR, libName, "src"));
 fs.writeFileSync(path.join(LIBLET_DIR, libName, ".npmrc"), "package-lock=false");
 fs.writeFileSync(path.join(LIBLET_DIR, libName, "src", "index.ts"), "export default {};");
 fs.writeFileSync(
+	path.join(LIBLET_DIR, libName, "src", "dummy.test.ts"),
+	`import test from "ava";
+
+test("Dummy test :: ${libName}", t => {
+	t.is(1, 1);
+});
+`
+);
+fs.writeFileSync(
 	path.join(LIBLET_DIR, libName, "package.json"),
 	stringify({
 		name: "@chlorophytum/" + libName,

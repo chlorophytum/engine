@@ -1,0 +1,9 @@
+{
+	"extends": "../tsconfig.settings.json",
+	"references": [{"path": "../arch"}, {"path": "../sink-hltt"}],
+	"compilerOptions": {
+		"outDir": "lib",
+		"rootDir": "src",
+		"tsBuildInfoFile": ".build-cache/src"
+	}
+}

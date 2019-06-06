@@ -2,8 +2,13 @@
 	"files": [],
 	"references": [
 		{"path": "./arch"},
+		{"path": "./demo-ideograph-hinter"},
 		{"path": "./fontforge-instr"},
+		{"path": "./hint-common"},
+		{"path": "./hint-embox"},
+		{"path": "./hint-maz"},
 		{"path": "./hltt"},
-		{"path": "./ideograph-programs"}
+		{"path": "./ideograph-shape-analyzer-1"},
+		{"path": "./sink-hltt"}
 	]
 }

@@ -9,19 +9,23 @@ export async function midHint(
 	const store = await sf.createHintStoreFromFile(fromPath);
 	const fhs = ff.createFinalHintSinkFor(store);
 	for (const gid of store.listGlyphs()) {
+		const ps = fhs.createGlyphProgramSink(gid);
 		const hints = store.getGlyphHints(gid);
 		if (!hints) continue;
-		const hc = hints.createCompiler(fhs);
+		const hc = hints.createCompiler(ps);
 		if (!hc) continue;
 		hc.doCompile();
+		ps.save();
 	}
 	for (const modelType of store.listSharedTypes()) {
+		const ps = fhs.createSharedProgramSink(modelType);
 		const hints = store.getSharedHints(modelType);
 		if (!hints) continue;
-		const hc = hints.createCompiler(fhs);
+		const hc = hints.createCompiler(ps);
 		if (!hc) continue;
 		hc.doCompile();
+		ps.save();
 	}
 
-	await fhs.save(toPath);
+	//await fhs.save(toPath);
 }

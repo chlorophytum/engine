@@ -1,0 +1,14 @@
+{
+	"extends": "../tsconfig.settings.json",
+	"references": [
+		{"path": "../arch"},
+		{"path": "../hint-embox"},
+		{"path": "../hltt"},
+		{"path": "../sink-hltt"}
+	],
+	"compilerOptions": {
+		"outDir": "lib",
+		"rootDir": "src",
+		"tsBuildInfoFile": ".build-cache/src"
+	}
+}
