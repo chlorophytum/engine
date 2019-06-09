@@ -1,7 +1,8 @@
+import * as _ from "lodash";
+
 import { GlyphAnalysis } from "../analyze/analysis";
 import { atGlyphBottom, atGlyphTop } from "../si-common/stem-spatial";
 import HintingStrategy from "../strategy";
-import Stem from "../types/stem";
 
 import HierarchySink, { DependentHintType } from "./sink";
 
@@ -193,7 +194,21 @@ export default class HierarchyAnalyzer {
 			if (pathStart >= 0 && next >= 0) this.analysis.directOverlaps[pathStart][next] = false;
 			pathStart = next;
 		}
-		return path;
+		for (let m = 0; m < path.length; m++) {
+			const sm = this.analysis.stems[path[m]];
+			if (!sm || !sm.rid) continue;
+			if ((!sm.hasGlyphStemBelow && sm.diagHigh) || (!sm.hasGlyphStemAbove && sm.diagLow)) {
+				// Our key path is on a strange track
+				// We selected a diagonal stroke half, but it is not a good half
+				// Try to swap. 2 parts of a diagonal never occur in a path, so swapping is ok.
+				let opposite = -1;
+				for (let j = 0; j < this.analysis.stems.length; j++) {
+					if (j !== path[m] && this.analysis.stems[j].rid === sm.rid) opposite = j;
+				}
+				if (opposite >= 0 && !this.stemPointMask[opposite]) path[m] = opposite;
+			}
+		}
+		return _.uniq(path);
 	}
 
 	private getDependents(path: number[]) {

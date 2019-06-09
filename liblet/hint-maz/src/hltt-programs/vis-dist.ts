@@ -43,13 +43,7 @@ export const VisDist = LibFunc("IdeographProgram::visDist", function*(e) {
 
 export const OctDistOrig = LibFunc("IdeographProgram::octDistOrig", function*(e) {
 	const [zBot, zTop] = e.args(2);
-	const GEAR = e.coerce.toF26D6(32);
-	yield e.return(
-		e.sub(
-			e.div(e.round.gray(e.mul(e.gc.orig(zTop), GEAR)), GEAR),
-			e.div(e.round.gray(e.mul(e.gc.orig(zBot), GEAR)), GEAR)
-		)
-	);
+	yield e.return(e.sub(e.gc.orig(zTop), e.gc.orig(zBot)));
 });
 
 function midBot(e: ProgramDsl, zMids: Variable, index: Expression) {
