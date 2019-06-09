@@ -3,6 +3,8 @@ import { HlttProgramSink } from "@chlorophytum/sink-hltt";
 
 import { PREFIX } from "./constants";
 import {
+	DefaultStretch,
+	StretchProps,
 	THintBottomStroke,
 	THintBottomStrokeFree,
 	THintTopStroke,
@@ -11,13 +13,15 @@ import {
 
 export namespace EmBoxStroke {
 	const TAG = "Chlorophytum::EmBox::Stroke";
+	export type Stretch = StretchProps;
 	export class Hint implements IHint {
 		constructor(
 			private readonly boxName: string,
 			private readonly top: boolean,
 			private readonly spur: boolean,
 			private readonly zSBot: number,
-			private readonly zsTop: number
+			private readonly zsTop: number,
+			private readonly stretch: StretchProps | null = null
 		) {}
 		toJSON() {
 			return {
@@ -26,7 +30,8 @@ export namespace EmBoxStroke {
 				top: this.top,
 				spur: this.spur,
 				zsBot: this.zSBot,
-				zsTop: this.zsTop
+				zsTop: this.zsTop,
+				stretch: this.stretch
 			};
 		}
 		createCompiler(sink: IFinalHintProgramSink): IHintCompiler | null {
@@ -37,7 +42,8 @@ export namespace EmBoxStroke {
 					this.top,
 					this.spur,
 					this.zSBot,
-					this.zsTop
+					this.zsTop,
+					this.stretch
 				);
 			}
 			return null;
@@ -48,7 +54,14 @@ export namespace EmBoxStroke {
 		readonly type = TAG;
 		readJson(json: any) {
 			if (json && json.type === TAG) {
-				return new Hint(json.boxName, json.top, json.spur, json.zsBot, json.zsTop);
+				return new Hint(
+					json.boxName,
+					json.top,
+					json.spur,
+					json.zsBot,
+					json.zsTop,
+					json.stretch || null
+				);
 			}
 			return null;
 		}
@@ -61,10 +74,11 @@ export namespace EmBoxStroke {
 			private readonly top: boolean,
 			private readonly spur: boolean,
 			private readonly zsBot: number,
-			private readonly zsTop: number
+			private readonly zsTop: number,
+			private readonly stretch: StretchProps | null
 		) {}
 		doCompile() {
-			const { boxName, top, spur, zsBot, zsTop } = this;
+			const { boxName, top, spur, zsBot, zsTop, stretch } = this;
 			this.sink.addSegment(function*($) {
 				const strokeBottom = $.globalTwilight(`${PREFIX}::${boxName}::StrokeBottom`);
 				const strokeTop = $.globalTwilight(`${PREFIX}::${boxName}::StrokeTop`);
@@ -78,8 +92,23 @@ export namespace EmBoxStroke {
 						yield $.call(THintBottomStrokeFree, spurBottom, spurTop, zsBot, zsTop);
 					}
 				} else {
-					if (top) yield $.call(THintTopStroke, spurBottom, spurTop, zsBot, zsTop);
-					else yield $.call(THintBottomStroke, spurBottom, spurTop, zsBot, zsTop);
+					if (top) {
+						yield $.call(
+							THintTopStroke(stretch || DefaultStretch),
+							strokeBottom,
+							strokeTop,
+							zsBot,
+							zsTop
+						);
+					} else {
+						yield $.call(
+							THintBottomStroke(stretch || DefaultStretch),
+							strokeBottom,
+							strokeTop,
+							zsBot,
+							zsTop
+						);
+					}
 				}
 			});
 		}

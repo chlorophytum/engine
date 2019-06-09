@@ -2,6 +2,7 @@ import { IFinalHintProgramSink, IHint, IHintCompiler, IHintFactory } from "@chlo
 import { HlttProgramSink } from "@chlorophytum/sink-hltt";
 
 import { PREFIX } from "./constants";
+import { TInitEmBoxTwilightPoints } from "./programs";
 
 export namespace EmBoxInit {
 	const TAG = "Chlorophytum::EmBox::Init";
@@ -36,10 +37,13 @@ export namespace EmBoxInit {
 				const spurBottom = $.globalTwilight(`${PREFIX}::${name}::SpurBottom`);
 				const spurTop = $.globalTwilight(`${PREFIX}::${name}::SpurTop`);
 
-				yield $.mdap.round(strokeBottom);
-				yield $.mdrp.round(strokeBottom, strokeTop);
-				yield $.mdrp(strokeBottom, spurBottom);
-				yield $.mdrp(strokeTop, spurTop);
+				yield $.call(
+					TInitEmBoxTwilightPoints,
+					strokeBottom,
+					strokeTop,
+					spurBottom,
+					spurTop
+				);
 			});
 		}
 	}

@@ -21,7 +21,11 @@ import {
 } from "../ast/statement/branch";
 import { GCExpression, SCFSStatement } from "../ast/statement/coord";
 import { DeltaStatement } from "../ast/statement/deltas";
-import { GraphStateStatement, GraphStateStatement1 } from "../ast/statement/graph-state";
+import {
+	GraphStateStatement,
+	GraphStateStatement1,
+	IupStatement
+} from "../ast/statement/graph-state";
 import { LIp, LMdap, LMdrp, LMiap, LMirp } from "../ast/statement/move-point";
 import { ReturnStatement } from "../ast/statement/return";
 import { SequenceStatement } from "../ast/statement/sequence";
@@ -379,8 +383,8 @@ export class EdslProgram {
 		y: () => new GraphStateStatement(TTI.SVTCA_y)
 	};
 	iup = {
-		x: () => new GraphStateStatement(TTI.IUP_x),
-		y: () => new GraphStateStatement(TTI.IUP_y)
+		x: () => new IupStatement(TTI.IUP_x),
+		y: () => new IupStatement(TTI.IUP_y)
 	};
 
 	emptyBlock = () => function*(): Iterable<Statement> {};

@@ -3,12 +3,24 @@ import Assembler from "../../ir";
 import { cExpr1 } from "../expression/constant";
 import { Expression, Statement } from "../interface";
 
+import { setZone } from "./long-point";
+
 export class GraphStateStatement extends Statement {
 	constructor(private readonly op: TTI) {
 		super();
 	}
 	refer() {}
 	compile(asm: Assembler) {
+		asm.prim(this.op, 0, 0);
+	}
+}
+export class IupStatement extends Statement {
+	constructor(private readonly op: TTI) {
+		super();
+	}
+	refer() {}
+	compile(asm: Assembler) {
+		setZone(asm, "zp2", false);
 		asm.prim(this.op, 0, 0);
 	}
 }

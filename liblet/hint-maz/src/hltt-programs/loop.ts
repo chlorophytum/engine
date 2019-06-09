@@ -139,7 +139,7 @@ export const MaxAverageLoop = LibFunc("IdeographProgram::maxAverageLoop", functi
 						e.part(pAlloc, jLoop),
 						e.add(e.coerce.toF26D6(2), e.mul(scalar, e.part(pA, jLoop)))
 					),
-					e.gt(e.part(pC, jLoop), dOpt)
+					e.gteq(e.part(pC, jLoop), dOpt)
 				),
 				function*() {
 					yield e.set(jOpt, jLoop);
