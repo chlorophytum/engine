@@ -1,13 +1,13 @@
-import { IFinalHintFactory, IFontSourceFactory } from "../interfaces";
+import { IFinalHintCollector, IFontSourceFactory } from "../interfaces";
 
 export async function midHint(
 	sf: IFontSourceFactory,
-	ff: IFinalHintFactory,
+	ff: IFinalHintCollector,
 	fromPath: string,
 	toPath: string
 ) {
 	const store = await sf.createHintStoreFromFile(fromPath);
-	const fhs = ff.createFinalHintSinkFor(store);
+	const fhs = ff.createSession();
 	for (const gid of store.listGlyphs()) {
 		const ps = fhs.createGlyphProgramSink(gid);
 		const hints = store.getGlyphHints(gid);

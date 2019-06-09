@@ -72,14 +72,14 @@ export namespace EmBoxStroke {
 				const spurTop = $.globalTwilight(`${PREFIX}::${boxName}::SpurTop`);
 
 				if (spur) {
-					if (top) yield $.call(THintTopStroke, spurBottom, spurTop, zsBot, zsTop);
-					else yield $.call(THintBottomStroke, spurBottom, spurTop, zsBot, zsTop);
-				} else {
 					if (top) {
 						yield $.call(THintTopStrokeFree, spurBottom, spurTop, zsBot, zsTop);
 					} else {
 						yield $.call(THintBottomStrokeFree, spurBottom, spurTop, zsBot, zsTop);
 					}
+				} else {
+					if (top) yield $.call(THintTopStroke, spurBottom, spurTop, zsBot, zsTop);
+					else yield $.call(THintBottomStroke, spurBottom, spurTop, zsBot, zsTop);
 				}
 			});
 		}

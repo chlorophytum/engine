@@ -1,11 +1,29 @@
-import { IFinalHintProgramSink, IFinalHintSink } from "@chlorophytum/arch";
-import HLTT, { ProgramDsl, ProgramRecord, Statement } from "@chlorophytum/hltt";
+import { IFinalHintCollector, IFinalHintProgramSink, IFinalHintSession } from "@chlorophytum/arch";
+import HLTT, {
+	GlobalDsl,
+	InstrFormat,
+	ProgramDsl,
+	ProgramRecord,
+	Statement
+} from "@chlorophytum/hltt";
 
 export type ProgramGenerator = ($: ProgramDsl) => Iterable<Statement>;
 
-export class HlttSink implements IFinalHintSink {
+export class HlttCollector implements IFinalHintCollector {
 	readonly format = "hltt";
 	readonly edsl = HLTT();
+	createSession() {
+		return new HlttSession(this.edsl);
+	}
+
+	getFunctionDefs<F>(format: InstrFormat<F>) {
+		return this.edsl.compileFunctions(format);
+	}
+}
+
+export class HlttSession implements IFinalHintSession {
+	readonly format = "hltt";
+	constructor(readonly edsl: GlobalDsl) {}
 	glyphPrograms: Map<string, ProgramRecord> = new Map();
 	preProgram: ProgramRecord | null = null;
 
@@ -21,6 +39,22 @@ export class HlttSink implements IFinalHintSink {
 		this.preProgram = this.edsl.program(function*($) {
 			for (const gen of preSegments) yield* gen($);
 		});
+	}
+
+	getPreProgram<F>(format: InstrFormat<F>) {
+		if (!this.preProgram) {
+			return format.createSink().getResult();
+		} else {
+			return this.edsl.compileProgram(this.preProgram, format);
+		}
+	}
+	getGlyphProgram<F>(gid: string, format: InstrFormat<F>) {
+		const glyphProgram = this.glyphPrograms.get(gid);
+		if (glyphProgram) {
+			return this.edsl.compileProgram(glyphProgram, format);
+		} else {
+			return format.createSink().getResult();
+		}
 	}
 }
 

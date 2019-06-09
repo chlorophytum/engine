@@ -4,17 +4,18 @@ import {
 	createHints,
 	createSharedHints
 } from "@chlorophytum/ideograph-shape-analyzer-1";
-import { HlttSink } from "@chlorophytum/sink-hltt";
+import { HlttCollector } from "@chlorophytum/sink-hltt";
 import * as fs from "fs";
 
 const otd = JSON.parse(fs.readFileSync(process.argv[2], "utf-8"));
 const params = createHintingStrategy();
-const tt = new HlttSink();
+const ttCol = new HlttCollector();
+const ttSession = ttCol.createSession();
 
 for (const c in otd.cmap) {
 	const gid = otd.cmap[c];
 	if (otd.glyf[gid] && otd.glyf[gid].contours) {
-		const programSink = tt.createGlyphProgramSink(gid);
+		const programSink = ttSession.createGlyphProgramSink(gid);
 		const hints = createHints(otd.glyf[gid].contours, params);
 		const compiler = hints.createCompiler(programSink);
 		if (compiler) {
@@ -27,29 +28,19 @@ for (const c in otd.cmap) {
 
 {
 	const prepHints = createSharedHints(params);
-	const programSink = tt.createSharedProgramSink("Ideographs");
+	const programSink = ttSession.createSharedProgramSink("Ideographs");
 	const compiler = prepHints.createCompiler(programSink);
 	if (compiler) {
 		compiler.doCompile();
 		programSink.save();
 	}
-	tt.consolidatePreProgram();
+	ttSession.consolidatePreProgram();
 }
 
-const fpgmResults = tt.edsl.compileFunctions(FontForgeTextInstr);
-otd.fpgm = [];
-for (const [k, v] of fpgmResults) otd.fpgm.push(v);
-
-otd.prep = [];
-if (tt.preProgram) otd.prep = [tt.edsl.compileProgram(tt.preProgram, FontForgeTextInstr)];
-
+otd.fpgm = [...ttCol.getFunctionDefs(FontForgeTextInstr).values()];
+otd.prep = [ttSession.getPreProgram(FontForgeTextInstr)];
 for (let gid in otd.glyf) {
-	const glyphProgram = tt.glyphPrograms.get(gid);
-	if (glyphProgram) {
-		otd.glyf[gid].instructions = [tt.edsl.compileProgram(glyphProgram, FontForgeTextInstr)];
-	} else {
-		otd.glyf[gid].instructions = [];
-	}
+	otd.glyf[gid].instructions = [ttSession.getGlyphProgram(gid, FontForgeTextInstr)];
 }
 
 otd.gasp = [

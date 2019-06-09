@@ -41,17 +41,21 @@ export interface IHintStore {
 }
 
 export interface IFinalHintFactory {
-	createFinalHintSinkFor(to: IHintStore): IFinalHintSink;
+	createFinalHintCollectorFor(to: IHintStore): IFinalHintCollector;
 	createFinalHintIntegratorFor(from: IHintStore, to: any): IFinalSinkIntegrator;
 }
 export interface IFinalHintProgramSink {
 	readonly format: string;
 	save(): void;
 }
-export interface IFinalHintSink {
+export interface IFinalHintSession {
 	readonly format: string;
 	createGlyphProgramSink(gid: string): IFinalHintProgramSink;
 	createSharedProgramSink(type: string): IFinalHintProgramSink;
+}
+export interface IFinalHintCollector {
+	readonly format: string;
+	createSession(): IFinalHintSession;
 }
 export interface IFinalSinkIntegrator {
 	readonly format: string;
