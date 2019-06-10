@@ -1,6 +1,4 @@
-import { Point } from "@chlorophytum/arch";
-
-import HintingStrategy from "../../strategy";
+import { HintingStrategy } from "../../strategy";
 import Glyph from "../../types/glyph";
 import Stem from "../../types/stem";
 
@@ -13,8 +11,8 @@ export class Bitmap {
 
 	constructor(strategy: HintingStrategy, public array: boolean[][]) {
 		let scale = strategy.UPM / SIZE;
-		let yMin = Math.floor(strategy.BLUE_ZONE_BOTTOM_CENTER / scale);
-		let yMax = Math.ceil(strategy.BLUE_ZONE_TOP_CENTER / scale);
+		let yMin = Math.floor((strategy.EMBOX_BOTTOM * strategy.UPM) / scale);
+		let yMax = Math.ceil((strategy.EMBOX_TOP * strategy.UPM) / scale);
 		this.scale = scale;
 		this.yMin = yMin;
 		this.yMax = yMax;
@@ -35,8 +33,8 @@ export class Bitmap {
 
 export function createImageBitmap(g: Glyph, strategy: HintingStrategy) {
 	let scale = strategy.UPM / SIZE;
-	let yMin = Math.floor(strategy.BLUE_ZONE_BOTTOM_CENTER / scale);
-	let yMax = Math.ceil(strategy.BLUE_ZONE_TOP_CENTER / scale);
+	let yMin = Math.floor((strategy.EMBOX_BOTTOM * strategy.UPM) / scale);
+	let yMax = Math.ceil((strategy.EMBOX_TOP * strategy.UPM) / scale);
 	let bitmap = new Array(SIZE + 1);
 	for (let x = 0; x <= SIZE; x++) {
 		bitmap[x] = new Array(yMax - yMin + 1);

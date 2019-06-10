@@ -1,10 +1,8 @@
 import { stemOverlapLength, stemOverlapRatio } from "../../si-common/overlap";
-import HintingStrategy from "../../strategy";
+import { HintingStrategy } from "../../strategy";
 import Glyph from "../../types/glyph";
-import Radical from "../../types/radical";
 import Stem from "../../types/stem";
 import { GlyphAnalysis } from "../analysis";
-import analyzeRadicals from "../radicals";
 
 import { computeACSMatrices, computePQMatrices } from "./collide-matrix";
 import { analyzeDirectOverlaps } from "./direct-overlap";

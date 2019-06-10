@@ -1,7 +1,7 @@
 import { Point } from "@chlorophytum/arch";
 import * as _ from "lodash";
 
-import HintingStrategy from "../../strategy";
+import { HintingStrategy } from "../../strategy";
 import Contour from "../../types/contour";
 import Glyph from "../../types/glyph";
 import { AdjPoint, CPoint } from "../../types/point";
@@ -37,7 +37,11 @@ function shortAbsorptionPointByKeys(
 	for (let m = 0; m < keys.length; m++) {
 		let key = keys[m];
 		const dist = Math.hypot(pt.y - key.y, pt.x - key.x);
-		if (key.yStrongExtrema && dist <= strategy.ABSORPTION_LIMIT && key.id !== pt.id) {
+		if (
+			key.yStrongExtrema &&
+			dist <= strategy.ABSORPTION_LIMIT * strategy.UPM &&
+			key.id !== pt.id
+		) {
 			if (dist < minDist) {
 				minDist = dist;
 				minKey = key;
@@ -192,8 +196,8 @@ function linkRadicalSoleStemPoints(
 					continue;
 				}
 				if (
-					Math.abs(z.y - zKey.y) <= strategy.Y_FUZZ &&
-					Math.abs(z.x - zKey.x) <= strategy.Y_FUZZ
+					Math.abs(z.y - zKey.y) <= strategy.Y_FUZZ * strategy.UPM &&
+					Math.abs(z.x - zKey.x) <= strategy.Y_FUZZ * strategy.UPM
 				) {
 					continue;
 				}
@@ -206,8 +210,8 @@ function linkRadicalSoleStemPoints(
 				let yDifference = z.y - (zKey.y + (z.x - zKey.x) * (zKey.slope || 0));
 				if (
 					!(yDifference > 0
-						? yDifference < strategy.Y_FUZZ * 2
-						: -yDifference < strategy.Y_FUZZ)
+						? yDifference < strategy.Y_FUZZ * strategy.UPM * 2
+						: -yDifference < strategy.Y_FUZZ * strategy.UPM)
 				) {
 					continue;
 				}
@@ -457,13 +461,25 @@ export default function AnalyzeIpSa(
 	linkSoleStemPoints(shortAbsorptions, strategy, analysis, 7);
 	let b: AdjPoint[] = [];
 	for (let j = 0; j < contours.length; j++) {
-		interpolateByKeys(targets, records[j].topBot, glyphKeyPoints, 5, strategy.Y_FUZZ);
+		interpolateByKeys(
+			targets,
+			records[j].topBot,
+			glyphKeyPoints,
+			5,
+			strategy.Y_FUZZ * strategy.UPM
+		);
 		interpolateByKeys(targets, records[j].topBot, glyphKeyPoints, 5, 1);
 		b = b.concat(records[j].topBot.filter(z => z.touched));
 	}
 	glyphKeyPoints = glyphKeyPoints.concat(b).sort(byPointY);
 	for (let j = 0; j < contours.length; j++) {
-		interpolateByKeys(targets, records[j].middlePoints, glyphKeyPoints, 3, strategy.Y_FUZZ);
+		interpolateByKeys(
+			targets,
+			records[j].middlePoints,
+			glyphKeyPoints,
+			3,
+			strategy.Y_FUZZ * strategy.UPM
+		);
 		interpolateByKeys(targets, records[j].middlePoints, glyphKeyPoints, 3, 1);
 		shortAbsorptionByKeys(
 			targets,
@@ -498,7 +514,7 @@ function cleanupInterpolations(
 				ipJ.rp2 === ipK.rp2 &&
 				ipJ.z === ipK.z &&
 				ipJ.priority !== 9 &&
-				Math.abs(ipJ.z.y - ipJ.z.y) <= strategy.Y_FUZZ
+				Math.abs(ipJ.z.y - ipJ.z.y) <= strategy.Y_FUZZ * strategy.UPM
 			) {
 				shortAbsorptions.push(new ShortAbsorption(ipJ.z, ipK.z, ipJ.priority - 1));
 				interpolations[k] = null;

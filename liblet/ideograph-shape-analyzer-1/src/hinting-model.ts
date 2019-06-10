@@ -5,7 +5,7 @@ import { createGlyph } from "./create-glyph";
 import HierarchyAnalyzer from "./hierarchy";
 import HintGenSink from "./hint-gen";
 import { createSharedHints } from "./shared-hints";
-import HintingStrategy from "./strategy";
+import { HintingStrategy } from "./strategy";
 
 function isIdeographCodePoint(code: number) {
 	return (

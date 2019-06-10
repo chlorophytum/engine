@@ -55,90 +55,37 @@ export namespace MultipleAlignZone {
 		doCompile() {
 			const { props } = this;
 			const N = props.middleStrokes.length;
-			if (N <= 4) {
-				// For small N, use templates
-				this.sink.addSegment($ => [
-					$.call(
+			this.sink.addSegment(function*($) {
+				const strokeBottom = $.globalTwilight(
+					TranslateEmboxTwilightName(props.emBoxName, "StrokeBottom")
+				);
+				const strokeTop = $.globalTwilight(
+					TranslateEmboxTwilightName(props.emBoxName, "StrokeTop")
+				);
+
+				const bottomPoint = props.bottomPoint < 0 ? strokeBottom : props.bottomPoint;
+				const topPoint = props.topPoint < 0 ? strokeTop : props.topPoint;
+
+				if (N <= 4) {
+					yield $.call(
 						THintMultipleStrokesStub(N, props),
-						props.bottomPoint,
-						props.topPoint,
+						bottomPoint,
+						topPoint,
 						..._.flatten(props.middleStrokes)
-					)
-				]);
-			} else {
-				// Otherwise, go the "explicit" path and pass all the args in
-				this.sink.addSegment($ => [
-					$.call(
+					);
+				} else {
+					yield $.call(
 						THintMultipleStrokesExplicit(N),
 						...props.gapMinDist,
 						...props.inkMinDist,
 						...props.recPath,
 						props.bottomFree ? 2 : 1,
 						props.topFree ? 2 : 1,
-						props.bottomPoint,
-						props.topPoint,
+						bottomPoint,
+						topPoint,
 						..._.flatten(props.middleStrokes)
-					)
-				]);
-			}
-		}
-	}
-}
-
-export namespace EmBoxFreeStroke {
-	const TAG = "Chlorophytum::MultipleAlignZone::EmboxFreeStroke";
-	export class Hint implements IHint {
-		constructor(
-			private readonly boxName: string,
-			private readonly bottom: number,
-			private readonly top: number
-		) {}
-		toJSON() {
-			return { type: TAG, boxName: this.boxName, bottom: this.bottom, top: this.top };
-		}
-		createCompiler(sink: IFinalHintProgramSink): IHintCompiler | null {
-			if (sink instanceof HlttProgramSink) {
-				return new HlttCompiler(sink, this.boxName, this.bottom, this.top);
-			}
-			return null;
-		}
-	}
-
-	export class HintFactory implements IHintFactory {
-		readonly type = TAG;
-		readJson(json: any) {
-			if (json && json.type === TAG) return new Hint(json.boxName, json.bottom, json.top);
-			return null;
-		}
-	}
-	export class HlttCompiler implements IHintCompiler {
-		constructor(
-			private readonly sink: HlttProgramSink,
-			private readonly boxName: string,
-			private readonly bottom: number,
-			private readonly top: number
-		) {}
-		doCompile() {
-			const { boxName, bottom, top } = this;
-
-			this.sink.addSegment(function*($) {
-				const strokeBottom = $.globalTwilight(
-					TranslateEmboxTwilightName(boxName, "SpurBottom")
-				);
-				const strokeTop = $.globalTwilight(TranslateEmboxTwilightName(boxName, "SpurTop"));
-				yield $.call(
-					THintMultipleStrokesStub(1, {
-						gapMinDist: [1, 1],
-						inkMinDist: [1],
-						recPath: [0],
-						bottomFree: false,
-						topFree: false
-					}),
-					strokeBottom,
-					strokeTop,
-					bottom,
-					top
-				);
+					);
+				}
 			});
 		}
 	}

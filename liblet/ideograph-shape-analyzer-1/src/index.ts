@@ -4,11 +4,7 @@ import analyzeGlyph from "./analyze";
 import { createGlyph } from "./create-glyph";
 import HierarchyAnalyzer from "./hierarchy";
 import HintGenSink from "./hint-gen";
-import HintingStrategy from "./strategy";
-
-export function createHintingStrategy() {
-	return new HintingStrategy();
-}
+import { HintingStrategy } from "./strategy";
 
 export function createHints(geometry: GlyphGeometry, params: HintingStrategy) {
 	const glyph = createGlyph(geometry);
@@ -26,3 +22,4 @@ export function createHints(geometry: GlyphGeometry, params: HintingStrategy) {
 }
 
 export { createSharedHints } from "./shared-hints";
+export * from "./strategy";

@@ -1,6 +1,6 @@
 import { Point } from "@chlorophytum/arch";
 
-import HintingStrategy from "../../strategy";
+import { HintingStrategy } from "../../strategy";
 import Glyph from "../../types/glyph";
 import { CPoint } from "../../types/point";
 import { GlyphAnalysis } from "../analysis";
@@ -31,7 +31,7 @@ export default function analyzeBlueZonePoints(
 					(zm.touched || zm.dontTouch) &&
 					(CPoint.adjacent(point, zm) || CPoint.adjacentZ(point, zm)) &&
 					zm.y <= point.y &&
-					nearTop(point, zm, strategy.STEM_SIDE_MIN_RISE)
+					nearTop(point, zm, strategy.STEM_SIDE_MIN_RISE * strategy.UPM)
 				) {
 					isDecoTop = true;
 					point.dontTouch = true;
@@ -40,7 +40,7 @@ export default function analyzeBlueZonePoints(
 					(zm.touched || zm.dontTouch) &&
 					(CPoint.adjacent(point, zm) || CPoint.adjacentZ(point, zm)) &&
 					zm.y >= point.y &&
-					nearBot(point, zm, strategy.STEM_SIDE_MIN_RISE / 3)
+					nearBot(point, zm, (strategy.STEM_SIDE_MIN_RISE * strategy.UPM) / 3)
 				) {
 					isDecoBot = true;
 					point.dontTouch = true;
@@ -48,7 +48,7 @@ export default function analyzeBlueZonePoints(
 			}
 			if (
 				!isDecoTop &&
-				point.y >= strategy.BLUE_ZONE_TOP_LIMIT &&
+				point.y >= strategy.EMBOX_TOP_STROKE * strategy.UPM &&
 				point.yExtrema &&
 				!point.touched &&
 				!point.dontTouch
@@ -60,7 +60,7 @@ export default function analyzeBlueZonePoints(
 			}
 			if (
 				!isDecoBot &&
-				point.y <= strategy.BLUE_ZONE_BOTTOM_LIMIT &&
+				point.y <= strategy.EMBOX_BOTTOM_STROKE * strategy.UPM &&
 				point.yExtrema &&
 				!point.touched &&
 				!point.dontTouch

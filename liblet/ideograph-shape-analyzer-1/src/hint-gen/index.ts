@@ -8,8 +8,6 @@ import HierarchySink, { DependentHintType } from "../hierarchy/sink";
 import { AdjPoint } from "../types/point";
 import Stem from "../types/stem";
 
-const LOGGING = false;
-
 export default class HintGenSink extends HierarchySink {
 	constructor(private readonly glyphKind: string) {
 		super();
@@ -32,8 +30,6 @@ export default class HintGenSink extends HierarchySink {
 	}
 
 	addBoundaryStem(stem: Stem, locTop: boolean, atBottom: boolean, atTop: boolean) {
-		if (LOGGING) console.log("BOUND", [stem.lowKey.id, stem.highKey.id], atBottom, atTop);
-
 		if (atBottom || atTop) {
 			this.subHints.push(
 				new EmBoxStroke.Hint(this.glyphKind, atTop, false, stem.lowKey.id, stem.highKey.id)
@@ -44,30 +40,35 @@ export default class HintGenSink extends HierarchySink {
 			);
 		}
 	}
-	addStemHint(bot: Stem, middle: Stem[], top: Stem, annex: number[]) {
+	addStemPileHint(
+		bot: Stem,
+		middle: Stem[],
+		top: Stem,
+		botIsBoundary: boolean,
+		topIsBoundary: boolean,
+		annex: number[]
+	) {
 		if (!middle.length) return;
 
-		if (LOGGING) {
-			console.log(
-				"STEMS",
-				bot === middle[0] ? bot.lowKey.id : bot.highKey.id,
-				_.flatten(middle.map(s => [s.lowKey.id, s.highKey.id])).join(" "),
-				top === middle[middle.length - 1] ? top.highKey.id : top.lowKey.id
-			);
-			console.log("ANNEX  ", annex);
-		}
-
+		const firstMid = middle[0];
+		const lastMid = middle[middle.length - 1];
 		const botSame = bot === middle[0];
 		const topSame = top === middle[middle.length - 1];
-		const zBot = botSame ? bot.lowKey.id : bot.highKey.id;
-		const zTop = topSame ? top.highKey.id : top.lowKey.id;
+		const zBot = !bot ? -1 : botSame ? bot.lowKey.id : bot.highKey.id;
+		const zTop = !top ? -1 : topSame ? top.highKey.id : top.lowKey.id;
 		let inkMD: number[] = Array(middle.length).fill(1);
 		let gapMD: number[] = Array(middle.length + 1).fill(1);
+
+		// Fix gapMD
 		if (botSame) gapMD[0] = 0;
+		if (botIsBoundary || botSame) annex[0] = 0;
+
 		if (topSame) gapMD[middle.length] = 0;
+		if (topIsBoundary || topSame) annex[middle.length] = 0;
 
 		this.subHints.push(
 			new MultipleAlignZone.Hint({
+				emBoxName: this.glyphKind,
 				gapMinDist: gapMD,
 				inkMinDist: inkMD,
 				recPath: [],
@@ -80,15 +81,8 @@ export default class HintGenSink extends HierarchySink {
 			})
 		);
 	}
-	addDependentHint(type: DependentHintType, from: Stem, to: Stem) {
-		if (LOGGING) {
-			console.log(
-				DependentHintType[type],
-				[from.lowKey.id, from.highKey.id],
-				[to.lowKey.id, to.highKey.id]
-			);
-		}
 
+	addDependentHint(type: DependentHintType, from: Stem, to: Stem) {
 		this.subHints.push(new LinkChain.Hint([from.lowKey.id, to.lowKey.id]));
 		this.subHints.push(new LinkChain.Hint([from.highKey.id, to.highKey.id]));
 	}

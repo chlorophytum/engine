@@ -234,7 +234,8 @@ export const TInitEmBoxTwilightPoints = LibFunc(
 	`Chlorophytum::EmBox::HlttSupportPrograms::TInitEmBoxTwilightPoints`,
 	function*($) {
 		const [strokeBottom, strokeTop, spurBottom, spurTop] = $.args(4);
-		yield $.mdap.round(strokeBottom);
+		yield $.mdap(strokeBottom);
+		yield $.scfs(strokeBottom, $.round.black($.gc.orig(strokeBottom)));
 		yield $.mdap(strokeTop); // Make VTT happy
 		const dist = $.local();
 		yield $.set(dist, $.round.gray($.sub($.gc.orig(strokeTop), $.gc.orig(strokeBottom))));

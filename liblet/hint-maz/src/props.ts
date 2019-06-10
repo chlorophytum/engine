@@ -7,6 +7,7 @@ export interface MultipleAlignZoneMeta {
 }
 
 export interface MultipleAlignZoneProps extends MultipleAlignZoneMeta {
+	emBoxName: string;
 	bottomPoint: number; // 1 arg
 	topPoint: number; // 1 arg
 	middleStrokes: [number, number][]; // 2N args

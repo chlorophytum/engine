@@ -8,7 +8,7 @@ import { HlttCollector } from "@chlorophytum/sink-hltt";
 import * as fs from "fs";
 
 const otd = JSON.parse(fs.readFileSync(process.argv[2], "utf-8"));
-const params = createHintingStrategy();
+const params = createHintingStrategy(JSON.parse(fs.readFileSync(process.argv[3], "utf-8")));
 const ttCol = new HlttCollector();
 const ttSession = ttCol.createSession();
 
@@ -57,6 +57,6 @@ otd.maxp.maxFunctionDefs = 2048;
 otd.maxp.maxStackElements = 2048;
 otd.maxp.maxStorage = 2048;
 otd.maxp.maxTwilightPoints = 256;
-otd.TSI_01 = otd.TSI_23 = null;
+otd.TSI_01 = otd.TSI_23 = otd.TSI5 = null;
 
-fs.writeFileSync(process.argv[3], JSON.stringify(otd, undefined, "\t"));
+fs.writeFileSync(process.argv[4], JSON.stringify(otd, undefined, "\t"));

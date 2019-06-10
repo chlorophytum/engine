@@ -1,5 +1,5 @@
-import { transitionClosure, transitiveReduce } from "../../si-common/overlap";
-import HintingStrategy from "../../strategy";
+import { transitiveReduce } from "../../si-common/overlap";
+import { HintingStrategy } from "../../strategy";
 import Stem from "../../types/stem";
 
 function edgeTouch(s: Stem, t: Stem): boolean {

@@ -1,6 +1,6 @@
 import { Point } from "@chlorophytum/arch";
 
-import HintingStrategy from "../../strategy";
+import { HintingStrategy } from "../../strategy";
 import Glyph from "../../types/glyph";
 import { AdjPoint } from "../../types/point";
 import Radical from "../../types/radical";
@@ -17,10 +17,10 @@ function PtAbove(
 	stem: Stem,
 	xMin: number,
 	xMax: number,
-	blueFuzz: number,
+	yFuzz: number,
 	sameRadical: boolean
 ) {
-	if (point.y > stem.y && point.x < xMax - blueFuzz && point.x > xMin + blueFuzz) {
+	if (point.y > stem.y && point.x < xMax - yFuzz && point.x > xMin + yFuzz) {
 		stem.hasGlyphPointAbove = true;
 		stem.glyphCenterRise = Math.max(stem.glyphCenterRise || 0, point.y - stem.y);
 		if (sameRadical) {
@@ -34,10 +34,10 @@ function PtRightAdjAbove(
 	stem: Stem,
 	xMin: number,
 	xMax: number,
-	blueFuzz: number,
+	yFuzz: number,
 	sameRadical: boolean
 ) {
-	if (point.y > stem.y && point.x >= xMax - blueFuzz && point.x <= xMax + blueFuzz) {
+	if (point.y > stem.y && point.x >= xMax - yFuzz && point.x <= xMax + yFuzz) {
 		stem.hasGlyphRightAdjacentPointAbove = true;
 		stem.glyphRightAdjacentRise = Math.max(stem.glyphRightAdjacentRise || 0, point.y - stem.y);
 		if (sameRadical) {
@@ -54,10 +54,10 @@ function PtLeftAdjAbove(
 	stem: Stem,
 	xMin: number,
 	xMax: number,
-	blueFuzz: number,
+	yFuzz: number,
 	sameRadical: boolean
 ) {
-	if (point.y > stem.y && point.x <= xMin + blueFuzz && point.x >= xMin - blueFuzz) {
+	if (point.y > stem.y && point.x <= xMin + yFuzz && point.x >= xMin - yFuzz) {
 		stem.hasGlyphLeftAdjacentPointAbove = true;
 		stem.glyphLeftAdjacentRise = Math.max(stem.glyphLeftAdjacentRise || 0, point.y - stem.y);
 		if (sameRadical) {
@@ -74,10 +74,10 @@ function PtRightDistAbove(
 	stem: Stem,
 	xMin: number,
 	xMax: number,
-	blueFuzz: number,
+	yFuzz: number,
 	sameRadical: boolean
 ) {
-	if (point.y > stem.y && point.x >= xMax + blueFuzz) {
+	if (point.y > stem.y && point.x >= xMax + yFuzz) {
 		stem.hasGlyphRightDistancedPointAbove = true;
 		stem.glyphRightDistancedRise = Math.max(
 			stem.glyphRightDistancedRise || 0,
@@ -97,10 +97,10 @@ function PtLeftDistAbove(
 	stem: Stem,
 	xMin: number,
 	xMax: number,
-	blueFuzz: number,
+	yFuzz: number,
 	sameRadical: boolean
 ) {
-	if (point.y > stem.y && point.x <= xMin - blueFuzz) {
+	if (point.y > stem.y && point.x <= xMin - yFuzz) {
 		stem.hasGlyphLeftDistancedPointAbove = true;
 		stem.glyphLeftDistancedRise = Math.max(stem.glyphLeftDistancedRise || 0, point.y - stem.y);
 		if (sameRadical) {
@@ -117,7 +117,7 @@ function FoldAbove(
 	stem: Stem,
 	xMin: number,
 	xMax: number,
-	blueFuzz: number,
+	yFuzz: number,
 	sameRadical: boolean
 ) {
 	if (point.prev && point.prev.prev && point.prev.prev.prev) {
@@ -128,8 +128,8 @@ function FoldAbove(
 		if (
 			z2.x === z3.x &&
 			z1.x < z2.x === z4.x < z3.x &&
-			((z2.y > stem.y + blueFuzz && z3.y >= stem.y && z2.x < xMax && z2.x > xMin) ||
-				(z3.y > stem.y + blueFuzz && z2.y >= stem.y && z3.x < xMax && z3.x > xMin))
+			((z2.y > stem.y + yFuzz && z3.y >= stem.y && z2.x < xMax && z2.x > xMin) ||
+				(z3.y > stem.y + yFuzz && z2.y >= stem.y && z3.x < xMax && z3.x > xMin))
 		) {
 			if (
 				(!z2.atLeft && z2.x > xMin + (xMax - xMin) * 0.2) ||
@@ -154,14 +154,10 @@ function PtBelow(
 	stem: Stem,
 	xMin: number,
 	xMax: number,
-	blueFuzz: number,
+	yFuzz: number,
 	sameRadical: boolean
 ) {
-	if (
-		pointBelowStem(point, stem, blueFuzz) &&
-		point.x < xMax - blueFuzz &&
-		point.x > xMin + blueFuzz
-	) {
+	if (pointBelowStem(point, stem, yFuzz) && point.x < xMax - yFuzz && point.x > xMin + yFuzz) {
 		stem.hasGlyphPointBelow = true;
 		stem.glyphCenterDescent = Math.max(
 			stem.glyphCenterDescent || 0,
@@ -187,14 +183,10 @@ function PtRightAdjBelow(
 	stem: Stem,
 	xMin: number,
 	xMax: number,
-	blueFuzz: number,
+	yFuzz: number,
 	sameRadical: boolean
 ) {
-	if (
-		pointBelowStem(point, stem, blueFuzz) &&
-		point.x >= xMax - blueFuzz &&
-		point.x <= xMax + blueFuzz
-	) {
+	if (pointBelowStem(point, stem, yFuzz) && point.x >= xMax - yFuzz && point.x <= xMax + yFuzz) {
 		stem.hasGlyphRightAdjacentPointBelow = true;
 		stem.glyphRightAdjacentDescent = Math.max(
 			stem.glyphRightAdjacentDescent || 0,
@@ -214,14 +206,10 @@ function PtLeftAdjBelow(
 	stem: Stem,
 	xMin: number,
 	xMax: number,
-	blueFuzz: number,
+	yFuzz: number,
 	sameRadical: boolean
 ) {
-	if (
-		pointBelowStem(point, stem, blueFuzz) &&
-		point.x <= xMin + blueFuzz &&
-		point.x >= xMin - blueFuzz
-	) {
+	if (pointBelowStem(point, stem, yFuzz) && point.x <= xMin + yFuzz && point.x >= xMin - yFuzz) {
 		stem.hasGlyphLeftAdjacentPointBelow = true;
 		stem.glyphLeftAdjacentDescent = Math.max(
 			stem.glyphLeftAdjacentDescent || 0,
@@ -241,10 +229,10 @@ function PtRightDistBelow(
 	stem: Stem,
 	xMin: number,
 	xMax: number,
-	blueFuzz: number,
+	yFuzz: number,
 	sameRadical: boolean
 ) {
-	if (pointBelowStem(point, stem, blueFuzz) && point.x >= xMax + blueFuzz) {
+	if (pointBelowStem(point, stem, yFuzz) && point.x >= xMax + yFuzz) {
 		stem.hasGlyphRightDistancedPointBelow = true;
 		stem.glyphRightDistancedDescent = Math.max(
 			stem.glyphRightDistancedDescent || 0,
@@ -264,10 +252,10 @@ function PtLeftDistBelow(
 	stem: Stem,
 	xMin: number,
 	xMax: number,
-	blueFuzz: number,
+	yFuzz: number,
 	sameRadical: boolean
 ) {
-	if (pointBelowStem(point, stem, blueFuzz) && point.x <= xMin - blueFuzz) {
+	if (pointBelowStem(point, stem, yFuzz) && point.x <= xMin - yFuzz) {
 		stem.hasGlyphLeftDistancedPointBelow = true;
 		stem.glyphLeftDistancedDescent = Math.max(
 			stem.glyphLeftDistancedDescent || 0,
@@ -287,11 +275,11 @@ function FoldBelow(
 	stem: Stem,
 	xMin: number,
 	xMax: number,
-	blueFuzz: number,
+	yFuzz: number,
 	sameRadical: boolean
 ) {
 	if (
-		pointBelowStem(point, stem, blueFuzz) &&
+		pointBelowStem(point, stem, yFuzz) &&
 		point.xStrongExtrema &&
 		!(point.yExtrema && !point.yStrongExtrema) &&
 		point.x < xMax + Math.min((xMax - xMin) / 3, stem.width) &&
@@ -322,7 +310,7 @@ function analyzeRadicalPointsToStemRelationships(
 ) {
 	stem.proximityUp = 0;
 	stem.proximityDown = 0;
-	const blueFuzz = strategy.BLUE_ZONE_WIDTH || 15;
+	const yFuzz = strategy.Y_FUZZ * strategy.UPM || 15;
 	const a0 = stem.low[0][0].x,
 		az = stem.low[stem.low.length - 1][stem.low[stem.low.length - 1].length - 1].x;
 	const b0 = stem.high[0][0].x,
@@ -333,18 +321,18 @@ function analyzeRadicalPointsToStemRelationships(
 	for (let j = 0; j < radicalParts.length; j++) {
 		for (let k = 0; k < radicalParts[j].points.length - 1; k++) {
 			const point = radicalParts[j].points[k];
-			PtAbove(point, stem, xMin, xMax, blueFuzz, sameRadical);
-			PtRightAdjAbove(point, stem, xMin, xMax, blueFuzz, sameRadical);
-			PtLeftAdjAbove(point, stem, xMin, xMax, blueFuzz, sameRadical);
-			PtRightDistAbove(point, stem, xMin, xMax, blueFuzz, sameRadical);
-			PtLeftDistAbove(point, stem, xMin, xMax, blueFuzz, sameRadical);
-			FoldAbove(point, stem, xMin, xMax, blueFuzz, sameRadical);
-			PtBelow(point, stem, xMin, xMax, blueFuzz, sameRadical);
-			PtRightAdjBelow(point, stem, xMin, xMax, blueFuzz, sameRadical);
-			PtLeftAdjBelow(point, stem, xMin, xMax, blueFuzz, sameRadical);
-			PtRightDistBelow(point, stem, xMin, xMax, blueFuzz, sameRadical);
-			PtLeftDistBelow(point, stem, xMin, xMax, blueFuzz, sameRadical);
-			FoldBelow(point, stem, xMin, xMax, blueFuzz, sameRadical);
+			PtAbove(point, stem, xMin, xMax, yFuzz, sameRadical);
+			PtRightAdjAbove(point, stem, xMin, xMax, yFuzz, sameRadical);
+			PtLeftAdjAbove(point, stem, xMin, xMax, yFuzz, sameRadical);
+			PtRightDistAbove(point, stem, xMin, xMax, yFuzz, sameRadical);
+			PtLeftDistAbove(point, stem, xMin, xMax, yFuzz, sameRadical);
+			FoldAbove(point, stem, xMin, xMax, yFuzz, sameRadical);
+			PtBelow(point, stem, xMin, xMax, yFuzz, sameRadical);
+			PtRightAdjBelow(point, stem, xMin, xMax, yFuzz, sameRadical);
+			PtLeftAdjBelow(point, stem, xMin, xMax, yFuzz, sameRadical);
+			PtRightDistBelow(point, stem, xMin, xMax, yFuzz, sameRadical);
+			PtLeftDistBelow(point, stem, xMin, xMax, yFuzz, sameRadical);
+			FoldBelow(point, stem, xMin, xMax, yFuzz, sameRadical);
 		}
 	}
 }
@@ -398,8 +386,8 @@ export function analyzeStemSpatialRelationships(
 }
 
 function analyzePBS(u: Stem, v: Stem, radical: Radical, strategy: HintingStrategy) {
-	let blueFuzz = strategy.BLUE_ZONE_WIDTH || 15;
-	let radicalParts = [radical.outline].concat(radical.holes);
+	const yFuzz = strategy.Y_FUZZ * strategy.UPM || 15;
+	const radicalParts = [radical.outline].concat(radical.holes);
 	let ans = 0;
 	for (let j = 0; j < radicalParts.length; j++) {
 		for (let k = 0; k < radicalParts[j].points.length - 1; k++) {
@@ -409,12 +397,12 @@ function analyzePBS(u: Stem, v: Stem, radical: Radical, strategy: HintingStrateg
 					!v.hasGlyphPointBelow ||
 					point.xExtrema ||
 					point.yExtrema) &&
-				point.y > v.y + blueFuzz &&
-				point.y < u.y - u.width - blueFuzz &&
-				point.x > v.xMin + blueFuzz &&
-				point.x < v.xMax - blueFuzz &&
-				point.x > u.xMin + blueFuzz &&
-				point.x < u.xMax - blueFuzz
+				point.y > v.y + yFuzz &&
+				point.y < u.y - u.width - yFuzz &&
+				point.x > v.xMin + yFuzz &&
+				point.x < v.xMax - yFuzz &&
+				point.x > u.xMin + yFuzz &&
+				point.x < u.xMax - yFuzz
 			) {
 				if (ans < 1) ans = 1;
 				if (point.xStrongExtrema && ans < 2) {

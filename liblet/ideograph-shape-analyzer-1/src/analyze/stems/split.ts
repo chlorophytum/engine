@@ -1,7 +1,7 @@
 import { Point } from "@chlorophytum/arch";
 
 import { leftmostZ_SS, rightmostZ_SS } from "../../si-common/seg";
-import HintingStrategy from "../../strategy";
+import { HintingStrategy } from "../../strategy";
 import { AdjPoint, CPoint } from "../../types/point";
 import { PostHint } from "../../types/post-hint";
 import { Seg } from "../../types/seg";
@@ -29,8 +29,8 @@ function shouldSplit(
 			Math.max(Math.abs(hl.y - ll.y), Math.abs(hr.y - lr.y)) &&
 		Math.abs(hl.x - ll.x) * 2.25 < Math.max(Math.abs(hl.x - hr.x), Math.abs(ll.x - lr.x)) &&
 		Math.abs(hr.x - lr.x) * 2.25 < Math.max(Math.abs(hl.x - hr.x), Math.abs(ll.x - lr.x)) &&
-		(Math.abs(hl.y - hr.y) >= strategy.Y_FUZZ_DIAG ||
-			Math.abs(ll.y - lr.y) >= strategy.Y_FUZZ_DIAG)
+		(Math.abs(hl.y - hr.y) >= strategy.Y_FUZZ_DIAG * strategy.UPM ||
+			Math.abs(ll.y - lr.y) >= strategy.Y_FUZZ_DIAG * strategy.UPM)
 	);
 }
 function contained(z1: Point, z2: Point, segments: Seg, fuzz: number) {
@@ -60,8 +60,8 @@ export function splitDiagonalStem(
 
 	if (
 		shouldSplit(hl, ll, hr, lr, strategy) &&
-		contained(ll, lr, s.low, strategy.Y_FUZZ) &&
-		contained(hl, hr, s.high, strategy.Y_FUZZ)
+		contained(ll, lr, s.low, strategy.Y_FUZZ * strategy.UPM) &&
+		contained(hl, hr, s.high, strategy.Y_FUZZ * strategy.UPM)
 	) {
 		let hmx = (hl.x + hr.x) / 2;
 		let lmx = (ll.x + lr.x) / 2;

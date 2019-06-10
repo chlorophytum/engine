@@ -2,7 +2,7 @@ import * as _ from "lodash";
 
 import { GlyphAnalysis } from "../analyze/analysis";
 import { atGlyphBottom, atGlyphTop } from "../si-common/stem-spatial";
-import HintingStrategy from "../strategy";
+import { HintingStrategy } from "../strategy";
 
 import HierarchySink, { DependentHintType } from "./sink";
 
@@ -67,6 +67,8 @@ export default class HierarchyAnalyzer {
 		const middle = path.filter(j => this.analysis.stems[j] && !this.stemPointMask[j]).reverse();
 		if (!middle.length) return;
 
+		let botIdBoundary = false,
+			topIsBoundary = false;
 		if (!this.stemPointMask[bot]) {
 			this.stemPointMask[bot] = MaskState.Hinted;
 			sink.addBoundaryStem(
@@ -75,6 +77,7 @@ export default class HierarchyAnalyzer {
 				atGlyphBottom(this.analysis.stems[bot], this.strategy),
 				atGlyphTop(this.analysis.stems[bot], this.strategy)
 			);
+			botIdBoundary = true;
 		}
 		if (!this.stemPointMask[top]) {
 			this.stemPointMask[top] = MaskState.Hinted;
@@ -84,11 +87,14 @@ export default class HierarchyAnalyzer {
 				atGlyphBottom(this.analysis.stems[top], this.strategy),
 				atGlyphTop(this.analysis.stems[top], this.strategy)
 			);
+			topIsBoundary = true;
 		}
-		sink.addStemHint(
+		sink.addStemPileHint(
 			this.analysis.stems[bot],
 			middle.map(j => this.analysis.stems[j]),
 			this.analysis.stems[top],
+			botIdBoundary,
+			topIsBoundary,
 			this.getMergePriority(this.analysis.collisionMatrices.annexation, top, bot, middle)
 		);
 		for (const dependent of dependents) {

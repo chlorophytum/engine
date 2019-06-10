@@ -1,17 +1,17 @@
-import HintingStrategy from "../strategy";
+import { HintingStrategy } from "../strategy";
 import Stem from "../types/stem";
 
 export function atRadicalBottom(s: Stem, strategy: HintingStrategy) {
 	return (
 		!s.hasSameRadicalStemBelow &&
-		!(s.hasRadicalPointBelow && s.radicalCenterDescent > strategy.STEM_CENTER_MIN_DESCENT) &&
+		!(s.hasRadicalPointBelow && s.radicalCenterDescent > (strategy.STEM_CENTER_MIN_DESCENT * strategy.UPM)) &&
 		!(
 			s.hasRadicalLeftAdjacentPointBelow &&
-			s.radicalLeftAdjacentDescent > strategy.STEM_SIDE_MIN_DESCENT
+			s.radicalLeftAdjacentDescent > (strategy.STEM_SIDE_MIN_DESCENT * strategy.UPM)
 		) &&
 		!(
 			s.hasRadicalRightAdjacentPointBelow &&
-			s.radicalRightAdjacentDescent > strategy.STEM_SIDE_MIN_DESCENT
+			s.radicalRightAdjacentDescent > (strategy.STEM_SIDE_MIN_DESCENT * strategy.UPM)
 		)
 	);
 }
@@ -20,14 +20,14 @@ export function atGlyphBottom(stem: Stem, strategy: HintingStrategy) {
 	return (
 		atRadicalBottom(stem, strategy) &&
 		!stem.hasGlyphStemBelow &&
-		!(stem.hasGlyphPointBelow && stem.glyphCenterDescent > strategy.STEM_CENTER_MIN_DESCENT) &&
+		!(stem.hasGlyphPointBelow && stem.glyphCenterDescent > (strategy.STEM_CENTER_MIN_DESCENT * strategy.UPM)) &&
 		!(
 			stem.hasGlyphLeftAdjacentPointBelow &&
-			stem.glyphLeftAdjacentDescent > strategy.STEM_SIDE_MIN_DESCENT
+			stem.glyphLeftAdjacentDescent > (strategy.STEM_SIDE_MIN_DESCENT * strategy.UPM)
 		) &&
 		!(
 			stem.hasGlyphRightAdjacentPointBelow &&
-			stem.glyphRightAdjacentDescent > strategy.STEM_SIDE_MIN_DESCENT
+			stem.glyphRightAdjacentDescent > (strategy.STEM_SIDE_MIN_DESCENT * strategy.UPM)
 		)
 	);
 }
@@ -37,11 +37,11 @@ export function atRadicalBottomMost(stem: Stem, strategy: HintingStrategy) {
 		atRadicalBottom(stem, strategy) &&
 		!(
 			stem.hasRadicalLeftDistancedPointBelow &&
-			stem.radicalLeftDistancedDescent > strategy.STEM_SIDE_MIN_DIST_DESCENT
+			stem.radicalLeftDistancedDescent > (strategy.STEM_SIDE_MIN_DIST_DESCENT * strategy.UPM)
 		) &&
 		!(
 			stem.hasRadicalRightDistancedPointBelow &&
-			stem.radicalRightDistancedDescent > strategy.STEM_SIDE_MIN_DIST_DESCENT
+			stem.radicalRightDistancedDescent > (strategy.STEM_SIDE_MIN_DIST_DESCENT * strategy.UPM)
 		)
 	);
 }
@@ -49,9 +49,9 @@ export function isCapShape(stem: Stem, strategy: HintingStrategy) {
 	return (
 		atRadicalBottom(stem, strategy) &&
 		((stem.hasRadicalLeftDistancedPointBelow &&
-			stem.radicalLeftDistancedDescent > strategy.STEM_SIDE_MIN_DIST_DESCENT) ||
+			stem.radicalLeftDistancedDescent > (strategy.STEM_SIDE_MIN_DIST_DESCENT * strategy.UPM)) ||
 			(stem.hasRadicalRightDistancedPointBelow &&
-				stem.radicalRightDistancedDescent > strategy.STEM_SIDE_MIN_DIST_DESCENT))
+				stem.radicalRightDistancedDescent > (strategy.STEM_SIDE_MIN_DIST_DESCENT * strategy.UPM)))
 	);
 }
 export function atGlyphBottomMost(stem: Stem, strategy: HintingStrategy) {
@@ -59,19 +59,19 @@ export function atGlyphBottomMost(stem: Stem, strategy: HintingStrategy) {
 		atGlyphBottom(stem, strategy) &&
 		!(
 			stem.hasGlyphLeftDistancedPointBelow &&
-			stem.glyphLeftDistancedDescent > strategy.STEM_SIDE_MIN_DIST_DESCENT
+			stem.glyphLeftDistancedDescent > (strategy.STEM_SIDE_MIN_DIST_DESCENT * strategy.UPM)
 		) &&
 		!(
 			stem.hasGlyphRightDistancedPointBelow &&
-			stem.glyphRightDistancedDescent > strategy.STEM_SIDE_MIN_DIST_DESCENT
+			stem.glyphRightDistancedDescent > (strategy.STEM_SIDE_MIN_DIST_DESCENT * strategy.UPM)
 		) &&
 		!(
 			stem.hasRadicalLeftAdjacentPointBelow &&
-			stem.radicalLeftAdjacentDescent > strategy.STEM_SIDE_MIN_DESCENT / 3
+			stem.radicalLeftAdjacentDescent > (strategy.STEM_SIDE_MIN_DESCENT * strategy.UPM) / 3
 		) &&
 		!(
 			stem.hasRadicalRightAdjacentPointBelow &&
-			stem.radicalRightAdjacentDescent > strategy.STEM_SIDE_MIN_DESCENT / 3
+			stem.radicalRightAdjacentDescent > (strategy.STEM_SIDE_MIN_DESCENT * strategy.UPM) / 3
 		)
 	);
 }
@@ -89,22 +89,22 @@ export function atStrictRadicalBottom(stem: Stem, strategy: HintingStrategy) {
 export function atRadicalTop(stem: Stem, strategy: HintingStrategy) {
 	return (
 		!stem.hasSameRadicalStemAbove &&
-		!(stem.hasRadicalPointAbove && stem.radicalCenterRise > strategy.STEM_CENTER_MIN_RISE) &&
+		!(stem.hasRadicalPointAbove && stem.radicalCenterRise > (strategy.STEM_CENTER_MIN_RISE * strategy.UPM)) &&
 		!(
 			stem.hasRadicalLeftAdjacentPointAbove &&
-			stem.radicalLeftAdjacentRise > strategy.STEM_SIDE_MIN_RISE
+			stem.radicalLeftAdjacentRise > (strategy.STEM_SIDE_MIN_RISE * strategy.UPM)
 		) &&
 		!(
 			stem.hasRadicalRightAdjacentPointAbove &&
-			stem.radicalRightAdjacentRise > strategy.STEM_SIDE_MIN_RISE
+			stem.radicalRightAdjacentRise > (strategy.STEM_SIDE_MIN_RISE * strategy.UPM)
 		) &&
 		!(
 			stem.hasRadicalLeftDistancedPointAbove &&
-			stem.radicalLeftDistancedRise > strategy.STEM_SIDE_MIN_DIST_RISE
+			stem.radicalLeftDistancedRise > (strategy.STEM_SIDE_MIN_DIST_RISE * strategy.UPM)
 		) &&
 		!(
 			stem.hasRadicalRightDistancedPointAbove &&
-			stem.radicalRightDistancedRise > strategy.STEM_SIDE_MIN_DIST_RISE
+			stem.radicalRightDistancedRise > (strategy.STEM_SIDE_MIN_DIST_RISE * strategy.UPM)
 		)
 	);
 }
@@ -113,14 +113,14 @@ export function atGlyphTop(stem: Stem, strategy: HintingStrategy) {
 	return (
 		atRadicalTop(stem, strategy) &&
 		!stem.hasGlyphStemAbove &&
-		!(stem.hasGlyphPointAbove && stem.glyphCenterRise > strategy.STEM_CENTER_MIN_RISE) &&
+		!(stem.hasGlyphPointAbove && stem.glyphCenterRise > (strategy.STEM_CENTER_MIN_RISE * strategy.UPM)) &&
 		!(
 			stem.hasGlyphLeftAdjacentPointAbove &&
-			stem.glyphLeftAdjacentRise > strategy.STEM_SIDE_MIN_RISE
+			stem.glyphLeftAdjacentRise > (strategy.STEM_SIDE_MIN_RISE * strategy.UPM)
 		) &&
 		!(
 			stem.hasGlyphRightAdjacentPointAbove &&
-			stem.glyphRightAdjacentRise > strategy.STEM_SIDE_MIN_RISE
+			stem.glyphRightAdjacentRise > (strategy.STEM_SIDE_MIN_RISE * strategy.UPM)
 		)
 	);
 }
