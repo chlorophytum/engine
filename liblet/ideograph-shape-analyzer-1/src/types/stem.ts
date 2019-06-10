@@ -68,7 +68,6 @@ export default class Stem {
 	hasRadicalVFoldBelow = false;
 	hasEntireContourAbove = false;
 	hasEntireContourBelow = false;
-	hasLRSpur = false;
 
 	radicalCenterRise = 0;
 	glyphCenterRise = 0;

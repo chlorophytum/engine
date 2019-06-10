@@ -69,6 +69,20 @@ export const InitMSDGapEntries = LibFunc("IdeographProgram::initMSDGapEntries", 
 	});
 });
 
+const AdjustStrokeDist = LibFunc("IdeographProgram::AdjustStrokeDist", function*($) {
+	const [d] = $.args(1);
+	const One = $.coerce.toF26D6(1);
+	yield $.return(
+		$.add(
+			$.max(One, $.floor(d)),
+			$.mul(
+				$.sub(d, $.max(One, $.floor(d))),
+				$.sub(One, $.div(One, $.max(One, $.mul($.coerce.toF26D6(16), $.mppem()))))
+			)
+		)
+	);
+});
+
 export const InitMSDInkEntries = LibFunc("IdeographProgram::initMSDInkEntries", function*(e) {
 	const [N, vpTotalDist, vpA, vpB, vpC, vpDiv, vpAlloc, vpZMids, vpStrokeMD] = e.args(9);
 
@@ -88,7 +102,10 @@ export const InitMSDInkEntries = LibFunc("IdeographProgram::initMSDInkEntries", 
 			vpC,
 			vpDiv,
 			vpAlloc,
-			e.call(OctDistOrig, midBot(e, pZMids, j), midTop(e, pZMids, j)),
+			e.call(
+				AdjustStrokeDist,
+				e.call(OctDistOrig, midBot(e, pZMids, j), midTop(e, pZMids, j))
+			),
 			e.coerce.toF26D6(1),
 			e.part(pStrokeMD, j)
 		);

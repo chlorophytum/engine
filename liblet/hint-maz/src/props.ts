@@ -1,12 +1,14 @@
-export interface MultipleAlignZoneMeta {
+export interface MultipleAlignZoneMetaPropShared {
 	gapMinDist: number[]; // N+1 args
 	inkMinDist: number[]; // N args
-	recPath: number[]; // N args
 	bottomFree: boolean; // 1 arg
 	topFree: boolean; // 1 arg
 }
+export interface MultipleAlignZoneMeta extends MultipleAlignZoneMetaPropShared {
+	recPath: number[]; // N args
+}
 
-export interface MultipleAlignZoneProps extends MultipleAlignZoneMeta {
+export interface MultipleAlignZoneProps extends MultipleAlignZoneMetaPropShared {
 	emBoxName: string;
 	bottomPoint: number; // 1 arg
 	topPoint: number; // 1 arg

@@ -4,7 +4,6 @@ import { GlyphAnalysis } from "../analysis";
 
 import analyzeBlueZonePoints from "./bluezone-points";
 import AnalyzeIpSa from "./ipsa";
-import analyzeSpur from "./spur";
 import analyzeSymmetry from "./symmetry";
 
 export default function analyzePostStemHints(
@@ -13,7 +12,6 @@ export default function analyzePostStemHints(
 	analysis: GlyphAnalysis
 ) {
 	analysis.blueZone = analyzeBlueZonePoints(glyph, analysis, strategy);
-	analyzeSpur(analysis);
 	const iss = AnalyzeIpSa(glyph, analysis, strategy);
 	analysis.interpolations = iss.interpolations;
 	analysis.shortAbsorptions = iss.shortAbsorptions;

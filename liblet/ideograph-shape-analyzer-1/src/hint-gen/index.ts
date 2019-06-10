@@ -50,8 +50,6 @@ export default class HintGenSink extends HierarchySink {
 	) {
 		if (!middle.length) return;
 
-		const firstMid = middle[0];
-		const lastMid = middle[middle.length - 1];
 		const botSame = bot === middle[0];
 		const topSame = top === middle[middle.length - 1];
 		const zBot = !bot ? -1 : botSame ? bot.lowKey.id : bot.highKey.id;
@@ -71,7 +69,6 @@ export default class HintGenSink extends HierarchySink {
 				emBoxName: this.glyphKind,
 				gapMinDist: gapMD,
 				inkMinDist: inkMD,
-				recPath: [],
 				bottomFree: !botSame,
 				topFree: !topSame,
 				mergePriority: annex,

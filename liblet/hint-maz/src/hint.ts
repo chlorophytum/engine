@@ -10,8 +10,7 @@ export namespace MultipleAlignZone {
 	const TAG = "Chlorophytum::MultipleAlignZone::MultipleAlignZone";
 	export class Hint implements IHint {
 		private readonly N: number;
-		private readonly props: MultipleAlignZoneProps;
-		constructor(props: MultipleAlignZoneProps) {
+		constructor(private readonly props: MultipleAlignZoneProps) {
 			const N = props.middleStrokes.length;
 			this.N = N;
 
@@ -24,10 +23,6 @@ export namespace MultipleAlignZone {
 			if (props.inkMinDist.length !== N) {
 				throw new TypeError("inkMinDist length mismatch");
 			}
-			this.props = {
-				...props,
-				recPath: getRecPath(props.mergePriority, N)
-			};
 		}
 		toJSON() {
 			return { type: TAG, props: this.props };
@@ -55,6 +50,8 @@ export namespace MultipleAlignZone {
 		doCompile() {
 			const { props } = this;
 			const N = props.middleStrokes.length;
+			const recPath = getRecPath(props.mergePriority, N);
+
 			this.sink.addSegment(function*($) {
 				const strokeBottom = $.globalTwilight(
 					TranslateEmboxTwilightName(props.emBoxName, "StrokeBottom")
@@ -68,7 +65,7 @@ export namespace MultipleAlignZone {
 
 				if (N <= 4) {
 					yield $.call(
-						THintMultipleStrokesStub(N, props),
+						THintMultipleStrokesStub(N, { ...props, recPath }),
 						bottomPoint,
 						topPoint,
 						..._.flatten(props.middleStrokes)
@@ -78,7 +75,7 @@ export namespace MultipleAlignZone {
 						THintMultipleStrokesExplicit(N),
 						...props.gapMinDist,
 						...props.inkMinDist,
-						...props.recPath,
+						...recPath,
 						props.bottomFree ? 2 : 1,
 						props.topFree ? 2 : 1,
 						bottomPoint,
