@@ -3,6 +3,7 @@
 	"references": [
 		{"path": "./arch"},
 		{"path": "./demo-ideograph-hinter"},
+		{"path": "./font-opentype"},
 		{"path": "./fontforge-instr"},
 		{"path": "./hint-common"},
 		{"path": "./hint-embox"},

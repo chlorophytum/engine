@@ -11,6 +11,7 @@
 		"no-switch-case-fall-through": true,
 		"no-var-keyword": true,
 		"no-relative-import": true,
-		"ordered-imports": [true, { "grouped-imports": true }]
+		"ordered-imports": [true, { "grouped-imports": true }],
+		"member-access": true
 	}
 }

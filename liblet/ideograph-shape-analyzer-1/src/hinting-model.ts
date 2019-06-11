@@ -39,7 +39,7 @@ export class IdeographHintingModel1<GID, VAR, MASTER> implements IHintingModel<G
 		const geometry = this.font.getGeometry(gid, null);
 		if (!geometry) return new EmptyImpl.Empty.Hint();
 
-		const glyph = createGlyph(geometry);
+		const glyph = createGlyph(geometry.eigen); // Care about outline glyphs only
 
 		const analysis = analyzeGlyph(glyph, this.params);
 		const sink = new HintGenSink(this.params.groupName);

@@ -8,7 +8,15 @@ export interface GlyphPoint {
 	readonly on: boolean;
 	readonly id: number;
 }
-export type GlyphGeometry = GlyphPoint[][];
+export type GlyphGeometry = readonly GlyphPoint[][];
+export interface GlyphShapeComponent {
+	readonly shape: GlyphShape; // Shape of resulting geometry, transformed
+}
+export interface GlyphShape {
+	readonly eigen: GlyphGeometry;
+	readonly compositionOperator?: string;
+	readonly components?: GlyphShapeComponent;
+}
 
 export interface IFontSourceFactory {
 	// "any"s are actually existential types
@@ -18,25 +26,24 @@ export interface IFontSourceFactory {
 export interface IFontSourceMetadata {
 	readonly upm: number;
 }
-export interface GlyphRelation<GID> {
-	readonly target: GID;
+export interface GlyphRelation<Glyph> {
+	readonly target: Glyph;
 	readonly relationTag: string;
 }
-export interface IFontSource<GID, VAR, MASTER> {
+export interface IFontSource<Glyph, VAR, MASTER> {
 	readonly format: string;
 
 	readonly metadata: IFontSourceMetadata;
 
-	getGlyphFromName(name: string): GID | undefined;
-	getUniqueGlyphName(glyph: GID): string;
+	getGlyphFromName(name: string): Glyph | undefined;
+	getUniqueGlyphName(glyph: Glyph): string | undefined;
 	getCharacterSet(): Set<number>;
-	getGlyphSet(): Set<GID>;
-	getEncodedGlyph(codePoint: number): GID | null | undefined; // Get a glyph ID from a font
-	getRelatedGlyphs(from: GID): GlyphRelation<GID>[] | null | undefined; // Get related glyphs
-	getComponentGlyphs(from: GID): GlyphRelation<GID>[] | null | undefined; // Get components
+	getGlyphSet(): Set<Glyph>;
+	getEncodedGlyph(codePoint: number): Glyph | null | undefined; // Get a glyph ID from a font
+	getRelatedGlyphs(from: Glyph): GlyphRelation<Glyph>[] | null | undefined; // Get related glyphs
 
-	getGlyphMasters(glyph: GID): { peak: VAR; master: MASTER }[]; // Get master list
-	getGeometry(glyph: GID, instance: null | VAR): GlyphGeometry; // Get geometry
+	getGlyphMasters(glyph: Glyph): { peak: VAR; master: MASTER }[]; // Get master list
+	getGeometry(glyph: Glyph, instance: null | VAR): GlyphShape; // Get geometry
 
 	createHintStore(): IHintStore;
 }
@@ -95,13 +102,13 @@ export interface HintingModelConfig {
 	readonly type: string;
 	readonly parameters?: any;
 }
-export interface IHintingModel<GID> {
+export interface IHintingModel<Glyph> {
 	readonly type: string;
 	// Analyze shared parameters (usually CVT)
 	// Return the glyphs needed to be hinted
-	analyzeSharedParameters(): null | Set<GID>;
+	analyzeSharedParameters(): null | Set<Glyph>;
 	// Create glyph analyzer
-	analyzeGlyph(gid: GID): IHint;
+	analyzeGlyph(gid: Glyph): IHint;
 	// Create a compiler to compile shared functions / parameters
 	getSharedHints(): IHint;
 }

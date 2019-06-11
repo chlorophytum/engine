@@ -2,6 +2,7 @@
 	"extends": "../tsconfig.settings.json",
 	"references": [
 		{"path": "../arch"},
+		{"path": "../font-opentype"},
 		{"path": "../hint-common"},
 		{"path": "../hint-embox"},
 		{"path": "../hint-maz"}
