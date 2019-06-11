@@ -14,8 +14,8 @@ export const DefaultStretch: StretchProps = {
 	PIXEL_SHIFT_TO_MOVE: 0.7,
 	STRETCH_BOTTOM_A: -0.5,
 	STRETCH_BOTTOM_X: 2.5,
-	STRETCH_TOP_A: -6,
-	STRETCH_TOP_X: 8
+	STRETCH_TOP_A: -0.5,
+	STRETCH_TOP_X: 2.5
 };
 
 const TDistAdjustBot = Template(
