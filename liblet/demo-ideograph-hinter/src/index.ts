@@ -14,6 +14,7 @@ const ttSession = ttCol.createSession();
 
 for (const c in otd.cmap) {
 	const gid = otd.cmap[c];
+	//if (gid !== "uni2FB9") continue;
 	if (otd.glyf[gid] && otd.glyf[gid].contours) {
 		const programSink = ttSession.createGlyphProgramSink(gid);
 		const hints = createHints(otd.glyf[gid].contours, params);
@@ -21,10 +22,11 @@ for (const c in otd.cmap) {
 		if (compiler) {
 			compiler.doCompile();
 			programSink.save();
-			console.log("Analyzed", gid);
+			process.stdout.write(".");
 		}
 	}
 }
+process.stdout.write("\n");
 
 {
 	const prepHints = createSharedHints(params);

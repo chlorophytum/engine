@@ -24,10 +24,10 @@ export namespace MultipleAlignZone {
 				throw new TypeError("inkMinDist length mismatch");
 			}
 		}
-		toJSON() {
+		public toJSON() {
 			return { type: TAG, props: this.props };
 		}
-		createCompiler(sink: IFinalHintProgramSink): IHintCompiler | null {
+		public createCompiler(sink: IFinalHintProgramSink): IHintCompiler | null {
 			if (sink instanceof HlttProgramSink) {
 				return new HlttCompiler(sink, this.props);
 			}
@@ -36,8 +36,8 @@ export namespace MultipleAlignZone {
 	}
 
 	export class HintFactory implements IHintFactory {
-		readonly type = TAG;
-		readJson(json: any) {
+		public readonly type = TAG;
+		public readJson(json: any) {
 			if (json && json.type === TAG) return new Hint(json.props);
 			return null;
 		}
@@ -47,21 +47,21 @@ export namespace MultipleAlignZone {
 			private readonly sink: HlttProgramSink,
 			private readonly props: MultipleAlignZoneProps
 		) {}
-		doCompile() {
+		public doCompile() {
 			const { props } = this;
 			const N = props.middleStrokes.length;
 			const recPath = getRecPath(props.mergePriority, N);
 
 			this.sink.addSegment(function*($) {
-				const strokeBottom = $.globalTwilight(
-					TranslateEmboxTwilightName(props.emBoxName, "StrokeBottom")
+				const spurBottom = $.globalTwilight(
+					TranslateEmboxTwilightName(props.emBoxName, "SpurBottom")
 				);
-				const strokeTop = $.globalTwilight(
-					TranslateEmboxTwilightName(props.emBoxName, "StrokeTop")
+				const spurTop = $.globalTwilight(
+					TranslateEmboxTwilightName(props.emBoxName, "SpurTop")
 				);
 
-				const bottomPoint = props.bottomPoint < 0 ? strokeBottom : props.bottomPoint;
-				const topPoint = props.topPoint < 0 ? strokeTop : props.topPoint;
+				const bottomPoint = props.bottomPoint < 0 ? spurBottom : props.bottomPoint;
+				const topPoint = props.topPoint < 0 ? spurTop : props.topPoint;
 
 				if (N <= 4) {
 					yield $.call(

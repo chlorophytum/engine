@@ -11,10 +11,10 @@ export const VisFloor = LibFunc("IdeographProgram::visFloor", function*(e) {
 			e.max(e.coerce.toF26D6(VIS_DIST_MIN), e.min(e.coerce.toF26D6(VIS_DIST_MAX), fillRate))
 		),
 		function*() {
-			yield e.return(e.add(e.coerce.toF26D6(1), e.floor(x)));
+			yield e.return(e.floor(e.add(e.coerce.toF26D6(1), e.floor(x))));
 		},
 		function*() {
-			yield e.return(e.floor(x));
+			yield e.return(e.floor(e.floor(x)));
 		}
 	);
 });
@@ -26,10 +26,10 @@ export const VisCeil = LibFunc("IdeographProgram::visCeil", function*(e) {
 			e.max(e.coerce.toF26D6(VIS_DIST_MIN), e.min(e.coerce.toF26D6(VIS_DIST_MAX), fillRate))
 		),
 		function*() {
-			yield e.return(e.sub(e.ceiling(x), e.coerce.toF26D6(1)));
+			yield e.return(e.ceiling(e.sub(e.ceiling(x), e.coerce.toF26D6(1))));
 		},
 		function*() {
-			yield e.return(e.ceiling(x));
+			yield e.return(e.ceiling(e.ceiling(x)));
 		}
 	);
 });

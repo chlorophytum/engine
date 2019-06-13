@@ -1,4 +1,4 @@
-import { LibFunc, Template } from "@chlorophytum/hltt";
+import { Expression, LibFunc, ProgramDsl, Template } from "@chlorophytum/hltt";
 
 export interface StretchProps {
 	readonly PIXEL_RATIO_TO_MOVE: number;
@@ -7,6 +7,7 @@ export interface StretchProps {
 	readonly STRETCH_BOTTOM_X: number;
 	readonly STRETCH_TOP_A: number;
 	readonly STRETCH_TOP_X: number;
+	readonly CUTIN: number;
 }
 
 export const DefaultStretch: StretchProps = {
@@ -15,7 +16,8 @@ export const DefaultStretch: StretchProps = {
 	STRETCH_BOTTOM_A: -0.5,
 	STRETCH_BOTTOM_X: 2.5,
 	STRETCH_TOP_A: -0.5,
-	STRETCH_TOP_X: 2.5
+	STRETCH_TOP_X: 2.5,
+	CUTIN: 0
 };
 
 const TDistAdjustBot = Template(
@@ -59,75 +61,101 @@ const TDistAdjustTop = Template(
 
 const FOffsetMovementHasImprovement = LibFunc(
 	"Chlorophytum::EmBox::HlttSupportPrograms::FOffsetMovementHasImprovement",
-	function*(e) {
-		const [dOrig, dCur, sign] = e.args(3);
-		yield e.return(e.lteq(e.abs(e.sub(e.add(sign, dCur), dOrig)), e.abs(e.sub(dCur, dOrig))));
+	function*($) {
+		const [dOrig, dCur, sign] = $.args(3);
+		yield $.return($.lteq($.abs($.sub($.add(sign, dCur), dOrig)), $.abs($.sub(dCur, dOrig))));
+	}
+);
+
+function $TooMuch($: ProgramDsl, stretch: StretchProps, dCur: Expression, dOrig: Expression) {
+	return $.or(
+		$.gt(dCur, $.mul($.coerce.toF26D6(stretch.PIXEL_RATIO_TO_MOVE), dOrig)),
+		$.gt(dCur, $.add($.coerce.toF26D6(stretch.PIXEL_SHIFT_TO_MOVE), dOrig))
+	);
+}
+function $TooLess($: ProgramDsl, stretch: StretchProps, dCur: Expression, dOrig: Expression) {
+	return $.or(
+		$.lt(dCur, $.mul($.coerce.toF26D6(1 / stretch.PIXEL_RATIO_TO_MOVE), dOrig)),
+		$.lt(dCur, $.add($.coerce.toF26D6(-stretch.PIXEL_SHIFT_TO_MOVE), dOrig))
+	);
+}
+
+const TComputeOffsetPixelsForTBImpl = Template(
+	"Chlorophytum::EmBox::HlttSupportPrograms::TComputeOffsetPixelsForTBImpl",
+	function*($, stretch: StretchProps) {
+		const [dOrig, dCur, sign] = $.args(3);
+
+		yield $.if($.gt(dOrig, $.coerce.toF26D6(stretch.CUTIN)), function*() {
+			yield $.if(
+				$.and(
+					$TooMuch($, stretch, dCur, dOrig),
+					$.call(FOffsetMovementHasImprovement, dOrig, dCur, $.coerce.toF26D6(-1))
+				),
+				function*() {
+					yield $.return($.mul($.coerce.toF26D6(-1), sign));
+				}
+			);
+			yield $.if(
+				$.and(
+					$TooLess($, stretch, dCur, dOrig),
+					$.call(FOffsetMovementHasImprovement, dOrig, dCur, $.coerce.toF26D6(+1))
+				),
+				function*() {
+					yield $.return($.mul($.coerce.toF26D6(+1), sign));
+				}
+			);
+		});
+
+		yield $.return(0);
 	}
 );
 const TComputeOffsetPixelsForTB = Template(
 	"Chlorophytum::EmBox::HlttSupportPrograms::TComputeOffsetPixelsForTB",
-	function*(e, stretch: StretchProps) {
-		const [dOrig, dCur, sign] = e.args(3);
-		const dOffset = e.local();
+	function*($, stretch: StretchProps) {
+		const [dOrig, dCur, dOrigArch, dCurArch, sign] = $.args(5);
 
-		const $tooMuch = e.or(
-			e.gt(dCur, e.mul(e.coerce.toF26D6(stretch.PIXEL_RATIO_TO_MOVE), dOrig)),
-			e.gt(dCur, e.add(e.coerce.toF26D6(stretch.PIXEL_SHIFT_TO_MOVE), dOrig))
-		);
-		const $tooLess = e.or(
-			e.lt(dCur, e.mul(e.coerce.toF26D6(1 / stretch.PIXEL_RATIO_TO_MOVE), dOrig)),
-			e.lt(dCur, e.add(e.coerce.toF26D6(-stretch.PIXEL_SHIFT_TO_MOVE), dOrig))
-		);
+		const offset = $.local();
+		yield $.set(offset, $.call(TComputeOffsetPixelsForTBImpl(stretch), dOrig, dCur, sign));
+		yield $.if(offset, function*() {
+			yield $.return(offset);
+		});
 
-		yield e.set(dOffset, 0);
-		yield e.if(
-			e.and(
-				$tooMuch,
-				e.call(FOffsetMovementHasImprovement, dOrig, dCur, e.coerce.toF26D6(-1))
-			),
-			function*() {
-				yield e.set(dOffset, e.mul(e.coerce.toF26D6(-1), sign));
-			},
-			function*() {
-				yield e.if(
-					e.and(
-						$tooLess,
-						e.call(FOffsetMovementHasImprovement, dOrig, dCur, e.coerce.toF26D6(+1))
-					),
-					function*() {
-						yield e.set(dOffset, e.mul(e.coerce.toF26D6(+1), sign));
-					}
-				);
-			}
+		yield $.set(
+			offset,
+			$.call(TComputeOffsetPixelsForTBImpl(stretch), dOrigArch, dCurArch, sign)
 		);
+		yield $.if(offset, function*() {
+			yield $.return(offset);
+		});
 
-		yield e.return(dOffset);
+		yield $.return(0);
 	}
 );
 
 export const THintBottomStroke = Template(
 	`Chlorophytum::EmBox::HlttSupportPrograms::THintBottomStroke`,
-	function*(e, stretch: StretchProps) {
-		const [zBot, zTop, zsBot, zsTop] = e.args(4);
+	function*($, stretch: StretchProps) {
+		const [zBot, zTop, zaBot, zaTop, zsBot, zsTop] = $.args(6);
 
 		// Perform a "free" position first -- we'd like to grab the positions
-		yield e.call(THintBottomStrokeFree, zBot, zTop, zsBot, zsTop);
+		yield $.call(THintBottomStrokeFree, zBot, zTop, zsBot, zsTop);
 
-		const dBelowOrig = e.local();
-		const dBelowCur = e.local();
-		const dOffset = e.local();
-		yield e.set(
-			dBelowOrig,
-			e.call(TDistAdjustBot(stretch), e.sub(e.gc.orig(zsBot), e.gc.orig(zBot)))
-		);
-		yield e.set(dBelowCur, e.sub(e.gc.cur(zsBot), e.gc.cur(zBot)));
-		yield e.set(
+		const dOffset = $.local();
+
+		yield $.set(
 			dOffset,
-			e.call(TComputeOffsetPixelsForTB(stretch), dBelowOrig, dBelowCur, e.coerce.toF26D6(+1))
+			$.call(
+				TComputeOffsetPixelsForTB(stretch),
+				$.call(TDistAdjustBot(stretch), $.sub($.gc.orig(zsBot), $.gc.orig(zBot))),
+				$.sub($.gc.cur(zsBot), $.gc.cur(zBot)),
+				$.call(TDistAdjustBot(stretch), $.sub($.gc.orig(zsBot), $.gc.orig(zaBot))),
+				$.sub($.gc.cur(zsBot), $.gc.cur(zaBot)),
+				$.coerce.toF26D6(+1)
+			)
 		);
 
-		yield e.scfs(zsBot, e.add(e.gc.cur(zsBot), dOffset));
-		yield e.scfs(zsTop, e.add(e.gc.cur(zsTop), dOffset));
+		yield $.scfs(zsBot, $.add($.gc.cur(zsBot), dOffset));
+		yield $.scfs(zsTop, $.add($.gc.cur(zsTop), dOffset));
 	}
 );
 
@@ -161,22 +189,22 @@ export const THintBottomStrokeFree = LibFunc(
 export const THintTopStroke = Template(
 	`Chlorophytum::EmBox::HlttSupportPrograms::THintTopStroke`,
 	function*(e, stretch: StretchProps) {
-		const [zBot, zTop, zsBot, zsTop] = e.args(4);
+		const [zBot, zTop, zaBot, zaTop, zsBot, zsTop] = e.args(6);
 
 		// Perform a "free" position first -- we'd like to grab the positions
 		yield e.call(THintTopStrokeFree, zBot, zTop, zsBot, zsTop);
-
-		const dAboveOrig = e.local();
-		const dAboveCur = e.local();
 		const dOffset = e.local();
-		yield e.set(
-			dAboveOrig,
-			e.call(TDistAdjustTop(stretch), e.sub(e.gc.orig(zTop), e.gc.orig(zsTop)))
-		);
-		yield e.set(dAboveCur, e.sub(e.gc.cur(zTop), e.gc.cur(zsTop)));
+
 		yield e.set(
 			dOffset,
-			e.call(TComputeOffsetPixelsForTB(stretch), dAboveOrig, dAboveCur, e.coerce.toF26D6(-1))
+			e.call(
+				TComputeOffsetPixelsForTB(stretch),
+				e.call(TDistAdjustTop(stretch), e.sub(e.gc.orig(zTop), e.gc.orig(zsTop))),
+				e.sub(e.gc.cur(zTop), e.gc.cur(zsTop)),
+				e.call(TDistAdjustTop(stretch), e.sub(e.gc.orig(zaTop), e.gc.orig(zsTop))),
+				e.sub(e.gc.cur(zaTop), e.gc.cur(zsTop)),
+				e.coerce.toF26D6(-1)
+			)
 		);
 		yield e.scfs(zsBot, e.add(e.gc.cur(zsBot), dOffset));
 		yield e.scfs(zsTop, e.add(e.gc.cur(zsTop), dOffset));
@@ -230,18 +258,66 @@ export const THintTopEdge = LibFunc(
 	}
 );
 
+export const RLink = LibFunc(
+	`Chlorophytum::EmBox::HlttSupportPrograms::TInitEmBoxTwilightPoints::RLink`,
+	function*($) {
+		const [a, b] = $.args(2);
+		yield $.scfs(b, $.add($.gc.cur(a), $.round.gray($.sub($.gc.orig(b), $.gc.orig(a)))));
+	}
+);
+
+export const RLinkLim = LibFunc(
+	`Chlorophytum::EmBox::HlttSupportPrograms::TInitEmBoxTwilightPoints::RLinkLim`,
+	function*($) {
+		const [a, b, c] = $.args(3);
+		const dist = $.local();
+		const absDist = $.local();
+		const absDistC = $.local();
+		yield $.set(dist, $.round.gray($.sub($.gc.orig(b), $.gc.orig(a))));
+		yield $.set(absDist, $.abs(dist));
+		yield $.set(absDistC, $.abs($.sub($.gc.orig(c), $.gc.orig(a))));
+		yield $.while($.gt(absDist, absDistC), function*() {
+			yield $.set(absDist, $.sub(absDist, $.coerce.toF26D6(1)));
+		});
+		yield $.if(
+			$.gt(dist, 0),
+			function*() {
+				yield $.scfs(b, $.add($.gc.cur(a), absDist));
+			},
+			function*() {
+				yield $.scfs(b, $.sub($.gc.cur(a), absDist));
+			}
+		);
+	}
+);
+
 export const TInitEmBoxTwilightPoints = LibFunc(
 	`Chlorophytum::EmBox::HlttSupportPrograms::TInitEmBoxTwilightPoints`,
 	function*($) {
-		const [strokeBottom, strokeTop, spurBottom, spurTop] = $.args(4);
+		const [strokeBottom, strokeTop, archBottom, archTop, spurBottom, spurTop] = $.args(6);
+		// These MDAPs are not necessary but VTT loves them
 		yield $.mdap(strokeBottom);
+		yield $.mdap(strokeTop);
+		yield $.mdap(archBottom);
+		yield $.mdap(archTop);
+
 		yield $.scfs(strokeBottom, $.round.black($.gc.orig(strokeBottom)));
-		yield $.mdap(strokeTop); // Make VTT happy
-		const dist = $.local();
-		yield $.set(dist, $.round.gray($.sub($.gc.orig(strokeTop), $.gc.orig(strokeBottom))));
-		yield $.scfs(strokeTop, $.add($.gc.cur(strokeBottom), dist));
-		yield $.mdap.round(strokeTop);
+		yield $.call(RLink, strokeBottom, strokeTop);
 		yield $.mdrp(strokeBottom, spurBottom);
 		yield $.mdrp(strokeTop, spurTop);
+		yield $.call(RLinkLim, strokeBottom, archBottom, spurBottom);
+		yield $.call(RLinkLim, strokeTop, archTop, spurTop);
 	}
 );
+
+const InitEmBoxPointPrepImpl = LibFunc(
+	`Chlorophytum::EmBox::HlttSupportPrograms::InitEmBoxPointPrepImpl`,
+	function*($) {
+		const [z, d] = $.args(2);
+		yield $.scfs(z, $.div($.mul(d, $.toFloat($.mppem())), $.coerce.toF26D6(64)));
+	}
+);
+
+export function TInitEmBoxPointPrep($: ProgramDsl, z: Expression, pos: number) {
+	return $.call(InitEmBoxPointPrepImpl, z, $.coerce.toF26D6(pos * 64));
+}

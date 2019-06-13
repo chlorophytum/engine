@@ -18,18 +18,18 @@ export default class HintGenSink extends HierarchySink {
 	private subHints: IHint[] = [];
 	private postHints: IHint[] = [];
 
-	addBlue(top: boolean, z: AdjPoint) {
+	public addBlue(top: boolean, z: AdjPoint) {
 		this.subHints.push(new EmBoxEdge.Hint(this.glyphKind, top, z.id));
 	}
 
-	addInterpolate(rp1: number, rp2: number, z: number) {
+	public addInterpolate(rp1: number, rp2: number, z: number) {
 		this.subHints.push(new Interpolate.Hint(rp1, rp2, [z]));
 	}
-	addLink(rp0: number, z: number) {
+	public addLink(rp0: number, z: number) {
 		this.subHints.push(new LinkChain.Hint([rp0, z]));
 	}
 
-	addBoundaryStem(stem: Stem, locTop: boolean, atBottom: boolean, atTop: boolean) {
+	public addBoundaryStem(stem: Stem, locTop: boolean, atBottom: boolean, atTop: boolean) {
 		if (atBottom || atTop) {
 			this.subHints.push(
 				new EmBoxStroke.Hint(this.glyphKind, atTop, false, stem.lowKey.id, stem.highKey.id)
@@ -40,10 +40,10 @@ export default class HintGenSink extends HierarchySink {
 			);
 		}
 	}
-	addStemPileHint(
-		bot: Stem,
+	public addStemPileHint(
+		bot: null | Stem,
 		middle: Stem[],
-		top: Stem,
+		top: null | Stem,
 		botIsBoundary: boolean,
 		topIsBoundary: boolean,
 		annex: number[]
@@ -79,12 +79,55 @@ export default class HintGenSink extends HierarchySink {
 		);
 	}
 
-	addDependentHint(type: DependentHintType, from: Stem, to: Stem) {
-		this.subHints.push(new LinkChain.Hint([from.lowKey.id, to.lowKey.id]));
-		this.subHints.push(new LinkChain.Hint([from.highKey.id, to.highKey.id]));
+	public addDependentHint(
+		type: DependentHintType,
+		belowFrom: null | Stem,
+		from: Stem,
+		aboveFrom: null | Stem,
+		to: Stem
+	) {
+		// console.log(DependentHintType[type], [from.lowKey.id, from.highKey.id], "->", [
+		// 	to.lowKey.id,
+		// 	to.highKey.id
+		// ]);
+		// if (belowFrom) console.log("BELOW", [belowFrom.lowKey.id, belowFrom.highKey.id]);
+		// if (aboveFrom) console.log("ABOVE", [aboveFrom.lowKey.id, aboveFrom.highKey.id]);
+
+		if (type === DependentHintType.DiagHighToLow && belowFrom) {
+			this.subHints.push(
+				new MultipleAlignZone.Hint({
+					emBoxName: this.glyphKind,
+					gapMinDist: [1, 0],
+					inkMinDist: [1],
+					bottomFree: false,
+					topFree: false,
+					mergePriority: [0, 1],
+					bottomPoint: belowFrom.highKey.id,
+					middleStrokes: [[to.lowKey.id, to.highKey.id]],
+					topPoint: from.highKey.id
+				})
+			);
+		} else if (type === DependentHintType.DiagLowToHigh && aboveFrom) {
+			this.subHints.push(
+				new MultipleAlignZone.Hint({
+					emBoxName: this.glyphKind,
+					gapMinDist: [0, 1],
+					inkMinDist: [1],
+					bottomFree: false,
+					topFree: false,
+					mergePriority: [-1, 0],
+					bottomPoint: from.lowKey.id,
+					middleStrokes: [[to.lowKey.id, to.highKey.id]],
+					topPoint: aboveFrom.lowKey.id
+				})
+			);
+		} else {
+			this.subHints.push(new LinkChain.Hint([from.lowKey.id, to.lowKey.id]));
+			this.subHints.push(new LinkChain.Hint([from.highKey.id, to.highKey.id]));
+		}
 	}
 
-	addStemEdgeAlign(stem: Stem) {
+	public addStemEdgeAlign(stem: Stem) {
 		if (stem.highAlign.length) {
 			this.subHints.push(
 				new LinkChain.Hint([stem.highKey.id, ...stem.highAlign.map(z => z.id)])
@@ -97,7 +140,7 @@ export default class HintGenSink extends HierarchySink {
 		}
 	}
 
-	getHint() {
+	public getHint() {
 		return new EmptyImpl.Sequence.Hint([
 			...this.preHints,
 			new WithDirection.Hint(true, new EmptyImpl.Sequence.Hint(this.subHints)),

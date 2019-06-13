@@ -3,6 +3,7 @@ import * as _ from "lodash";
 import { GlyphAnalysis } from "../analyze/analysis";
 import { atGlyphBottom, atGlyphTop } from "../si-common/stem-spatial";
 import { HintingStrategy } from "../strategy";
+import Stem from "../types/stem";
 
 import HierarchySink, { DependentHintType } from "./sink";
 
@@ -41,22 +42,25 @@ interface DependentHint {
 	toStem: number;
 }
 
+const ENABLE_TBA = true;
+
 export default class HierarchyAnalyzer {
-	private stemPointMask: number[];
-	lastPathWeight = 0;
-	loops = 0;
+	private stemMask: number[];
+	private pointMask: number[] = [];
+	public lastPathWeight = 0;
+	public loops = 0;
 
 	constructor(private analysis: GlyphAnalysis, private readonly strategy: HintingStrategy) {
-		this.stemPointMask = [];
-		for (let j = 0; j < analysis.stems.length; j++) this.stemPointMask[j] = MaskState.Available;
+		this.stemMask = [];
+		for (let j = 0; j < analysis.stems.length; j++) this.stemMask[j] = MaskState.Available;
 	}
 
-	pre(sink: HierarchySink) {
+	public pre(sink: HierarchySink) {
 		for (const z of this.analysis.blueZone.topZs) sink.addBlue(true, z);
 		for (const z of this.analysis.blueZone.bottomZs) sink.addBlue(false, z);
 	}
 
-	fetch(sink: HierarchySink) {
+	public fetch(sink: HierarchySink) {
 		this.loops++;
 
 		let path = this.getKeyPath();
@@ -64,28 +68,32 @@ export default class HierarchyAnalyzer {
 		const top = path[0];
 		const bot = path[path.length - 1];
 		if (!this.analysis.stems[bot] || !this.analysis.stems[top]) return;
-		const middle = path.filter(j => this.analysis.stems[j] && !this.stemPointMask[j]).reverse();
+		const middle = path.filter(j => this.analysis.stems[j] && !this.stemMask[j]).reverse();
 		if (!middle.length) return;
 
-		let botIdBoundary = false,
-			topIsBoundary = false;
-		if (!this.stemPointMask[bot]) {
-			this.stemPointMask[bot] = MaskState.Hinted;
+		let botIsBoundary = false,
+			botAtGlyphBottom = false,
+			topIsBoundary = false,
+			topAtGlyphTop = false;
+		if (!this.stemMask[bot]) {
+			this.stemMask[bot] = MaskState.Hinted;
+			botAtGlyphBottom = atGlyphBottom(this.analysis.stems[bot], this.strategy);
 			sink.addBoundaryStem(
 				this.analysis.stems[bot],
 				false,
-				atGlyphBottom(this.analysis.stems[bot], this.strategy),
+				botAtGlyphBottom,
 				atGlyphTop(this.analysis.stems[bot], this.strategy)
 			);
-			botIdBoundary = true;
+			botIsBoundary = true;
 		}
-		if (!this.stemPointMask[top]) {
-			this.stemPointMask[top] = MaskState.Hinted;
+		if (!this.stemMask[top]) {
+			this.stemMask[top] = MaskState.Hinted;
+			topAtGlyphTop = atGlyphTop(this.analysis.stems[top], this.strategy);
 			sink.addBoundaryStem(
 				this.analysis.stems[top],
 				true,
 				atGlyphBottom(this.analysis.stems[top], this.strategy),
-				atGlyphTop(this.analysis.stems[top], this.strategy)
+				topAtGlyphTop
 			);
 			topIsBoundary = true;
 		}
@@ -93,19 +101,69 @@ export default class HierarchyAnalyzer {
 			this.analysis.stems[bot],
 			middle.map(j => this.analysis.stems[j]),
 			this.analysis.stems[top],
-			botIdBoundary,
+			botIsBoundary,
 			topIsBoundary,
 			this.getMergePriority(this.analysis.collisionMatrices.annexation, top, bot, middle)
 		);
+		// console.log(bot, middle, top);
+		if (
+			ENABLE_TBA &&
+			botIsBoundary &&
+			!botAtGlyphBottom &&
+			bot === middle[0] &&
+			bot !== middle[1]
+		) {
+			//console.log("B", bot, middle[1]);
+			sink.addStemPileHint(
+				null,
+				[this.analysis.stems[bot]],
+				this.analysis.stems[middle[1]],
+				false,
+				false,
+				[-1, 0]
+			);
+		}
+		if (
+			ENABLE_TBA &&
+			topIsBoundary &&
+			!topAtGlyphTop &&
+			top === middle[middle.length - 1] &&
+			top !== middle[middle.length - 2]
+		) {
+			//console.log("T", top, middle[middle.length - 2]);
+			sink.addStemPileHint(
+				this.analysis.stems[middle[middle.length - 2]],
+				[this.analysis.stems[top]],
+				null,
+				false,
+				false,
+				[0, 1]
+			);
+		}
 		for (const dependent of dependents) {
 			sink.addDependentHint(
 				dependent.type,
+				this.getStemBelow(bot, middle, top, dependent.fromStem),
 				this.analysis.stems[dependent.fromStem],
+				this.getStemAbove(bot, middle, top, dependent.fromStem),
 				this.analysis.stems[dependent.toStem]
 			);
 		}
 
-		for (const j of path) this.stemPointMask[j] = MaskState.Hinted;
+		for (const j of path) this.stemMask[j] = MaskState.Hinted;
+	}
+
+	private getStemBelow(bot: number, middle: number[], top: number, j: number): Stem | null {
+		const c = [bot, ...middle, top];
+		const jj = c.indexOf(j);
+		if (jj > 0) return this.analysis.stems[c[jj - 1]];
+		else return null;
+	}
+	private getStemAbove(bot: number, middle: number[], top: number, j: number): Stem | null {
+		const c = [bot, ...middle, top];
+		const jj = c.lastIndexOf(j);
+		if (jj >= 0 && jj < c.length - 1) return this.analysis.stems[c[jj + 1]];
+		else return null;
 	}
 
 	private collectIpSaCalls(sink: HierarchySink) {
@@ -126,9 +184,9 @@ export default class HierarchyAnalyzer {
 		}
 	}
 
-	post(sink: HierarchySink) {
+	public post(sink: HierarchySink) {
 		for (let j = 0; j < this.analysis.stems.length; j++) {
-			if (!this.stemPointMask[j]) {
+			if (!this.stemMask[j]) {
 				sink.addBoundaryStem(
 					this.analysis.stems[j],
 					!this.analysis.stems[j].hasGlyphStemAbove,
@@ -211,7 +269,7 @@ export default class HierarchyAnalyzer {
 				for (let j = 0; j < this.analysis.stems.length; j++) {
 					if (j !== path[m] && this.analysis.stems[j].rid === sm.rid) opposite = j;
 				}
-				if (opposite >= 0 && !this.stemPointMask[opposite]) path[m] = opposite;
+				if (opposite >= 0 && !this.stemMask[opposite]) path[m] = opposite;
 			}
 		}
 		return _.uniq(path);
@@ -221,15 +279,15 @@ export default class HierarchyAnalyzer {
 		let dependents: DependentHint[] = [];
 
 		for (const j of path) {
-			if (this.stemPointMask[j]) continue;
+			if (this.stemMask[j]) continue;
 			for (let k = 0; k < this.analysis.stems.length; k++) {
-				if (this.stemPointMask[k] || k === j) continue;
+				if (this.stemMask[k] || k === j) continue;
 				if (
 					this.analysis.stems[j].rid &&
 					this.analysis.stems[j].rid === this.analysis.stems[k].rid
 				) {
 					if (this.analysis.stems[j].diagLow && this.analysis.stems[k].diagHigh) {
-						this.stemPointMask[k] = MaskState.Dependent;
+						this.stemMask[k] = MaskState.Dependent;
 						dependents.push({
 							type: DependentHintType.DiagLowToHigh,
 							fromStem: j,
@@ -238,7 +296,7 @@ export default class HierarchyAnalyzer {
 						continue;
 					}
 					if (this.analysis.stems[j].diagHigh && this.analysis.stems[k].diagLow) {
-						this.stemPointMask[k] = MaskState.Dependent;
+						this.stemMask[k] = MaskState.Dependent;
 						dependents.push({
 							type: DependentHintType.DiagHighToLow,
 							fromStem: j,
@@ -248,7 +306,7 @@ export default class HierarchyAnalyzer {
 					}
 				}
 				if (this.analysis.symmetry[j][k] || this.analysis.symmetry[k][j]) {
-					this.stemPointMask[k] = MaskState.Dependent;
+					this.stemMask[k] = MaskState.Dependent;
 					dependents.push({ type: DependentHintType.Symmetry, fromStem: j, toStem: k });
 					continue;
 				}

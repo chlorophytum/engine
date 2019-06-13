@@ -1,7 +1,7 @@
 import { IFinalHintProgramSink, IHint, IHintCompiler, IHintFactory } from "@chlorophytum/arch";
 import { HlttProgramSink } from "@chlorophytum/sink-hltt";
 
-import { PREFIX } from "./constants";
+import { getEmBoxPoints } from "./constants";
 import {
 	DefaultStretch,
 	StretchProps,
@@ -23,7 +23,7 @@ export namespace EmBoxStroke {
 			private readonly zsTop: number,
 			private readonly stretch: StretchProps | null = null
 		) {}
-		toJSON() {
+		public toJSON() {
 			return {
 				type: TAG,
 				boxName: this.boxName,
@@ -34,7 +34,7 @@ export namespace EmBoxStroke {
 				stretch: this.stretch
 			};
 		}
-		createCompiler(sink: IFinalHintProgramSink): IHintCompiler | null {
+		public createCompiler(sink: IFinalHintProgramSink): IHintCompiler | null {
 			if (sink instanceof HlttProgramSink) {
 				return new HlttCompiler(
 					sink,
@@ -51,8 +51,8 @@ export namespace EmBoxStroke {
 	}
 
 	export class HintFactory implements IHintFactory {
-		readonly type = TAG;
-		readJson(json: any) {
+		public readonly type = TAG;
+		public readJson(json: any) {
 			if (json && json.type === TAG) {
 				return new Hint(
 					json.boxName,
@@ -77,13 +77,17 @@ export namespace EmBoxStroke {
 			private readonly zsTop: number,
 			private readonly stretch: StretchProps | null
 		) {}
-		doCompile() {
+		public doCompile() {
 			const { boxName, top, spur, zsBot, zsTop, stretch } = this;
 			this.sink.addSegment(function*($) {
-				const strokeBottom = $.globalTwilight(`${PREFIX}::${boxName}::StrokeBottom`);
-				const strokeTop = $.globalTwilight(`${PREFIX}::${boxName}::StrokeTop`);
-				const spurBottom = $.globalTwilight(`${PREFIX}::${boxName}::SpurBottom`);
-				const spurTop = $.globalTwilight(`${PREFIX}::${boxName}::SpurTop`);
+				const {
+					strokeBottom,
+					strokeTop,
+					archBottom,
+					archTop,
+					spurBottom,
+					spurTop
+				} = getEmBoxPoints($, boxName);
 
 				if (spur) {
 					if (top) {
@@ -97,6 +101,8 @@ export namespace EmBoxStroke {
 							THintTopStroke(stretch || DefaultStretch),
 							strokeBottom,
 							strokeTop,
+							archBottom,
+							archTop,
 							zsBot,
 							zsTop
 						);
@@ -105,6 +111,8 @@ export namespace EmBoxStroke {
 							THintBottomStroke(stretch || DefaultStretch),
 							strokeBottom,
 							strokeTop,
+							archBottom,
+							archTop,
 							zsBot,
 							zsTop
 						);

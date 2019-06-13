@@ -9,18 +9,24 @@ export enum DependentHintType {
 	DiagHighToLow
 }
 export default class HierarchySink {
-	addInterpolate(rp1: number, rp2: number, z: number) {}
-	addLink(rp0: number, z: number) {}
-	addBlue(top: boolean, z: AdjPoint) {}
-	addBoundaryStem(stem: Stem, locTop: boolean, atBottom: boolean, atTop: boolean) {}
-	addStemPileHint(
-		bot: Stem,
+	public addInterpolate(rp1: number, rp2: number, z: number) {}
+	public addLink(rp0: number, z: number) {}
+	public addBlue(top: boolean, z: AdjPoint) {}
+	public addBoundaryStem(stem: Stem, locTop: boolean, atBottom: boolean, atTop: boolean) {}
+	public addStemPileHint(
+		bot: null | Stem,
 		middle: Stem[],
-		top: Stem,
+		top: null | Stem,
 		botBound: boolean,
 		topBound: boolean,
 		annex: number[]
 	) {}
-	addDependentHint(type: DependentHintType, from: Stem, to: Stem) {}
-	addStemEdgeAlign(stem: Stem) {}
+	public addDependentHint(
+		type: DependentHintType,
+		belowFrom: null | Stem,
+		from: Stem,
+		aboveFrom: null | Stem,
+		to: Stem
+	) {}
+	public addStemEdgeAlign(stem: Stem) {}
 }
