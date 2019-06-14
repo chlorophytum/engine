@@ -21,8 +21,7 @@ export interface GsubRelation<Glyph> extends GlyphRelation<Glyph> {
 export interface IOpenTypeFileSupport<Glyph> {
 	readonly glyphSet: ISimpleGetBimap<string, Glyph>;
 	readonly cmap: ISimpleGetMap<number, Glyph>;
-	getGeometry(glyph: Glyph, instance: null | OpenTypeVariation): GlyphShape;
-	getGsubRelatedGlyphs(source: Glyph): GsubRelation<Glyph>[];
-	getGlyphMasters(glyph: Glyph): { peak: OpenTypeVariation; master: OpenTypeMaster }[];
-	getGeometry(glyph: Glyph, instance: null | OpenTypeVariation): GlyphShape;
+	getGeometry(glyph: Glyph, instance: null | OpenTypeVariation): Promise<GlyphShape>;
+	getGsubRelatedGlyphs(source: Glyph): Promise<GsubRelation<Glyph>[]>;
+	getGlyphMasters(glyph: Glyph): Promise<{ peak: OpenTypeVariation; master: OpenTypeMaster }[]>;
 }

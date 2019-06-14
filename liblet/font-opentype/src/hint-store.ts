@@ -4,22 +4,22 @@ export class OpenTypeHintStore implements IHintStore {
 	private glyphHints = new Map<string, IHint>();
 	private sharedHintTypes = new Map<string, IHint>();
 
-	public listGlyphs() {
+	public async listGlyphs() {
 		return this.glyphHints.keys();
 	}
-	public getGlyphHints(glyph: string) {
+	public async getGlyphHints(glyph: string) {
 		return this.glyphHints.get(glyph);
 	}
-	public setGlyphHints(glyph: string, hint: IHint) {
-		return this.glyphHints.set(glyph, hint);
+	public async setGlyphHints(glyph: string, hint: IHint) {
+		this.glyphHints.set(glyph, hint);
 	}
-	public listSharedTypes() {
+	public async listSharedTypes() {
 		return this.sharedHintTypes.keys();
 	}
-	public getSharedHints(type: string) {
+	public async getSharedHints(type: string) {
 		return this.sharedHintTypes.get(type);
 	}
-	public setSharedHints(type: string, hint: IHint) {
-		return this.sharedHintTypes.set(type, hint);
+	public async setSharedHints(type: string, hint: IHint) {
+		this.sharedHintTypes.set(type, hint);
 	}
 }

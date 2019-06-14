@@ -10,30 +10,30 @@ export abstract class OpenTypeFont<Glyph>
 	public abstract readonly format: string;
 	public abstract readonly metadata: IFontSourceMetadata;
 
-	public getGlyphFromName(name: string) {
+	public async getGlyphFromName(name: string) {
 		return this.support.glyphSet.get(name);
 	}
-	public getUniqueGlyphName(glyph: Glyph) {
+	public async getUniqueGlyphName(glyph: Glyph) {
 		return this.support.glyphSet.coGet(glyph);
 	}
-	public getCharacterSet() {
+	public async getCharacterSet() {
 		return new Set(this.support.cmap.keys());
 	}
-	public getGlyphSet() {
+	public async getGlyphSet() {
 		return new Set(this.support.glyphSet.values());
 	}
-	public getEncodedGlyph(codePoint: number) {
+	public async getEncodedGlyph(codePoint: number) {
 		return this.support.cmap.get(codePoint);
 	}
 
-	public getRelatedGlyphs(source: Glyph) {
-		return this.support.getGsubRelatedGlyphs(source);
+	public async getRelatedGlyphs(source: Glyph) {
+		return await this.support.getGsubRelatedGlyphs(source);
 	}
-	public getGlyphMasters(glyph: Glyph) {
-		return this.support.getGlyphMasters(glyph);
+	public async getGlyphMasters(glyph: Glyph) {
+		return await this.support.getGlyphMasters(glyph);
 	}
-	public getGeometry(glyph: Glyph, instance: null | OpenTypeVariation) {
-		return this.support.getGeometry(glyph, instance);
+	public async getGeometry(glyph: Glyph, instance: null | OpenTypeVariation) {
+		return await this.support.getGeometry(glyph, instance);
 	}
 	public createHintStore() {
 		return new OpenTypeHintStore();

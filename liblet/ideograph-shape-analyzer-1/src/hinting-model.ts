@@ -23,20 +23,20 @@ export class IdeographHintingModel1<GID, VAR, MASTER> implements IHintingModel<G
 		private readonly font: IFontSource<GID, VAR, MASTER>,
 		private readonly params: HintingStrategy
 	) {}
-	readonly type = "Chlorophytum::IdeographHintingModel1";
+	public readonly type = "Chlorophytum::IdeographHintingModel1";
 
-	analyzeSharedParameters() {
-		const charSet = this.font.getCharacterSet();
+	public async analyzeSharedParameters() {
+		const charSet = await this.font.getCharacterSet();
 		let gidSet: Set<GID> = new Set();
 		for (const unicode of charSet) {
 			if (!isIdeographCodePoint(unicode)) continue;
-			const gid = this.font.getEncodedGlyph(unicode);
+			const gid = await this.font.getEncodedGlyph(unicode);
 			if (gid) gidSet.add(gid);
 		}
 		return gidSet;
 	}
-	analyzeGlyph(gid: GID) {
-		const geometry = this.font.getGeometry(gid, null);
+	public async analyzeGlyph(gid: GID) {
+		const geometry = await this.font.getGeometry(gid, null);
 		if (!geometry) return new EmptyImpl.Empty.Hint();
 
 		const glyph = createGlyph(geometry.eigen); // Care about outline glyphs only
@@ -53,7 +53,7 @@ export class IdeographHintingModel1<GID, VAR, MASTER> implements IHintingModel<G
 
 		return sink.getHint();
 	}
-	getSharedHints() {
+	public async getSharedHints() {
 		return createSharedHints(this.params);
 	}
 }

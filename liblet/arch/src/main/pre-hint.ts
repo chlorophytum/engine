@@ -5,7 +5,7 @@ function findMatchingFactory(type: string, modelFactories: IHintingModelFactory[
 	return null;
 }
 
-export default function preHint<GID, VAR, MASTER>(
+export default async function preHint<GID, VAR, MASTER>(
 	font: IFontSource<GID, VAR, MASTER>,
 	modelFactories: IHintingModelFactory[],
 	modelConfig: HintingModelConfig[]
@@ -16,14 +16,17 @@ export default function preHint<GID, VAR, MASTER>(
 		if (!mf) continue;
 		const hm = mf.adopt(font, parameters);
 		if (!hm) continue;
-		const glyphs = hm.analyzeSharedParameters();
+		const glyphs = await hm.analyzeSharedParameters();
 		if (!glyphs) continue;
 		for (const glyph of glyphs) {
-			const gName = font.getUniqueGlyphName(glyph);
+			const gName = await font.getUniqueGlyphName(glyph);
 			if (!gName) continue;
-			hs.setGlyphHints(gName, hm.analyzeGlyph(glyph));
+			const hints = await hm.analyzeGlyph(glyph);
+			if (hints) await hs.setGlyphHints(gName, hints);
 		}
-		hs.setSharedHints(hm.type, hm.getSharedHints());
+
+		const sharedHints = await hm.getSharedHints();
+		if (sharedHints) await hs.setSharedHints(hm.type, sharedHints);
 	}
 	return hs;
 }

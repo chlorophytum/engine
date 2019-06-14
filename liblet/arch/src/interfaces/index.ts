@@ -35,25 +35,28 @@ export interface IFontSource<Glyph, VAR, MASTER> {
 
 	readonly metadata: IFontSourceMetadata;
 
-	getGlyphFromName(name: string): Glyph | undefined;
-	getUniqueGlyphName(glyph: Glyph): string | undefined;
-	getCharacterSet(): Set<number>;
-	getGlyphSet(): Set<Glyph>;
-	getEncodedGlyph(codePoint: number): Glyph | null | undefined; // Get a glyph ID from a font
-	getRelatedGlyphs(from: Glyph): GlyphRelation<Glyph>[] | null | undefined; // Get related glyphs
-
-	getGlyphMasters(glyph: Glyph): { peak: VAR; master: MASTER }[]; // Get master list
-	getGeometry(glyph: Glyph, instance: null | VAR): GlyphShape; // Get geometry
+	getGlyphFromName(name: string): Promise<Glyph | undefined>;
+	getUniqueGlyphName(glyph: Glyph): Promise<string | undefined>;
+	getCharacterSet(): Promise<Set<number>>;
+	getGlyphSet(): Promise<Set<Glyph>>;
+	// Get a glyph ID from a font
+	getEncodedGlyph(codePoint: number): Promise<Glyph | null | undefined>;
+	// Get related glyphs
+	getRelatedGlyphs(from: Glyph): Promise<GlyphRelation<Glyph>[] | null | undefined>;
+	// Get master list
+	getGlyphMasters(glyph: Glyph): Promise<{ peak: VAR; master: MASTER }[]>;
+	// Get geometry
+	getGeometry(glyph: Glyph, instance: null | VAR): Promise<GlyphShape>;
 
 	createHintStore(): IHintStore;
 }
 export interface IHintStore {
-	listGlyphs(): Iterable<string>;
-	getGlyphHints(glyph: string): IHint | null | undefined;
-	setGlyphHints(glyph: string, hint: IHint): void;
-	listSharedTypes(): Iterable<string>;
-	getSharedHints(type: string): IHint | null | undefined;
-	setSharedHints(type: string, hint: IHint): void;
+	listGlyphs(): Promise<Iterable<string>>;
+	getGlyphHints(glyph: string): Promise<IHint | null | undefined>;
+	setGlyphHints(glyph: string, hint: IHint): Promise<void>;
+	listSharedTypes(): Promise<Iterable<string>>;
+	getSharedHints(type: string): Promise<IHint | null | undefined>;
+	setSharedHints(type: string, hint: IHint): Promise<void>;
 }
 
 export interface IFinalHintFactory {
@@ -106,9 +109,9 @@ export interface IHintingModel<Glyph> {
 	readonly type: string;
 	// Analyze shared parameters (usually CVT)
 	// Return the glyphs needed to be hinted
-	analyzeSharedParameters(): null | Set<Glyph>;
+	analyzeSharedParameters(): Promise<null | Set<Glyph>>;
 	// Create glyph analyzer
-	analyzeGlyph(gid: Glyph): IHint;
+	analyzeGlyph(gid: Glyph): Promise<null | IHint>;
 	// Create a compiler to compile shared functions / parameters
-	getSharedHints(): IHint;
+	getSharedHints(): Promise<null | IHint>;
 }

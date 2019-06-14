@@ -10,17 +10,17 @@ export const EmptyHintingModelFactory: IHintingModelFactory = {
 };
 
 export class EmptyHintingModel<GID> implements IHintingModel<GID> {
-	readonly type = "Chlorophytum::EmptyHinting";
+	public readonly type = "Chlorophytum::EmptyHinting";
 
 	constructor() {}
 
-	analyzeSharedParameters() {
+	public async analyzeSharedParameters() {
 		return null;
 	}
-	getSharedHints() {
+	public async getSharedHints() {
 		return new Empty.Hint();
 	}
-	analyzeGlyph(gid: GID) {
+	public async analyzeGlyph(gid: GID) {
 		return new Empty.Hint();
 	}
 }
