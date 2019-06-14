@@ -20,10 +20,10 @@ export class InvokeExpression extends Expression {
 		if (!fn) return 0;
 		else return fn.returnArity || 0;
 	}
-	refer(asm: Assembler) {
+	public refer(asm: Assembler) {
 		for (const part of this.parts) part.refer(asm);
 	}
-	compile(asm: Assembler) {
+	public compile(asm: Assembler) {
 		let argArity = 1; // Function # is the last arg
 		for (const part of this.parts) {
 			part.compile(asm);
@@ -33,7 +33,8 @@ export class InvokeExpression extends Expression {
 		const fnArgArity = fn ? fn.arguments.size : 0;
 		if (fn && argArity !== fnArgArity + 1) {
 			throw new TypeError(
-				`Function arity mismatch: Given ${argArity - 1}, Required ${fnArgArity}`
+				`Function arity for ${this.pFunction} mismatch: Given ${argArity -
+					1}, Required ${fnArgArity}`
 			);
 		}
 		this.pFunction.compilePtr(asm);

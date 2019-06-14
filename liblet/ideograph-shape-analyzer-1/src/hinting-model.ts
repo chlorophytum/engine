@@ -1,13 +1,14 @@
-import { EmptyImpl, IFontSource, IHintingModel } from "@chlorophytum/arch";
+import { EmptyImpl, IFontSource, IHintingModel, IHintingModelFactory } from "@chlorophytum/arch";
 
 import analyzeGlyph from "./analyze";
 import { createGlyph } from "./create-glyph";
 import HierarchyAnalyzer from "./hierarchy";
 import HintGenSink from "./hint-gen";
 import { createSharedHints } from "./shared-hints";
-import { HintingStrategy } from "./strategy";
+import { createHintingStrategy, HintingStrategy } from "./strategy";
 
 function isIdeographCodePoint(code: number) {
+	// return code === 0x2fd0;
 	return (
 		(code >= 0x2e80 && code <= 0x2fff) || // CJK radicals
 		(code >= 0x3192 && code <= 0x319f) || // CJK strokes
@@ -18,11 +19,14 @@ function isIdeographCodePoint(code: number) {
 	);
 }
 
-export class IdeographHintingModel1<GID, VAR, MASTER> implements IHintingModel<GID> {
+class IdeographHintingModel1<GID, VAR, MASTER> implements IHintingModel<GID> {
+	private readonly params: HintingStrategy;
 	constructor(
 		private readonly font: IFontSource<GID, VAR, MASTER>,
-		private readonly params: HintingStrategy
-	) {}
+		ptParams: Partial<HintingStrategy>
+	) {
+		this.params = createHintingStrategy(ptParams);
+	}
 	public readonly type = "Chlorophytum::IdeographHintingModel1";
 
 	public async analyzeSharedParameters() {
@@ -57,3 +61,17 @@ export class IdeographHintingModel1<GID, VAR, MASTER> implements IHintingModel<G
 		return createSharedHints(this.params);
 	}
 }
+
+class CIdeographHintingModelFactory1 implements IHintingModelFactory {
+	public readonly type = "Chlorophytum::IdeographHintingModel1";
+	public adopt<GID, VAR, MASTER>(
+		font: IFontSource<GID, VAR, MASTER>,
+		parameters: any
+	): IHintingModel<GID> | null | undefined {
+		return new IdeographHintingModel1<GID, VAR, MASTER>(font, parameters);
+	}
+}
+
+const IdeographHintingModelFactory1: IHintingModelFactory = new CIdeographHintingModelFactory1();
+
+export default IdeographHintingModelFactory1;

@@ -11,7 +11,11 @@ export default function analyzePostStemHints(
 	strategy: HintingStrategy,
 	analysis: GlyphAnalysis
 ) {
-	analysis.blueZone = analyzeBlueZonePoints(glyph, analysis, strategy);
+	const bz = analyzeBlueZonePoints(glyph, analysis.stems, strategy);
+	analysis.blueZone.bottomZs = bz.bottomBluePoints;
+	analysis.blueZone.topZs = bz.topBluePoints;
+	analysis.nonBlueTopBottom.bottomZs = bz.glyphBottomMostPoint;
+	analysis.nonBlueTopBottom.topZs = bz.glyphTopMostPoint;
 	const iss = AnalyzeIpSa(glyph, analysis, strategy);
 	analysis.interpolations = iss.interpolations;
 	analysis.shortAbsorptions = iss.shortAbsorptions;

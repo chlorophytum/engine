@@ -6,6 +6,7 @@ export interface MultipleAlignZoneMetaPropShared {
 }
 export interface MultipleAlignZoneMeta extends MultipleAlignZoneMetaPropShared {
 	recPath: number[]; // N args
+	recPathCollide: number[]; // N args
 }
 
 export interface MultipleAlignZoneProps extends MultipleAlignZoneMetaPropShared {
@@ -14,6 +15,7 @@ export interface MultipleAlignZoneProps extends MultipleAlignZoneMetaPropShared 
 	topPoint: number; // 1 arg
 	middleStrokes: [number, number][]; // 2N args
 	mergePriority: number[]; // N+1 items. Not an argument!
+	allowCollide: boolean[]; // N+1 items. Not an argument!
 }
 
 function drop<A>(a: A[], index: number) {
@@ -36,25 +38,29 @@ function decideMerge(allowMerge: number[], N: number) {
 	return { mergeIndex, mergeDown };
 }
 
-function getRecPathImpl(a: number[], N: number): number[] {
-	const { mergeIndex, mergeDown } = decideMerge(a, N);
-	const pri = (1 + mergeIndex) * (mergeDown ? -1 : 1);
-	if (mergeIndex < 0) {
+function getRecPathImpl(a: number[], b: number[], N: number): number[] {
+	const ma = decideMerge(a, N);
+	const mb = decideMerge(b, N);
+	const pri = (1 + mb.mergeIndex) * (mb.mergeDown ? -1 : 1);
+	if (ma.mergeIndex < 0) {
 		return [];
-	} else if (mergeIndex === 0) {
-		return [pri, ...getRecPathImpl(drop(a, 0), N - 1)];
-	} else if (mergeIndex === N) {
-		return [pri, ...getRecPathImpl(drop(a, N - 1), N - 1)];
-	} else if (mergeDown) {
-		return [pri, ...getRecPathImpl(drop(a, mergeIndex), N - 1)];
+	} else if (ma.mergeIndex === 0) {
+		return [pri, ...getRecPathImpl(drop(a, 0), drop(b, 0), N - 1)];
+	} else if (ma.mergeIndex === N) {
+		return [pri, ...getRecPathImpl(drop(a, N - 1), drop(b, N - 1), N - 1)];
+	} else if (ma.mergeDown) {
+		return [pri, ...getRecPathImpl(drop(a, ma.mergeIndex), drop(b, ma.mergeIndex), N - 1)];
 	} else {
-		return [pri, ...getRecPathImpl(drop(a, mergeIndex - 1), N - 1)];
+		return [
+			pri,
+			...getRecPathImpl(drop(a, ma.mergeIndex - 1), drop(b, ma.mergeIndex - 1), N - 1)
+		];
 	}
 }
 
-export function getRecPath(a: number[], N: number) {
-	let a1 = getRecPathImpl(a, N);
-	while (a1.length < N) a1.push(0);
-	a1.length = N;
-	return a1;
+export function getRecPath(a: number[], b: number[], N: number) {
+	let path = getRecPathImpl(a, b, N);
+	while (path.length < N) path.push(0);
+	path.length = N;
+	return path;
 }

@@ -3,7 +3,7 @@ import { Point } from "@chlorophytum/arch";
 import { HintingStrategy } from "../../strategy";
 import Glyph from "../../types/glyph";
 import { AdjPoint, CPoint } from "../../types/point";
-import { GlyphAnalysis } from "../analysis";
+import Stem from "../../types/stem";
 
 function nearTop(z1: Point, z2: Point, d: number) {
 	return Math.hypot(z1.x - z2.x, z1.y - z2.y) < d;
@@ -15,9 +15,12 @@ function nearBot(z1: Point, z2: Point, d: number) {
 function considerPoint(
 	glyph: Glyph,
 	strategy: HintingStrategy,
+	stems: Stem[],
 	point: AdjPoint,
+	bottomBluePoints: AdjPoint[],
 	topBluePoints: AdjPoint[],
-	bottomBluePoints: AdjPoint[]
+	yBottom: number,
+	yTop: number
 ) {
 	let isDecoTop = false;
 	let isDecoBot = false;
@@ -44,26 +47,24 @@ function considerPoint(
 			}
 		}
 	}
+	for (const stem of stems) {
+		if (
+			point.y < stem.y + strategy.Y_FUZZ &&
+			point.y > stem.y - stem.width - strategy.Y_FUZZ &&
+			point.x > stem.xMin - strategy.X_FUZZ &&
+			point.x < stem.xMax + strategy.X_FUZZ
+		) {
+			return;
+		}
+	}
 
-	if (
-		!isDecoTop &&
-		point.y >= strategy.EMBOX_TOP_STROKE * strategy.UPM &&
-		point.yExtrema &&
-		!point.touched &&
-		!point.dontTouch
-	) {
+	if (!isDecoTop && point.y >= yTop && point.yExtrema && !point.touched && !point.dontTouch) {
 		point.touched = true;
 		point.keyPoint = true;
 		point.blued = true;
 		topBluePoints.push(point);
 	}
-	if (
-		!isDecoBot &&
-		point.y <= strategy.EMBOX_BOTTOM_STROKE * strategy.UPM &&
-		point.yExtrema &&
-		!point.touched &&
-		!point.dontTouch
-	) {
+	if (!isDecoBot && point.y <= yBottom && point.yExtrema && !point.touched && !point.dontTouch) {
 		point.touched = true;
 		point.keyPoint = true;
 		point.blued = true;
@@ -73,31 +74,70 @@ function considerPoint(
 
 export default function analyzeBlueZonePoints(
 	glyph: Glyph,
-	analysis: GlyphAnalysis,
+	stems: Stem[],
 	strategy: HintingStrategy
 ) {
 	// Blue zone points
 	let topBluePoints: AdjPoint[] = [];
 	let bottomBluePoints: AdjPoint[] = [];
+	let glyphTopMostPoint: AdjPoint[] = [];
+	let glyphBottomMostPoint: AdjPoint[] = [];
 
 	// We go two passes to get "better" results
 	for (let j = 0; j < glyph.contours.length; j++) {
 		for (let k = 0; k < glyph.contours[j].points.length - 1; k++) {
 			let point = glyph.contours[j].points[k];
-			if (point.yExtrema) {
-				considerPoint(glyph, strategy, point, topBluePoints, bottomBluePoints);
-			}
+			if (!point.yExtrema) continue;
+			considerPoint(
+				glyph,
+				strategy,
+				stems,
+				point,
+				bottomBluePoints,
+				topBluePoints,
+				strategy.EMBOX_BOTTOM_STROKE * strategy.UPM,
+				strategy.EMBOX_TOP_STROKE * strategy.UPM
+			);
 		}
 	}
 	for (let j = 0; j < glyph.contours.length; j++) {
 		for (let k = 0; k < glyph.contours[j].points.length - 1; k++) {
 			let point = glyph.contours[j].points[k];
-			considerPoint(glyph, strategy, point, topBluePoints, bottomBluePoints);
+			considerPoint(
+				glyph,
+				strategy,
+				stems,
+				point,
+				bottomBluePoints,
+				topBluePoints,
+				strategy.EMBOX_BOTTOM_STROKE * strategy.UPM,
+				strategy.EMBOX_TOP_STROKE * strategy.UPM
+			);
+		}
+	}
+
+	// For some really "narrow" glyphs, we create a blue into some other array
+	for (let j = 0; j < glyph.contours.length; j++) {
+		for (let k = 0; k < glyph.contours[j].points.length - 1; k++) {
+			let point = glyph.contours[j].points[k];
+			if (!point.yExtrema) continue;
+			considerPoint(
+				glyph,
+				strategy,
+				stems,
+				point,
+				glyphBottomMostPoint,
+				glyphTopMostPoint,
+				glyph.stats.yMin - (bottomBluePoints.length ? 0xffff : -1),
+				glyph.stats.yMax + (topBluePoints.length ? 0xffff : -1)
+			);
 		}
 	}
 
 	return {
-		topZs: topBluePoints.sort((a, b) => b.y - a.y),
-		bottomZs: bottomBluePoints.sort((a, b) => b.y - a.y)
+		topBluePoints: topBluePoints.sort((a, b) => b.y - a.y),
+		bottomBluePoints: bottomBluePoints.sort((a, b) => b.y - a.y),
+		glyphTopMostPoint,
+		glyphBottomMostPoint
 	};
 }

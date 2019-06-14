@@ -1,13 +1,6 @@
-import { IFinalHintCollector, IFontSourceFactory } from "../interfaces";
+import { IFinalHintSession, IHintStore } from "../interfaces";
 
-export async function midHint(
-	sf: IFontSourceFactory,
-	ff: IFinalHintCollector,
-	fromPath: string,
-	toPath: string
-) {
-	const store = await sf.createHintStoreFromFile(fromPath);
-	const fhs = ff.createSession();
+export async function mainMidHint(store: IHintStore, fhs: IFinalHintSession) {
 	const glyphList = await store.listGlyphs();
 	for (const gid of glyphList) {
 		const ps = fhs.createGlyphProgramSink(gid);
@@ -18,6 +11,7 @@ export async function midHint(
 		hc.doCompile();
 		ps.save();
 	}
+
 	const sharedTypeList = await store.listSharedTypes();
 	for (const modelType of sharedTypeList) {
 		const ps = fhs.createSharedProgramSink(modelType);
@@ -29,5 +23,5 @@ export async function midHint(
 		ps.save();
 	}
 
-	//await fhs.save(toPath);
+	return fhs;
 }

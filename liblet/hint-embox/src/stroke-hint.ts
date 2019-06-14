@@ -6,9 +6,8 @@ import {
 	DefaultStretch,
 	StretchProps,
 	THintBottomStroke,
-	THintBottomStrokeFree,
-	THintTopStroke,
-	THintTopStrokeFree
+	THintStrokeFreeAuto,
+	THintTopStroke
 } from "./programs";
 
 export namespace EmBoxStroke {
@@ -91,9 +90,9 @@ export namespace EmBoxStroke {
 
 				if (spur) {
 					if (top) {
-						yield $.call(THintTopStrokeFree, spurBottom, spurTop, zsBot, zsTop);
+						yield $.call(THintStrokeFreeAuto, spurBottom, spurTop, zsBot, zsTop);
 					} else {
-						yield $.call(THintBottomStrokeFree, spurBottom, spurTop, zsBot, zsTop);
+						yield $.call(THintStrokeFreeAuto, spurBottom, spurTop, zsBot, zsTop);
 					}
 				} else {
 					if (top) {

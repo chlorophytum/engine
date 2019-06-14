@@ -94,7 +94,8 @@ export const THintMultipleStrokesStub: EdslFunctionTemplate<
 			props.inkMinDist,
 			props.bottomFree ? 1 : 0,
 			props.topFree ? 1 : 0,
-			props.recPath
+			props.recPath,
+			props.recPathCollide
 		];
 	},
 	function*($, N: number, props: MultipleAlignZoneMeta) {
@@ -103,11 +104,13 @@ export const THintMultipleStrokesStub: EdslFunctionTemplate<
 		const aGapMD = $.local(N + 1);
 		const aInkMD = $.local(N);
 		const aRecPath = $.local(N);
+		const aRecPathCollide = $.local(N);
 		const aZMids = $.local(N * 2);
 
 		yield $.call(TInitMD(N + 1, props.gapMinDist), aGapMD.ptr);
 		yield $.call(TInitMD(N, props.inkMinDist), aInkMD.ptr);
 		yield $.call(TInitRecPath(N, props.recPath), aRecPath.ptr);
+		yield $.call(TInitRecPath(N, props.recPathCollide), aRecPathCollide.ptr);
 		yield $.call(TInitZMids(N), aZMids.ptr, ...zMids);
 
 		yield $.call(AmendMinGapDist, N, zBot, zTop, aZMids.ptr, aGapMD.ptr);
@@ -121,24 +124,26 @@ export const THintMultipleStrokesStub: EdslFunctionTemplate<
 			aZMids.ptr,
 			aGapMD.ptr,
 			aInkMD.ptr,
-			aRecPath.ptr
+			aRecPath.ptr,
+			aRecPathCollide.ptr
 		);
 	}
 );
 
 function MultipleAlignZoneArgQuantity(N: number) {
-	return N + 1 + N + N + 1 + 1 + 1 + 1 + 2 * N;
+	return N + 1 + N + N + N + 1 + 1 + 1 + 1 + 2 * N;
 }
 
 export const THintMultipleStrokesExplicit = Template(
 	"IdeographProgram::THintMultipleStrokesStub",
 	function*($, N: number) {
-		const argQty = [N + 1, N, N, 1, 1, 1, 1, 2 * N];
+		const argQty = [N + 1, N, N, N, 1, 1, 1, 1, 2 * N];
 		const args = $.args(MultipleAlignZoneArgQuantity(N));
 		const [
 			ixGapMinDist,
 			ixInkMinDist,
 			ixRecPath,
+			ixRecPathCollide,
 			[iBotFree],
 			[iTopFree],
 			[zBot],
@@ -149,11 +154,13 @@ export const THintMultipleStrokesExplicit = Template(
 		const aGapMD = $.local(N + 1);
 		const aInkMD = $.local(N);
 		const aRecPath = $.local(N);
+		const aRecPathCollide = $.local(N);
 		const aZMids = $.local(N * 2);
 
 		yield $.call(TInitArr(N + 1), aGapMD.ptr, ...ixGapMinDist);
 		yield $.call(TInitArr(N), aInkMD.ptr, ...ixInkMinDist);
 		yield $.call(TInitArr(N), aRecPath.ptr, ...ixRecPath);
+		yield $.call(TInitArr(N), aRecPathCollide.ptr, ...ixRecPathCollide);
 		yield $.call(TInitZMids(N), aZMids.ptr, ...zMids);
 		yield $.call(MapArrIntToPx, aGapMD.ptr, N + 1);
 		yield $.call(MapArrIntToPx, aInkMD.ptr, N);
@@ -169,7 +176,8 @@ export const THintMultipleStrokesExplicit = Template(
 			aZMids.ptr,
 			aGapMD.ptr,
 			aInkMD.ptr,
-			aRecPath.ptr
+			aRecPath.ptr,
+			aRecPathCollide.ptr
 		);
 	}
 );

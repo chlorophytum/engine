@@ -57,12 +57,14 @@ export default class HintGenSink extends HierarchySink {
 		let inkMD: number[] = Array(middle.length).fill(1);
 		let gapMD: number[] = Array(middle.length + 1).fill(1);
 
+		const allowCollide = annex.map(a => !!a);
+
 		// Fix gapMD
 		if (botSame) gapMD[0] = 0;
-		if (botIsBoundary || botSame) annex[0] = 0;
+		if (botIsBoundary || botSame) allowCollide[0] = false;
 
 		if (topSame) gapMD[middle.length] = 0;
-		if (topIsBoundary || topSame) annex[middle.length] = 0;
+		if (topIsBoundary || topSame) allowCollide[middle.length] = false;
 
 		this.subHints.push(
 			new MultipleAlignZone.Hint({
@@ -72,6 +74,7 @@ export default class HintGenSink extends HierarchySink {
 				bottomFree: !botSame,
 				topFree: !topSame,
 				mergePriority: annex,
+				allowCollide,
 				bottomPoint: zBot,
 				topPoint: zTop,
 				middleStrokes: middle.map(s => [s.lowKey.id, s.highKey.id])
@@ -86,13 +89,6 @@ export default class HintGenSink extends HierarchySink {
 		aboveFrom: null | Stem,
 		to: Stem
 	) {
-		// console.log(DependentHintType[type], [from.lowKey.id, from.highKey.id], "->", [
-		// 	to.lowKey.id,
-		// 	to.highKey.id
-		// ]);
-		// if (belowFrom) console.log("BELOW", [belowFrom.lowKey.id, belowFrom.highKey.id]);
-		// if (aboveFrom) console.log("ABOVE", [aboveFrom.lowKey.id, aboveFrom.highKey.id]);
-
 		if (type === DependentHintType.DiagHighToLow && belowFrom) {
 			this.subHints.push(
 				new MultipleAlignZone.Hint({
@@ -102,6 +98,7 @@ export default class HintGenSink extends HierarchySink {
 					bottomFree: false,
 					topFree: false,
 					mergePriority: [0, 1],
+					allowCollide: [false, true],
 					bottomPoint: belowFrom.highKey.id,
 					middleStrokes: [[to.lowKey.id, to.highKey.id]],
 					topPoint: from.highKey.id
@@ -116,6 +113,7 @@ export default class HintGenSink extends HierarchySink {
 					bottomFree: false,
 					topFree: false,
 					mergePriority: [-1, 0],
+					allowCollide: [true, false],
 					bottomPoint: from.lowKey.id,
 					middleStrokes: [[to.lowKey.id, to.highKey.id]],
 					topPoint: aboveFrom.lowKey.id

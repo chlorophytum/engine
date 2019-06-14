@@ -5,9 +5,9 @@ import Stem from "../../types/stem";
 const SIZE = 255;
 
 export class Bitmap {
-	scale: number;
-	yMin: number;
-	yMax: number;
+	public scale: number;
+	public yMin: number;
+	public yMax: number;
 
 	constructor(strategy: HintingStrategy, public array: boolean[][]) {
 		let scale = strategy.UPM / SIZE;
@@ -18,13 +18,13 @@ export class Bitmap {
 		this.yMax = yMax;
 		this.array = array;
 	}
-	transform(x: number, y: number) {
+	public transform(x: number, y: number) {
 		return {
 			x: Math.round(x / this.scale),
 			y: Math.round(y / this.scale) - this.yMin
 		};
 	}
-	access(x: number, y: number) {
+	public access(x: number, y: number) {
 		if (x < 0 || x > SIZE * this.scale) return false;
 		if (y < this.yMin * this.scale || y > this.yMax * this.scale) return false;
 		return this.array[Math.round(x / this.scale)][Math.round(y / this.scale) - this.yMin];
@@ -46,14 +46,14 @@ export function createImageBitmap(g: Glyph, strategy: HintingStrategy) {
 }
 
 class FlipAnalyzer {
-	lifetime: number[] = [];
-	enter<T>(a: T[]) {
+	public lifetime: number[] = [];
+	public enter<T>(a: T[]) {
 		const turns = this.getTurns(a);
 		for (let t = 0; t <= turns; t++) {
 			this.lifetime[t] = (this.lifetime[t] || 0) + 1;
 		}
 	}
-	getTurns<T>(a: T[]) {
+	public getTurns<T>(a: T[]) {
 		if (!a || !a.length) return 0;
 		let v0 = a[0],
 			turns = 0;
@@ -65,7 +65,7 @@ class FlipAnalyzer {
 		}
 		return turns;
 	}
-	computeFlips(limit: number) {
+	public computeFlips(limit: number) {
 		let turns = 0;
 		while (this.lifetime[turns] >= limit) turns++;
 		return turns;

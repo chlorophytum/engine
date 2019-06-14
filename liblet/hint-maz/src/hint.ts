@@ -17,6 +17,9 @@ export namespace MultipleAlignZone {
 			if (props.mergePriority.length !== N + 1) {
 				throw new TypeError("mergePriority length mismatch");
 			}
+			if (props.allowCollide.length !== N + 1) {
+				throw new TypeError("allowCollide length mismatch");
+			}
 			if (props.gapMinDist.length !== N + 1) {
 				throw new TypeError("gapMinDist length mismatch");
 			}
@@ -50,7 +53,11 @@ export namespace MultipleAlignZone {
 		public doCompile() {
 			const { props } = this;
 			const N = props.middleStrokes.length;
-			const recPath = getRecPath(props.mergePriority, N);
+			const recPath = getRecPath(props.mergePriority, props.mergePriority, N);
+			let collidePriority: number[] = props.mergePriority.map(
+				(c, j) => c * (props.allowCollide[j] ? 1 : 0)
+			);
+			const recPathCollide = getRecPath(props.mergePriority, collidePriority, N);
 
 			this.sink.addSegment(function*($) {
 				const spurBottom = $.globalTwilight(
@@ -63,9 +70,11 @@ export namespace MultipleAlignZone {
 				const bottomPoint = props.bottomPoint < 0 ? spurBottom : props.bottomPoint;
 				const topPoint = props.topPoint < 0 ? spurTop : props.topPoint;
 
-				if (N <= 4) {
+				// We'll generate stub functions for the cases that the stroke quantity are small
+				// to prevent producing too many functions and the consequent overflow.
+				if (N <= 3) {
 					yield $.call(
-						THintMultipleStrokesStub(N, { ...props, recPath }),
+						THintMultipleStrokesStub(N, { ...props, recPath, recPathCollide }),
 						bottomPoint,
 						topPoint,
 						..._.flatten(props.middleStrokes)
@@ -76,6 +85,7 @@ export namespace MultipleAlignZone {
 						...props.gapMinDist,
 						...props.inkMinDist,
 						...recPath,
+						...recPathCollide,
 						props.bottomFree ? 2 : 1,
 						props.topFree ? 2 : 1,
 						bottomPoint,

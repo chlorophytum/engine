@@ -36,6 +36,7 @@ export class GlyphAnalysis {
 	public symmetry: boolean[][] = [];
 	public collisionMatrices = new ColMats();
 	public blueZone = new BlueZone();
+	public nonBlueTopBottom = new BlueZone();
 	public interpolations: Interpolation[] = [];
 	public shortAbsorptions: ShortAbsorption[] = [];
 }

@@ -42,11 +42,8 @@ interface DependentHint {
 	toStem: number;
 }
 
-const ENABLE_TBA = true;
-
 export default class HierarchyAnalyzer {
 	private stemMask: number[];
-	private pointMask: number[] = [];
 	public lastPathWeight = 0;
 	public loops = 0;
 
@@ -58,6 +55,8 @@ export default class HierarchyAnalyzer {
 	public pre(sink: HierarchySink) {
 		for (const z of this.analysis.blueZone.topZs) sink.addBlue(true, z);
 		for (const z of this.analysis.blueZone.bottomZs) sink.addBlue(false, z);
+		for (const z of this.analysis.nonBlueTopBottom.topZs) sink.addBlue(true, z);
+		for (const z of this.analysis.nonBlueTopBottom.bottomZs) sink.addBlue(false, z);
 	}
 
 	public fetch(sink: HierarchySink) {
@@ -68,8 +67,9 @@ export default class HierarchyAnalyzer {
 		const top = path[0];
 		const bot = path[path.length - 1];
 		if (!this.analysis.stems[bot] || !this.analysis.stems[top]) return;
-		const middle = path.filter(j => this.analysis.stems[j] && !this.stemMask[j]).reverse();
-		if (!middle.length) return;
+
+		const sidPile = path.filter(j => this.analysis.stems[j] && !this.stemMask[j]).reverse();
+		if (!sidPile.length) return;
 
 		let botIsBoundary = false,
 			botAtGlyphBottom = false,
@@ -97,55 +97,35 @@ export default class HierarchyAnalyzer {
 			);
 			topIsBoundary = true;
 		}
-		sink.addStemPileHint(
-			this.analysis.stems[bot],
-			middle.map(j => this.analysis.stems[j]),
-			this.analysis.stems[top],
-			botIsBoundary,
-			topIsBoundary,
-			this.getMergePriority(this.analysis.collisionMatrices.annexation, top, bot, middle)
-		);
-		// console.log(bot, middle, top);
-		if (
-			ENABLE_TBA &&
-			botIsBoundary &&
-			!botAtGlyphBottom &&
-			bot === middle[0] &&
-			bot !== middle[1]
-		) {
-			//console.log("B", bot, middle[1]);
+
+		const sidPileMiddle = sidPile.filter(j => {
+			if (!botAtGlyphBottom && j === bot) return false;
+			if (!topAtGlyphTop && j === top) return false;
+			return true;
+		});
+
+		if (sidPileMiddle.length) {
 			sink.addStemPileHint(
-				null,
-				[this.analysis.stems[bot]],
-				this.analysis.stems[middle[1]],
-				false,
-				false,
-				[-1, 0]
+				this.analysis.stems[bot],
+				sidPileMiddle.map(j => this.analysis.stems[j]),
+				this.analysis.stems[top],
+				botIsBoundary,
+				topIsBoundary,
+				this.getMergePriority(
+					this.analysis.collisionMatrices.annexation,
+					top,
+					bot,
+					sidPileMiddle
+				)
 			);
 		}
-		if (
-			ENABLE_TBA &&
-			topIsBoundary &&
-			!topAtGlyphTop &&
-			top === middle[middle.length - 1] &&
-			top !== middle[middle.length - 2]
-		) {
-			//console.log("T", top, middle[middle.length - 2]);
-			sink.addStemPileHint(
-				this.analysis.stems[middle[middle.length - 2]],
-				[this.analysis.stems[top]],
-				null,
-				false,
-				false,
-				[0, 1]
-			);
-		}
+
 		for (const dependent of dependents) {
 			sink.addDependentHint(
 				dependent.type,
-				this.getStemBelow(bot, middle, top, dependent.fromStem),
+				this.getStemBelow(bot, sidPile, top, dependent.fromStem),
 				this.analysis.stems[dependent.fromStem],
-				this.getStemAbove(bot, middle, top, dependent.fromStem),
+				this.getStemAbove(bot, sidPile, top, dependent.fromStem),
 				this.analysis.stems[dependent.toStem]
 			);
 		}

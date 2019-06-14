@@ -238,6 +238,48 @@ export const THintTopStrokeFree = LibFunc(
 	}
 );
 
+export const THintStrokeFreeAuto = LibFunc(
+	`Chlorophytum::EmBox::HlttSupportPrograms::THintStrokeFreeAuto`,
+	function*(e) {
+		const [zBot, zTop, zsBot, zsTop] = e.args(4);
+		const dBelowOrig = e.local();
+		const dAboveOrig = e.local();
+		const wOrig = e.local();
+		const wCur = e.local();
+		const spaceCur = e.local();
+		const urTop = e.local();
+		const rTop = e.local();
+		const urBot = e.local();
+		const rBot = e.local();
+		yield e.set(dBelowOrig, e.sub(e.gc.orig(zsBot), e.gc.orig(zBot)));
+		yield e.set(dAboveOrig, e.sub(e.gc.orig(zTop), e.gc.orig(zsTop)));
+		yield e.set(wOrig, e.sub(e.gc.orig(zsTop), e.gc.orig(zsBot)));
+		yield e.set(wCur, e.max(e.coerce.toF26D6(3 / 5), wOrig));
+		yield e.set(spaceCur, e.sub(e.sub(e.gc.cur(zTop), e.gc.cur(zBot)), wCur));
+		yield e.set(
+			urTop,
+			e.sub(e.gc.cur(zTop), e.mul(spaceCur, e.div(dAboveOrig, e.add(dBelowOrig, dAboveOrig))))
+		);
+		yield e.set(
+			urBot,
+			e.add(e.gc.cur(zBot), e.mul(spaceCur, e.div(dBelowOrig, e.add(dBelowOrig, dAboveOrig))))
+		);
+		yield e.set(rTop, e.round.white(urTop));
+		yield e.set(rBot, e.round.white(urBot));
+		yield e.if(
+			e.gt(e.abs(e.sub(rTop, urTop)), e.abs(e.sub(rBot, urBot))),
+			function*() {
+				yield e.scfs(zsBot, rBot);
+				yield e.scfs(zsTop, e.add(rBot, wCur));
+			},
+			function*() {
+				yield e.scfs(zsTop, rTop);
+				yield e.scfs(zsBot, e.sub(rTop, wCur));
+			}
+		);
+	}
+);
+
 export const THintBottomEdge = LibFunc(
 	`Chlorophytum::EmBox::HlttSupportPrograms::THintBottomEdge`,
 	function*(e) {
@@ -258,6 +300,13 @@ export const THintTopEdge = LibFunc(
 	}
 );
 
+export const ULink = LibFunc(
+	`Chlorophytum::EmBox::HlttSupportPrograms::TInitEmBoxTwilightPoints::RLink`,
+	function*($) {
+		const [a, b] = $.args(2);
+		yield $.scfs(b, $.add($.gc.cur(a), $.sub($.gc.orig(b), $.gc.orig(a))));
+	}
+);
 export const RLink = LibFunc(
 	`Chlorophytum::EmBox::HlttSupportPrograms::TInitEmBoxTwilightPoints::RLink`,
 	function*($) {
@@ -300,11 +349,13 @@ export const TInitEmBoxTwilightPoints = LibFunc(
 		yield $.mdap(strokeTop);
 		yield $.mdap(archBottom);
 		yield $.mdap(archTop);
+		yield $.mdap(spurBottom);
+		yield $.mdap(spurTop);
 
 		yield $.scfs(strokeBottom, $.round.black($.gc.orig(strokeBottom)));
 		yield $.call(RLink, strokeBottom, strokeTop);
-		yield $.mdrp(strokeBottom, spurBottom);
-		yield $.mdrp(strokeTop, spurTop);
+		yield $.call(ULink, strokeBottom, spurBottom);
+		yield $.call(ULink, strokeTop, spurTop);
 		yield $.call(RLinkLim, strokeBottom, archBottom, spurBottom);
 		yield $.call(RLinkLim, strokeTop, archTop, spurTop);
 	}

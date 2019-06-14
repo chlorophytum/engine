@@ -174,9 +174,18 @@ const THintMultipleStrokes_DoMerge_ConsequenceEdge = LibFunc(
 const THintMultipleStrokes_DoMerge: EdslFunctionTemplate<[number]> = Template(
 	"IdeographProgram::THintMultipleStrokes::DoMerge",
 	function*($, N: number) {
-		const [fb, ft, zBot, zTop, vpZMids, vpGapMD, vpInkMD, vpRecPath] = $.args(8);
+		const [fb, ft, zBot, zTop, vpZMids, vpGapMD, vpInkMD, vpRecPath, vpRecPathCollide] = $.args(
+			9
+		);
+
 		const pRecPath = $.coerce.fromIndex.variable(vpRecPath);
+		const pRecPathCollide = $.coerce.fromIndex.variable(vpRecPathCollide);
 		const pRecValue = pRecPath;
+
+		yield $.if($.eq(pRecValue, 0), function*() {
+			yield $.call(HintMultipleStrokesGiveUp, N, zBot, zTop, vpZMids);
+			yield $.return(0);
+		});
 
 		const mergeIndex = $.local();
 		const mergeDown = $.local();
@@ -218,7 +227,8 @@ const THintMultipleStrokes_DoMerge: EdslFunctionTemplate<[number]> = Template(
 				zMids1.ptr,
 				gapMD1.ptr,
 				inkMD1.ptr,
-				$.part(pRecPath, 1).ptr
+				$.part(pRecPath, 1).ptr,
+				$.part(pRecPathCollide, 1).ptr
 			),
 			function*() {
 				yield $.call(
@@ -290,14 +300,22 @@ const THintMultipleStrokes_DoCollideMerge_ConsequenceEdge = LibFunc(
 const THintMultipleStrokes_DoCollideMerge: EdslFunctionTemplate<[number]> = Template(
 	"IdeographProgram::THintMultipleStrokes::DoCollideMerge",
 	function*($, N: number) {
-		const [fb, ft, zBot, zTop, vpZMids, vpGapMD, vpInkMD, vpRecPath] = $.args(8);
+		const [fb, ft, zBot, zTop, vpZMids, vpGapMD, vpInkMD, vpRecPath, vpRecPathCollide] = $.args(
+			9
+		);
 		const pRecPath = $.coerce.fromIndex.variable(vpRecPath);
-		const pRecValue = pRecPath;
+		const pRecPathCollide = $.coerce.fromIndex.variable(vpRecPathCollide);
+		const pRecValue = pRecPathCollide;
 
-		const mergeIndex = $.local();
-		const mergeDown = $.local();
-		yield $.set(mergeIndex, $.sub($.abs(pRecValue), 1));
-		yield $.set(mergeDown, $.lt(pRecValue, 0));
+		yield $.if($.eq(pRecValue, 0), function*() {
+			yield $.call(HintMultipleStrokesGiveUp, N, zBot, zTop, vpZMids);
+			yield $.return(0);
+		});
+
+		const collideIndex = $.local();
+		const collideDown = $.local();
+		yield $.set(collideIndex, $.sub($.abs(pRecValue), 1));
+		yield $.set(collideDown, $.lt(pRecValue, 0));
 
 		const gapMD1 = $.local(N);
 		const inkMD1 = $.local(N - 1);
@@ -306,8 +324,8 @@ const THintMultipleStrokes_DoCollideMerge: EdslFunctionTemplate<[number]> = Temp
 			UpdateNewProps,
 			N,
 			1,
-			mergeIndex,
-			mergeDown,
+			collideIndex,
+			collideDown,
 			vpGapMD,
 			vpInkMD,
 			vpZMids,
@@ -319,7 +337,7 @@ const THintMultipleStrokes_DoCollideMerge: EdslFunctionTemplate<[number]> = Temp
 		yield $.call(
 			THintMultipleStrokes_DoCollideMerge_ConsequenceEdge,
 			N,
-			mergeIndex,
+			collideIndex,
 			zBot,
 			zTop,
 			vpZMids
@@ -334,14 +352,15 @@ const THintMultipleStrokes_DoCollideMerge: EdslFunctionTemplate<[number]> = Temp
 				zMids1.ptr,
 				gapMD1.ptr,
 				inkMD1.ptr,
-				$.part(pRecPath, 1).ptr
+				$.part(pRecPath, 1).ptr,
+				$.part(pRecPathCollide, 1).ptr
 			),
 			function*() {
 				yield $.call(
 					THintMultipleStrokes_DoCollideMerge_Consequence,
 					N,
-					mergeIndex,
-					mergeDown,
+					collideIndex,
+					collideDown,
 					vpZMids
 				);
 				yield $.return(1);
@@ -356,21 +375,25 @@ const THintMultipleStrokes_DoCollideMerge: EdslFunctionTemplate<[number]> = Temp
 export const THintMultipleStrokes_OmitImpl = Template(
 	"IdeographProgram::THintMultipleStrokes::OmitImpl",
 	function*($, N: number) {
-		const [dist, reqDist, fb, ft, zBot, zTop, vpZMids, vpGapMD, vpInkMD, vpRecPath] = $.args(
-			10
-		);
+		const [
+			dist,
+			reqDist,
+			fb,
+			ft,
+			zBot,
+			zTop,
+			vpZMids,
+			vpGapMD,
+			vpInkMD,
+			vpRecPath,
+			vpRecPathCollide
+		] = $.args(11);
+
 		if (N <= 1) {
 			yield $.call(HintMultipleStrokesGiveUp, N, zBot, zTop, vpZMids);
 			yield $.return(0);
 			return;
 		}
-
-		const pRecPath = $.coerce.fromIndex.variable(vpRecPath);
-		const pRecValue = pRecPath;
-		yield $.if($.eq(pRecValue, 0), function*() {
-			yield $.call(HintMultipleStrokesGiveUp, N, zBot, zTop, vpZMids);
-			yield $.return(0);
-		});
 
 		yield $.if(
 			$.gteq(dist, $.sub(reqDist, $.coerce.toF26D6(1))),
@@ -385,7 +408,8 @@ export const THintMultipleStrokes_OmitImpl = Template(
 						vpZMids,
 						vpGapMD,
 						vpInkMD,
-						vpRecPath
+						vpRecPath,
+						vpRecPathCollide
 					)
 				);
 			},
@@ -400,7 +424,8 @@ export const THintMultipleStrokes_OmitImpl = Template(
 						vpZMids,
 						vpGapMD,
 						vpInkMD,
-						vpRecPath
+						vpRecPath,
+						vpRecPathCollide
 					)
 				);
 			}
@@ -411,7 +436,9 @@ export const THintMultipleStrokes_OmitImpl = Template(
 export const THintMultipleStrokesMainImpl: EdslFunctionTemplate<[number]> = Template(
 	"IdeographProgram::THintMultipleStrokes::MainImpl",
 	function*($, N: number) {
-		const [fb, ft, zBot, zTop, vpZMids, vpGapMD, vpInkMD, vpRecPath] = $.args(8);
+		const [fb, ft, zBot, zTop, vpZMids, vpGapMD, vpInkMD, vpRecPath, vpRecPathCollide] = $.args(
+			9
+		);
 
 		const dist = $.local();
 		const frBot = $.local();
@@ -438,7 +465,8 @@ export const THintMultipleStrokesMainImpl: EdslFunctionTemplate<[number]> = Temp
 					vpZMids,
 					vpGapMD,
 					vpInkMD,
-					vpRecPath
+					vpRecPath,
+					vpRecPathCollide
 				)
 			);
 		});

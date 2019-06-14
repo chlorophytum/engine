@@ -5,7 +5,7 @@ function findMatchingFactory(type: string, modelFactories: IHintingModelFactory[
 	return null;
 }
 
-export default async function preHint<GID, VAR, MASTER>(
+export default async function mainPreHint<GID, VAR, MASTER>(
 	font: IFontSource<GID, VAR, MASTER>,
 	modelFactories: IHintingModelFactory[],
 	modelConfig: HintingModelConfig[]
@@ -14,6 +14,7 @@ export default async function preHint<GID, VAR, MASTER>(
 	for (const { type, parameters } of modelConfig) {
 		const mf = findMatchingFactory(type, modelFactories);
 		if (!mf) continue;
+		console.log(`Apply model ${type}`);
 		const hm = mf.adopt(font, parameters);
 		if (!hm) continue;
 		const glyphs = await hm.analyzeSharedParameters();
@@ -23,8 +24,8 @@ export default async function preHint<GID, VAR, MASTER>(
 			if (!gName) continue;
 			const hints = await hm.analyzeGlyph(glyph);
 			if (hints) await hs.setGlyphHints(gName, hints);
+			console.log(gName);
 		}
-
 		const sharedHints = await hm.getSharedHints();
 		if (sharedHints) await hs.setSharedHints(hm.type, sharedHints);
 	}
