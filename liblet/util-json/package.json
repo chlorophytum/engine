@@ -17,8 +17,7 @@
 		"strip-bom-stream": "^4.0.0"
 	},
 	"devDependencies": {
-		"ava": "^1.4.1",
-		"@types/jsonstream": "^0.8.30"
+		"ava": "^1.4.1"
 	},
 	"ava": {
 		"files": [
