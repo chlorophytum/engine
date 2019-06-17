@@ -18,7 +18,7 @@
 	},
 	"devDependencies": {
 		"ava": "^1.4.1",
-		"@types/JSONStream": "^0.8.30"
+		"@types/jsonstream": "^0.8.30"
 	},
 	"ava": {
 		"files": [
