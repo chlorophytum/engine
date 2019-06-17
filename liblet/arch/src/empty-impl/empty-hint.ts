@@ -11,7 +11,7 @@ export namespace Empty {
 		}
 	}
 
-	export class HintFactory implements IHintFactory {
+	export class Factory implements IHintFactory {
 		public readonly type = TAG;
 		public readJson(json: any) {
 			if (json && json.type === TAG) return new Hint();

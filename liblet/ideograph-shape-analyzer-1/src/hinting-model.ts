@@ -1,4 +1,7 @@
-import { EmptyImpl, IFontSource, IHintingModel, IHintingModelFactory } from "@chlorophytum/arch";
+import { EmptyImpl, IFontSource, IHintingModel, IHintingModelPlugin } from "@chlorophytum/arch";
+import { Interpolate, LinkChain, Smooth, WithDirection } from "@chlorophytum/hint-common";
+import { EmBoxEdge, EmBoxInit, EmBoxShared, EmBoxStroke } from "@chlorophytum/hint-embox";
+import { MultipleAlignZone } from "@chlorophytum/hint-maz";
 
 import analyzeGlyph from "./analyze";
 import { createGlyph } from "./create-glyph";
@@ -62,7 +65,7 @@ class IdeographHintingModel1<GID, VAR, MASTER> implements IHintingModel<GID> {
 	}
 }
 
-class CIdeographHintingModelFactory1 implements IHintingModelFactory {
+class CIdeographHintingModelFactory1 implements IHintingModelPlugin {
 	public readonly type = "Chlorophytum::IdeographHintingModel1";
 	public adopt<GID, VAR, MASTER>(
 		font: IFontSource<GID, VAR, MASTER>,
@@ -70,8 +73,19 @@ class CIdeographHintingModelFactory1 implements IHintingModelFactory {
 	): IHintingModel<GID> | null | undefined {
 		return new IdeographHintingModel1<GID, VAR, MASTER>(font, parameters);
 	}
+	public readonly hintFactories = [
+		new WithDirection.HintFactory(),
+		new MultipleAlignZone.HintFactory(),
+		new LinkChain.HintFactory(),
+		new Interpolate.HintFactory(),
+		new EmBoxStroke.HintFactory(),
+		new EmBoxEdge.HintFactory(),
+		new EmBoxInit.HintFactory(),
+		new EmBoxShared.HintFactory(),
+		new Smooth.HintFactory()
+	];
 }
 
-const IdeographHintingModelFactory1: IHintingModelFactory = new CIdeographHintingModelFactory1();
+const IdeographHintingModelFactory1: IHintingModelPlugin = new CIdeographHintingModelFactory1();
 
 export default IdeographHintingModelFactory1;

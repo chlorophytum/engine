@@ -24,6 +24,7 @@ export class HlttCollector implements IFinalHintCollector {
 	public getFunctionDefs<F>(format: InstrFormat<F>) {
 		return this.edsl.compileFunctions(format);
 	}
+	public consolidate() {}
 }
 
 export class HlttSession implements IFinalHintSession {
@@ -44,6 +45,9 @@ export class HlttSession implements IFinalHintSession {
 		this.preProgram = this.edsl.program(function*($) {
 			for (const gen of preSegments) yield* gen($);
 		});
+	}
+	public consolidate() {
+		this.consolidatePreProgram();
 	}
 
 	public getPreProgram<F>(format: InstrFormat<F>) {
@@ -78,4 +82,10 @@ export class HlttProgramSink implements IFinalHintProgramSink {
 	public save() {
 		this.fSave($ => this.buildProgram($));
 	}
+}
+
+export class TtFinalHintStore<F> {
+	public glyphHints = new Map<string, F>();
+	public fpgm?: F;
+	public prep?: F;
 }

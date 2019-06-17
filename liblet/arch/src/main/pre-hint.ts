@@ -1,13 +1,13 @@
-import { HintingModelConfig, IFontSource, IHintingModelFactory } from "../interfaces";
+import { HintingModelConfig, IFontSource, IHintingModelPlugin } from "../interfaces";
 
-function findMatchingFactory(type: string, modelFactories: IHintingModelFactory[]) {
+function findMatchingFactory(type: string, modelFactories: IHintingModelPlugin[]) {
 	for (const mf of modelFactories) if (mf.type === type) return mf;
 	return null;
 }
 
 export default async function mainPreHint<GID, VAR, MASTER>(
 	font: IFontSource<GID, VAR, MASTER>,
-	modelFactories: IHintingModelFactory[],
+	modelFactories: IHintingModelPlugin[],
 	modelConfig: HintingModelConfig[]
 ) {
 	const hs = font.createHintStore();

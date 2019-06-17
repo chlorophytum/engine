@@ -6,7 +6,8 @@
 		{"path": "../fontforge-instr"},
 		{"path": "../hltt"},
 		{"path": "../ideograph-shape-analyzer-1"},
-		{"path": "../sink-hltt"}
+		{"path": "../sink-hltt"},
+		{"path": "../util-json"}
 	],
 	"compilerOptions": {
 		"outDir": "lib",

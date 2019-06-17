@@ -1,9 +1,13 @@
 import { IHint, IHintStore } from "@chlorophytum/arch";
+import * as stream from "stream";
+
+import { IOpenTypeHsSupport } from "./otf-support";
 
 export class OpenTypeHintStore implements IHintStore {
 	private glyphHints = new Map<string, IHint>();
 	private sharedHintTypes = new Map<string, IHint>();
 
+	constructor(protected readonly support: IOpenTypeHsSupport) {}
 	public async listGlyphs() {
 		return this.glyphHints.keys();
 	}
@@ -21,5 +25,9 @@ export class OpenTypeHintStore implements IHintStore {
 	}
 	public async setSharedHints(type: string, hint: IHint) {
 		this.sharedHintTypes.set(type, hint);
+	}
+
+	public save(stream: stream.Writable) {
+		return this.support.saveHintStore(this.glyphHints, this.sharedHintTypes, stream);
 	}
 }

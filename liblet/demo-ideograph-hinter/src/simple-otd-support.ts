@@ -1,11 +1,24 @@
-import { GlyphGeometry, GlyphPoint, IFontSourceMetadata } from "@chlorophytum/arch";
+import {
+	EmptyImpl,
+	GlyphGeometry,
+	GlyphPoint,
+	IFontSourceMetadata,
+	IHint,
+	IHintFactory,
+	IHintingModelPlugin,
+	IHintStore
+} from "@chlorophytum/arch";
 import {
 	IOpenTypeFileSupport,
+	IOpenTypeHsSupport,
 	ISimpleGetBimap,
 	ISimpleGetMap,
 	OpenTypeFont,
 	OpenTypeVariation
 } from "@chlorophytum/font-opentype";
+import { StreamJson } from "@chlorophytum/util-json";
+import * as stream from "stream";
+import * as zlib from "zlib";
 
 export class Cmap implements ISimpleGetMap<number, string> {
 	private m_map = new Map<number, string>();
@@ -88,6 +101,68 @@ export class OtdSupport implements IOpenTypeFileSupport<string> {
 	}
 	public async getGlyphMasters(glyph: string) {
 		return [];
+	}
+
+	public readonly hsSupport = new OtdHsSupport();
+}
+
+function stringifyJsonGz(obj: any, output: stream.Writable): Promise<void> {
+	const ts = new stream.PassThrough();
+	ts.pipe(zlib.createGzip()).pipe(output);
+	return new Promise<void>(resolve => {
+		StreamJson.stringify(obj, ts);
+		output.on("close", () => resolve());
+	});
+}
+
+async function parseJsonGz(input: stream.Readable) {
+	const ts = new stream.PassThrough();
+	input.pipe(zlib.createGunzip()).pipe(ts);
+	return await StreamJson.parse(ts);
+}
+
+export class OtdHsSupport implements IOpenTypeHsSupport {
+	private hintMapToDict(map: Map<string, IHint>) {
+		const dict: { [key: string]: any } = Object.create(null);
+		for (const [k, v] of map) {
+			dict[k] = v.toJSON();
+		}
+		return dict;
+	}
+
+	public saveHintStore(
+		glyphHints: Map<string, IHint>,
+		sharedHints: Map<string, IHint>,
+		output: stream.Writable
+	) {
+		const obj = {
+			glyphs: this.hintMapToDict(glyphHints),
+			sharedHints: this.hintMapToDict(sharedHints)
+		};
+		return stringifyJsonGz(obj, output);
+	}
+
+	public async populateHintStore(
+		input: stream.Readable,
+		plugins: IHintingModelPlugin[],
+		store: IHintStore
+	): Promise<void> {
+		const hsRep = await parseJsonGz(input);
+		const hfs: IHintFactory[] = [];
+		for (const plugin of plugins) {
+			for (const hf of plugin.hintFactories) {
+				hfs.push(hf);
+			}
+		}
+		const hf = new EmptyImpl.FallbackHintFactory(hfs);
+		for (const k in hsRep.glyphs) {
+			const hint = hf.readJson(hsRep.glyphs[k], hf);
+			if (hint) store.setGlyphHints(k, hint);
+		}
+		for (const k in hsRep.sharedHints) {
+			const hint = hf.readJson(hsRep.sharedHints[k], hf);
+			if (hint) store.setSharedHints(k, hint);
+		}
 	}
 }
 

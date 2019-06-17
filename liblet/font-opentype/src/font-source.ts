@@ -36,6 +36,6 @@ export abstract class OpenTypeFont<Glyph>
 		return await this.support.getGeometry(glyph, instance);
 	}
 	public createHintStore() {
-		return new OpenTypeHintStore();
+		return new OpenTypeHintStore(this.support.hsSupport);
 	}
 }

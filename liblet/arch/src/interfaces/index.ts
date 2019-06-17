@@ -1,3 +1,6 @@
+import * as stream from "stream";
+
+// Geometry data
 export interface Point {
 	readonly x: number;
 	readonly y: number;
@@ -17,18 +20,29 @@ export interface GlyphShape {
 	readonly compositionOperator?: string;
 	readonly components?: GlyphShapeComponent;
 }
-
-export interface IFontSourceFactory {
-	// "any"s are actually existential types
-	createFontSourceFromFile(path: string): Promise<IFontSource<any, any, any>>;
-	createHintStoreFromFile(path: string): Promise<IHintStore>;
-}
-export interface IFontSourceMetadata {
-	readonly upm: number;
-}
 export interface GlyphRelation<Glyph> {
 	readonly target: Glyph;
 	readonly relationTag: string;
+}
+
+// Font source
+export interface IFontFormatPlugin {
+	// "any"s are actually existential types
+	createFontSource(input: stream.Readable): Promise<IFontSource<any, any, any>>;
+	createHintStore(input: stream.Readable, plugins: IHintingModelPlugin[]): Promise<IHintStore>;
+	saveFinalHint(
+		col: IFinalHintCollector,
+		fhs: IFinalHintSession,
+		output: stream.Writable
+	): Promise<void>;
+	integrateFinalHintsToFont(
+		hints: stream.Readable,
+		font: stream.Readable,
+		output: stream.Writable
+	): Promise<void>;
+}
+export interface IFontSourceMetadata {
+	readonly upm: number;
 }
 export interface IFontSource<Glyph, VAR, MASTER> {
 	readonly format: string;
@@ -57,27 +71,7 @@ export interface IHintStore {
 	listSharedTypes(): Promise<Iterable<string>>;
 	getSharedHints(type: string): Promise<IHint | null | undefined>;
 	setSharedHints(type: string, hint: IHint): Promise<void>;
-}
-
-export interface IFinalHintFactory {
-	createFinalHintCollectorFor(to: IHintStore): IFinalHintCollector;
-	createFinalHintIntegratorFor(from: IHintStore, to: any): IFinalSinkIntegrator;
-}
-export interface IFinalHintProgramSink {
-	readonly format: string;
-	save(): void;
-}
-export interface IFinalHintSession {
-	readonly format: string;
-	createGlyphProgramSink(gid: string): IFinalHintProgramSink;
-	createSharedProgramSink(type: string): IFinalHintProgramSink;
-}
-export interface IFinalHintCollector {
-	readonly format: string;
-	createSession(): IFinalHintSession;
-}
-export interface IFinalSinkIntegrator {
-	readonly format: string;
+	save(stream: stream.Writable): Promise<void>;
 }
 
 // Visual hints are geometry-invariant
@@ -93,18 +87,7 @@ export interface IHintCompiler {
 	doCompile(): void;
 }
 
-// Shape analysis
-export interface IHintingModelFactory {
-	readonly type: string;
-	adopt<GID, VAR, MASTER>(
-		font: IFontSource<GID, VAR, MASTER>,
-		parameters: any
-	): IHintingModel<GID> | null | undefined;
-}
-export interface HintingModelConfig {
-	readonly type: string;
-	readonly parameters?: any;
-}
+// Shape analysis (auto hinting)
 export interface IHintingModel<Glyph> {
 	readonly type: string;
 	// Analyze shared parameters (usually CVT)
@@ -114,4 +97,36 @@ export interface IHintingModel<Glyph> {
 	analyzeGlyph(gid: Glyph): Promise<null | IHint>;
 	// Create a compiler to compile shared functions / parameters
 	getSharedHints(): Promise<null | IHint>;
+}
+export interface IHintingModelPlugin {
+	readonly type: string;
+	adopt<GID, VAR, MASTER>(
+		font: IFontSource<GID, VAR, MASTER>,
+		parameters: any
+	): IHintingModel<GID> | null | undefined;
+	hintFactories: IHintFactory[];
+}
+export interface HintingModelConfig {
+	readonly type: string;
+	readonly parameters?: any;
+}
+
+// Hint compilation (instructing)
+export interface IFinalHintPlugin {
+	createFinalHintCollector(): IFinalHintCollector;
+}
+export interface IFinalHintProgramSink {
+	readonly format: string;
+	save(): void;
+}
+export interface IFinalHintSession {
+	readonly format: string;
+	createGlyphProgramSink(gid: string): IFinalHintProgramSink;
+	createSharedProgramSink(type: string): IFinalHintProgramSink;
+	consolidate(): void;
+}
+export interface IFinalHintCollector {
+	readonly format: string;
+	createSession(): IFinalHintSession;
+	consolidate(): void;
 }
