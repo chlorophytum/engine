@@ -6,9 +6,15 @@ export interface HintOptions {
 	hintPasses: { plugin: string; options?: any }[];
 }
 
-export function createEnv(hOpt: HintOptions) {
+export function getFontPlugin(hOpt: HintOptions) {
 	const mFontFormat: Plugins.FontFormatModule = require(hOpt.fontFormat);
+	return mFontFormat.FontFormatPlugin;
+}
+export function getFinalHintPlugin(hOpt: HintOptions) {
 	const mFinalFormat: Plugins.FinalHintModule = require(hOpt.finalFormat);
+	return mFinalFormat.FinalHintPlugin;
+}
+export function getHintingModelsAndParams(hOpt: HintOptions) {
 	const models: IHintingModelPlugin[] = [];
 	const params: HintingModelConfig[] = [];
 
@@ -17,11 +23,5 @@ export function createEnv(hOpt: HintOptions) {
 		models.push(mModel.HintingModelPlugin);
 		params.push({ type: mModel.HintingModelPlugin.type, parameters: options });
 	}
-
-	return {
-		FontFormatPlugin: mFontFormat.FontFormatPlugin,
-		FinalHintPlugin: mFinalFormat.FinalHintPlugin,
-		models,
-		params
-	};
+	return { models, params };
 }
