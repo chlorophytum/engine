@@ -2,6 +2,7 @@
 	"files": [],
 	"references": [
 		{"path": "./arch"},
+		{"path": "./cli"},
 		{"path": "./demo-ideograph-hinter"},
 		{"path": "./font-opentype"},
 		{"path": "./fontforge-instr"},
