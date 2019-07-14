@@ -1,4 +1,4 @@
-import { HintingModelConfig, IHintingModelPlugin, Plugins } from "@chlorophytum/arch";
+import { EmptyImpl, HintingModelConfig, IHintingModelPlugin, Plugins } from "@chlorophytum/arch";
 
 export interface HintOptions {
 	fontFormat: string;
@@ -23,5 +23,10 @@ export function getHintingModelsAndParams(hOpt: HintOptions) {
 		models.push(mModel.HintingModelPlugin);
 		params.push({ type: mModel.HintingModelPlugin.type, parameters: options });
 	}
+
+	// Pad with empty-impl
+	models.push(EmptyImpl.EmptyHintingModelFactory);
+	params.push({ type: EmptyImpl.EmptyHintingModelFactory.type });
+
 	return { models, params };
 }

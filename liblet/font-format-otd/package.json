@@ -1,5 +1,5 @@
 {
-	"name": "@chlorophytum/sink-hltt",
+	"name": "@chlorophytum/font-format-otd",
 	"version": "0.0.1",
 	"description": "",
 	"main": "lib/index.js",
@@ -13,8 +13,12 @@
 	"license": "MIT",
 	"dependencies": {
 		"tslib": "^1.9.3",
+		"@chlorophytum/fontforge-instr": "^0.0.1",
 		"@chlorophytum/arch": "^0.0.1",
-		"@chlorophytum/hltt": "^0.0.1"
+		"@chlorophytum/hltt": "^0.0.1",
+		"@chlorophytum/final-hint-format-hltt": "^0.0.1",
+		"@chlorophytum/font-opentype": "^0.0.1",
+		"@chlorophytum/util-json": "^0.0.1"
 	},
 	"devDependencies": {
 		"ava": "^1.4.1"

@@ -1,6 +1,6 @@
 import { EmptyImpl, HintMain, IFinalHintSession } from "@chlorophytum/arch";
-import { hintingModel } from "@chlorophytum/ideograph-shape-analyzer-1";
-import * as Hltt from "@chlorophytum/sink-hltt";
+import * as Hltt from "@chlorophytum/final-hint-format-hltt";
+import * as Ideograph from "@chlorophytum/ideograph-shape-analyzer-1";
 import * as fs from "fs";
 import * as stream from "stream";
 
@@ -11,10 +11,10 @@ interface ExportPlan {
 	session: IFinalHintSession;
 }
 
-const PLUGINS = [hintingModel, EmptyImpl.EmptyHintingModelFactory];
+const PLUGINS = [Ideograph.HintingModelPlugin, EmptyImpl.EmptyHintingModelFactory];
 
 async function main() {
-	const ttCol = Hltt.Plugin.createFinalHintCollector();
+	const ttCol = Hltt.FinalHintPlugin.createFinalHintCollector();
 	const exportPlans: ExportPlan[] = [];
 
 	for (let j = 2; j < process.argv.length; j++) {

@@ -16,7 +16,7 @@
 		"@chlorophytum/fontforge-instr": "^0.0.1",
 		"@chlorophytum/arch": "^0.0.1",
 		"@chlorophytum/hltt": "^0.0.1",
-		"@chlorophytum/sink-hltt": "^0.0.1",
+		"@chlorophytum/final-hint-format-hltt": "^0.0.1",
 		"@chlorophytum/ideograph-shape-analyzer-1": "^0.0.1",
 		"@chlorophytum/font-opentype": "^0.0.1",
 		"@chlorophytum/util-json": "^0.0.1"

@@ -1,5 +1,5 @@
 import { EmptyImpl, HintMain } from "@chlorophytum/arch";
-import { hintingModel } from "@chlorophytum/ideograph-shape-analyzer-1";
+import * as Ideograph from "@chlorophytum/ideograph-shape-analyzer-1";
 import * as fs from "fs";
 
 import { Otd } from "./otd-font-format";
@@ -9,7 +9,7 @@ async function main() {
 	const fontSource = await Otd.createFontSource(otdStream);
 	const hs = await HintMain.preHint(
 		fontSource,
-		[hintingModel, EmptyImpl.EmptyHintingModelFactory],
+		[Ideograph.HintingModelPlugin, EmptyImpl.EmptyHintingModelFactory],
 		[
 			{ type: "Chlorophytum::EmptyHinting" },
 			{

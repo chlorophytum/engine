@@ -1,5 +1,5 @@
 {
-	"name": "@chlorophytum/hint-embox",
+	"name": "@chlorophytum/final-hint-format-hltt",
 	"version": "0.0.1",
 	"description": "",
 	"main": "lib/index.js",
@@ -14,7 +14,6 @@
 	"dependencies": {
 		"tslib": "^1.9.3",
 		"@chlorophytum/arch": "^0.0.1",
-		"@chlorophytum/final-hint-format-hltt": "^0.0.1",
 		"@chlorophytum/hltt": "^0.0.1"
 	},
 	"devDependencies": {

@@ -3,7 +3,10 @@
 	"references": [
 		{"path": "../arch"},
 		{"path": "../final-hint-format-hltt"},
-		{"path": "../hltt"}
+		{"path": "../font-opentype"},
+		{"path": "../fontforge-instr"},
+		{"path": "../hltt"},
+		{"path": "../util-json"}
 	],
 	"compilerOptions": {
 		"outDir": "lib",

@@ -5,9 +5,9 @@ import {
 	IHintingModelPlugin,
 	IHintStore
 } from "@chlorophytum/arch";
+import { HlttCollector, HlttSession } from "@chlorophytum/final-hint-format-hltt";
 import { OpenTypeHintStore } from "@chlorophytum/font-opentype";
 import { FontForgeTextInstr } from "@chlorophytum/fontforge-instr";
-import { HlttCollector, HlttSession } from "@chlorophytum/final-hint-format-hltt";
 import { StreamJson } from "@chlorophytum/util-json";
 import * as stream from "stream";
 import * as zlib from "zlib";
@@ -98,4 +98,4 @@ class OtdFontFormatPlugin implements IFontFormatPlugin {
 	}
 }
 
-export const Otd: IFontFormatPlugin = new OtdFontFormatPlugin();
+export const FontFormatPlugin: IFontFormatPlugin = new OtdFontFormatPlugin();

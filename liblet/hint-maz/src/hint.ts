@@ -1,6 +1,6 @@
 import { IFinalHintProgramSink, IHint, IHintCompiler, IHintFactory } from "@chlorophytum/arch";
 import { TranslateEmboxTwilightName } from "@chlorophytum/hint-embox";
-import { HlttProgramSink } from "@chlorophytum/sink-hltt";
+import { HlttProgramSink } from "@chlorophytum/final-hint-format-hltt";
 import * as _ from "lodash";
 
 import { THintMultipleStrokesExplicit, THintMultipleStrokesStub } from "./hltt-programs";

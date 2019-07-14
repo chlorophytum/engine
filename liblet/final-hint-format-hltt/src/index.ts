@@ -4,6 +4,6 @@ import { HlttCollector } from "./sink";
 
 export * from "./sink";
 
-export const Plugin: IFinalHintPlugin = {
+export const FinalHintPlugin: IFinalHintPlugin = {
 	createFinalHintCollector: () => new HlttCollector()
 };

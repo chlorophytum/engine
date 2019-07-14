@@ -1,5 +1,5 @@
 import { IFinalHintProgramSink, IHint, IHintCompiler, IHintFactory } from "@chlorophytum/arch";
-import { HlttProgramSink } from "@chlorophytum/sink-hltt";
+import { HlttProgramSink } from "@chlorophytum/final-hint-format-hltt";
 
 import { getEmBoxPoints } from "./constants";
 import { TInitEmBoxPointPrep } from "./programs/index";
