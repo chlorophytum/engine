@@ -1,13 +1,10 @@
 {
 	"extends": "../tsconfig.settings.json",
 	"references": [
-		{"path": "../arch"},
+		{"path": "../cli"},
 		{"path": "../final-hint-format-hltt"},
-		{"path": "../font-opentype"},
-		{"path": "../fontforge-instr"},
-		{"path": "../hltt"},
-		{"path": "../ideograph-shape-analyzer-1"},
-		{"path": "../util-json"}
+		{"path": "../font-format-otd"},
+		{"path": "../ideograph-shape-analyzer-1"}
 	],
 	"compilerOptions": {
 		"outDir": "lib",

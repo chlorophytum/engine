@@ -6,8 +6,9 @@ import { doHint } from "./hint";
 import { doInstruct } from "./instruct";
 import { doIntegrate, IntegrateJob } from "./integrate";
 
+program.version("0.0.1");
+
 program
-	.version("0.0.1")
 	.command("hint <font> <toHint> [...others]")
 	.option("-c, --config <json>", "Configuration file")
 	.action(async (font, toHint, rest, options) => {
@@ -18,7 +19,6 @@ program
 	});
 
 program
-	.version("0.0.1")
 	.command("instruct <hints> <instr> [...others]")
 	.option("-c, --config <json>", "Configuration file")
 	.action(async (hints, instr, rest, options) => {
@@ -29,7 +29,6 @@ program
 	});
 
 program
-	.version("0.0.1")
 	.command("integrate <instr> <input> <output> [...others]")
 	.option("-c, --config <json>", "Configuration file")
 	.action(async (instr, input, output, rest, options) => {
