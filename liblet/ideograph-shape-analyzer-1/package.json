@@ -16,8 +16,10 @@
 		"@chlorophytum/hint-common": "^0.0.1",
 		"@chlorophytum/hint-embox": "^0.0.1",
 		"@chlorophytum/hint-maz": "^0.0.1",
+		"@chlorophytum/font-opentype": "^0.0.1",
 		"tslib": "^1.9.3",
-		"lodash": "^4.17.11"
+		"lodash": "^4.17.11",
+		"deepmerge": "^3.2.0"
 	},
 	"devDependencies": {
 		"ava": "^1.4.1",

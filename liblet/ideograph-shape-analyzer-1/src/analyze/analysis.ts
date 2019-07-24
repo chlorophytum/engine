@@ -15,27 +15,28 @@ export class ShortAbsorption {
 }
 
 export class BlueZone {
-	topZs: AdjPoint[] = [];
-	bottomZs: AdjPoint[] = [];
+	public topZs: AdjPoint[] = [];
+	public bottomZs: AdjPoint[] = [];
 }
 
 export class ColMats {
-	annexation: number[][] = [];
-	darkness: number[][] = [];
-	flips: number[][] = [];
-	proximity: number[][] = [];
-	spatialProximity: number[][] = [];
+	public annexation: number[][] = [];
+	public darkness: number[][] = [];
+	public flips: number[][] = [];
+	public proximity: number[][] = [];
+	public spatialProximity: number[][] = [];
 }
 
 export class GlyphAnalysis {
-	radicals: Radical[] = [];
-	stems: Stem[] = [];
-	stemOverlaps: number[][] = [];
-	stemOverlapLengths: number[][] = [];
-	directOverlaps: boolean[][] = [];
-	symmetry: boolean[][] = [];
-	collisionMatrices = new ColMats();
-	blueZone = new BlueZone();
-	interpolations: Interpolation[] = [];
-	shortAbsorptions: ShortAbsorption[] = [];
+	public radicals: Radical[] = [];
+	public stems: Stem[] = [];
+	public stemOverlaps: number[][] = [];
+	public stemOverlapLengths: number[][] = [];
+	public directOverlaps: boolean[][] = [];
+	public symmetry: boolean[][] = [];
+	public collisionMatrices = new ColMats();
+	public blueZone = new BlueZone();
+	public nonBlueTopBottom = new BlueZone();
+	public interpolations: Interpolation[] = [];
+	public shortAbsorptions: ShortAbsorption[] = [];
 }

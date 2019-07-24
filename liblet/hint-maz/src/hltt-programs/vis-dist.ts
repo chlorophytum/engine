@@ -11,10 +11,10 @@ export const VisFloor = LibFunc("IdeographProgram::visFloor", function*(e) {
 			e.max(e.coerce.toF26D6(VIS_DIST_MIN), e.min(e.coerce.toF26D6(VIS_DIST_MAX), fillRate))
 		),
 		function*() {
-			yield e.return(e.add(e.coerce.toF26D6(1), e.floor(x)));
+			yield e.return(e.floor(e.add(e.coerce.toF26D6(1), e.floor(x))));
 		},
 		function*() {
-			yield e.return(e.floor(x));
+			yield e.return(e.floor(e.floor(x)));
 		}
 	);
 });
@@ -26,10 +26,10 @@ export const VisCeil = LibFunc("IdeographProgram::visCeil", function*(e) {
 			e.max(e.coerce.toF26D6(VIS_DIST_MIN), e.min(e.coerce.toF26D6(VIS_DIST_MAX), fillRate))
 		),
 		function*() {
-			yield e.return(e.sub(e.ceiling(x), e.coerce.toF26D6(1)));
+			yield e.return(e.ceiling(e.sub(e.ceiling(x), e.coerce.toF26D6(1))));
 		},
 		function*() {
-			yield e.return(e.ceiling(x));
+			yield e.return(e.ceiling(e.ceiling(x)));
 		}
 	);
 });
@@ -43,13 +43,7 @@ export const VisDist = LibFunc("IdeographProgram::visDist", function*(e) {
 
 export const OctDistOrig = LibFunc("IdeographProgram::octDistOrig", function*(e) {
 	const [zBot, zTop] = e.args(2);
-	const GEAR = e.coerce.toF26D6(32);
-	yield e.return(
-		e.sub(
-			e.div(e.round.gray(e.mul(e.gc.orig(zTop), GEAR)), GEAR),
-			e.div(e.round.gray(e.mul(e.gc.orig(zBot), GEAR)), GEAR)
-		)
-	);
+	yield e.return(e.sub(e.gc.orig(zTop), e.gc.orig(zBot)));
 });
 
 function midBot(e: ProgramDsl, zMids: Variable, index: Expression) {

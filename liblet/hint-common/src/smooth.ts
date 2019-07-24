@@ -1,5 +1,5 @@
 import { IFinalHintProgramSink, IHint, IHintCompiler, IHintFactory } from "@chlorophytum/arch";
-import { HlttProgramSink } from "@chlorophytum/sink-hltt";
+import { HlttProgramSink } from "@chlorophytum/final-hint-format-hltt";
 
 export namespace Smooth {
 	const TAG = "Chlorophytum::CommonHints::Smooth";

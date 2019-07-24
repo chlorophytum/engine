@@ -4,10 +4,10 @@ import { CPoint } from "./point";
 import { createStat } from "./stat";
 
 export default class Contour {
-	points: CPoint[] = [];
-	ccw = false;
-	stats = createStat();
-	outline = false;
+	public points: CPoint[] = [];
+	public ccw = false;
+	public stats = createStat();
+	public outline = false;
 
 	private checkYExtrema(prev: CPoint, z: CPoint, next: CPoint) {
 		if ((z.y > prev.y && z.y >= next.y) || (z.y < prev.y && z.y <= next.y)) {
@@ -36,7 +36,7 @@ export default class Contour {
 		z.turn = cross > 0;
 	}
 
-	stat() {
+	public stat() {
 		let points = this.points;
 		this.checkExtrema(points[points.length - 2], points[0], points[1]);
 		this.checkExtrema(points[points.length - 2], points[points.length - 1], points[1]);
@@ -97,10 +97,10 @@ export default class Contour {
 		}
 	}
 
-	includesPoint(z: Point) {
+	public includesPoint(z: Point) {
 		return inPoly(z, this.points);
 	}
-	includes(that: Contour) {
+	public includes(that: Contour) {
 		for (let j = 0; j < that.points.length - 1; j++) {
 			if (!inPoly(that.points[j], this.points)) return false;
 		}

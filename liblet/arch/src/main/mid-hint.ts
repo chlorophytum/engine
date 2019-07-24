@@ -1,25 +1,10 @@
-import { IFinalHintFactory, IFontSourceFactory } from "../interfaces";
+import { IFinalHintSession, IHintStore } from "../interfaces";
 
-export async function midHint(
-	sf: IFontSourceFactory,
-	ff: IFinalHintFactory,
-	fromPath: string,
-	toPath: string
-) {
-	const store = await sf.createHintStoreFromFile(fromPath);
-	const fhs = ff.createFinalHintSinkFor(store);
-	for (const gid of store.listGlyphs()) {
+export async function mainMidHint(store: IHintStore, fhs: IFinalHintSession) {
+	const glyphList = await store.listGlyphs();
+	for (const gid of glyphList) {
 		const ps = fhs.createGlyphProgramSink(gid);
-		const hints = store.getGlyphHints(gid);
-		if (!hints) continue;
-		const hc = hints.createCompiler(ps);
-		if (!hc) continue;
-		hc.doCompile();
-		ps.save();
-	}
-	for (const modelType of store.listSharedTypes()) {
-		const ps = fhs.createSharedProgramSink(modelType);
-		const hints = store.getSharedHints(modelType);
+		const hints = await store.getGlyphHints(gid);
 		if (!hints) continue;
 		const hc = hints.createCompiler(ps);
 		if (!hc) continue;
@@ -27,5 +12,16 @@ export async function midHint(
 		ps.save();
 	}
 
-	//await fhs.save(toPath);
+	const sharedTypeList = await store.listSharedTypes();
+	for (const modelType of sharedTypeList) {
+		const ps = fhs.createSharedProgramSink(modelType);
+		const hints = await store.getSharedHints(modelType);
+		if (!hints) continue;
+		const hc = hints.createCompiler(ps);
+		if (!hc) continue;
+		hc.doCompile();
+		ps.save();
+	}
+
+	return fhs;
 }

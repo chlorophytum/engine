@@ -6,12 +6,12 @@ import { createStat, Stat } from "./stat";
 
 export default class Glyph {
 	constructor(public contours: Contour[] = []) {}
-	nPoints = 0;
-	indexedPoints: CPoint[] = [];
+	public nPoints = 0;
+	public indexedPoints: CPoint[] = [];
 
-	stats: Stat = createStat();
+	public stats: Stat = createStat();
 
-	containsPoint(z: Point) {
+	public containsPoint(z: Point) {
 		let nCW = 0,
 			nCCW = 0;
 		for (let j = 0; j < this.contours.length; j++) {
@@ -23,7 +23,7 @@ export default class Glyph {
 		return nCCW !== nCW;
 	}
 
-	unifyZ() {
+	public unifyZ() {
 		for (let j = 0; j < this.contours.length; j++) {
 			let pts = this.contours[j].points;
 			for (let k = 0; k < pts.length; k++) {
@@ -33,7 +33,7 @@ export default class Glyph {
 			}
 		}
 	}
-	stat() {
+	public stat() {
 		for (let c of this.contours) {
 			c.stat();
 			if (c.stats.xMin < this.stats.xMin) this.stats.xMin = c.stats.xMin;

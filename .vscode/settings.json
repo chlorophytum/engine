@@ -1,11 +1,13 @@
 {
 	"cSpell.words": [
 		"AAPL",
+		"Bimap",
 		"CVAR",
 		"Calibri",
 		"ENDF",
 		"Edsl",
 		"Fvar",
+		"Gsub",
 		"Gvar",
 		"Hiragino",
 		"IDEF",
@@ -32,6 +34,7 @@
 		"codepoint",
 		"devtool",
 		"dont",
+		"eigen",
 		"embox",
 		"fontforge",
 		"fpgm",

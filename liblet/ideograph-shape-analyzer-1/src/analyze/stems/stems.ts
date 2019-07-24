@@ -2,7 +2,7 @@ import { Support } from "@chlorophytum/arch";
 
 import { overlapInfo, overlapRatio } from "../../si-common/overlap";
 import { expandZ, leftmostZ_SS, rightmostZ_SS, slopeOf } from "../../si-common/seg";
-import HintingStrategy from "../../strategy";
+import { HintingStrategy } from "../../strategy";
 import { AdjPoint } from "../../types/point";
 import Radical from "../../types/radical";
 import { Seg, SegSpan } from "../../types/seg";
@@ -103,7 +103,7 @@ function uuMatchable(sj: SegSpan, sk: SegSpan, radical: Radical, strategy: Hinti
 	let ref = leftmostZ_SS([sj]);
 	let focus = leftmostZ_SS([sk]);
 	let desired = ref.y + (focus.x - ref.x) * slope;
-	let delta = Math.abs(focus.x - ref.x) * strategy.SLOPE_FUZZ_P + strategy.Y_FUZZ;
+	let delta = Math.abs(focus.x - ref.x) * strategy.SLOPE_FUZZ_P + strategy.Y_FUZZ * strategy.UPM;
 	return Math.abs(focus.y - desired) <= delta && segmentJoinable(sj, sk, radical);
 }
 function segmentJoinable(pivot: SegSpan, segment: SegSpan, radical: Radical) {
@@ -117,7 +117,7 @@ function segmentJoinable(pivot: SegSpan, segment: SegSpan, radical: Radical) {
 }
 
 function udMatchable(sj: SegSpan, sk: SegSpan, radical: Radical, strategy: HintingStrategy) {
-	if (!radical.includesTetragon(sj, sk, strategy.X_FUZZ)) return false;
+	if (!radical.includesTetragon(sj, sk, strategy.X_FUZZ * strategy.UPM)) return false;
 	const slopeJ = slopeOf([sj]);
 	const slopeK = slopeOf([sk]);
 	if (!!slopeJ !== !!slopeK && Math.abs(slopeJ - slopeK) >= strategy.SLOPE_FUZZ / 2) return false;
@@ -150,7 +150,8 @@ function identifyStem(
 	strategy: HintingStrategy
 ) {
 	let candidate = { high: [] as number[], low: [] as number[] };
-	const maxStemWidth = strategy.CANONICAL_STEM_WIDTH * strategy.CANONICAL_STEM_WIDTH_LIMIT_X;
+	const maxStemWidth =
+		strategy.UPM * strategy.CANONICAL_STEM_WIDTH * strategy.CANONICAL_STEM_WIDTH_LIMIT_X;
 	if (up[j]) {
 		candidate.high.push(j);
 	} else {

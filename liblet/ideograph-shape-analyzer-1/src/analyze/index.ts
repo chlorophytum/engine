@@ -1,4 +1,4 @@
-import HintingStrategy from "../strategy";
+import { HintingStrategy } from "../strategy";
 import Glyph from "../types/glyph";
 
 import { GlyphAnalysis } from "./analysis";

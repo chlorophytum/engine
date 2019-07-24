@@ -2,8 +2,8 @@
 	"extends": "../tsconfig.settings.json",
 	"references": [
 		{"path": "../arch"},
-		{"path": "../hltt"},
-		{"path": "../sink-hltt"}
+		{"path": "../final-hint-format-hltt"},
+		{"path": "../hltt"}
 	],
 	"compilerOptions": {
 		"outDir": "lib",

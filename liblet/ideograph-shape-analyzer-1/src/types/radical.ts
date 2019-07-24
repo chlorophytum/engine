@@ -7,12 +7,12 @@ import Stem from "./stem";
 
 export default class Radical {
 	constructor(public outline: Contour) {}
-	holes: Contour[] = [];
-	subs: Radical[] = [];
-	segments: SegSpan[] = [];
-	stems: Stem[] = [];
+	public holes: Contour[] = [];
+	public subs: Radical[] = [];
+	public segments: SegSpan[] = [];
+	public stems: Stem[] = [];
 
-	includes(z: Point) {
+	public includes(z: Point) {
 		if (!this.outline.includesPoint(z)) return false;
 		for (let j = 0; j < this.holes.length; j++) {
 			if (this.holes[j].includesPoint(z)) return false;
@@ -20,7 +20,7 @@ export default class Radical {
 		return true;
 	}
 
-	includesEdge(z: Point, mu: number, mv: number) {
+	public includesEdge(z: Point, mu: number, mv: number) {
 		if (this.includes(z)) return true;
 		for (let u = -mu; u <= mu; u++) {
 			for (let v = -mv; v <= mv; v++) {
@@ -30,7 +30,7 @@ export default class Radical {
 		return false;
 	}
 
-	includesSegment(z1: Point, z2: Point) {
+	public includesSegment(z1: Point, z2: Point) {
 		const SEGMENTS = 64;
 		for (let s = 1; s < SEGMENTS; s++) {
 			let test = {
@@ -42,7 +42,7 @@ export default class Radical {
 		return true;
 	}
 
-	includesSegmentEdge(
+	public includesSegmentEdge(
 		z1: Point,
 		z2: Point,
 		umx: number,
@@ -67,7 +67,7 @@ export default class Radical {
 		return false;
 	}
 
-	includesTetragon(s1: AdjPoint[], s2: AdjPoint[], _dS: number) {
+	public includesTetragon(s1: AdjPoint[], s2: AdjPoint[], _dS: number) {
 		let xMin1 = s1[0].x,
 			xMax1 = s1[0].x,
 			xMin2 = s2[0].x,

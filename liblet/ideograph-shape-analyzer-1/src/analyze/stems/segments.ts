@@ -1,6 +1,6 @@
 import { GlyphPoint } from "@chlorophytum/arch";
 
-import HintingStrategy from "../../strategy";
+import { HintingStrategy } from "../../strategy";
 import Contour from "../../types/contour";
 import { CPoint } from "../../types/point";
 import Radical from "../../types/radical";
@@ -20,7 +20,7 @@ function eqSlopeA(z1: GlyphPoint, z2: GlyphPoint, _strategy: HintingStrategy) {
 function approSlopeA(z1: GlyphPoint, z2: GlyphPoint, strategy: HintingStrategy) {
 	const slope = (z1.y - z2.y) / (z1.x - z2.x);
 	return (
-		Math.abs(z2.x - z1.x) >= strategy.Y_FUZZ * 2 &&
+		Math.abs(z2.x - z1.x) >= (strategy.Y_FUZZ * strategy.UPM) * 2 &&
 		(slope >= 0 ? slope <= strategy.SLOPE_FUZZ : slope >= -strategy.SLOPE_FUZZ_NEG)
 	);
 }

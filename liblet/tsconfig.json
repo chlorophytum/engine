@@ -2,13 +2,17 @@
 	"files": [],
 	"references": [
 		{"path": "./arch"},
+		{"path": "./cli"},
 		{"path": "./demo-ideograph-hinter"},
+		{"path": "./final-hint-format-hltt"},
+		{"path": "./font-format-otd"},
+		{"path": "./font-opentype"},
 		{"path": "./fontforge-instr"},
 		{"path": "./hint-common"},
 		{"path": "./hint-embox"},
 		{"path": "./hint-maz"},
 		{"path": "./hltt"},
 		{"path": "./ideograph-shape-analyzer-1"},
-		{"path": "./sink-hltt"}
+		{"path": "./util-json"}
 	]
 }

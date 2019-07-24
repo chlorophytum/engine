@@ -40,31 +40,31 @@ export class CPoint implements AdjPoint {
 		public on: boolean = true,
 		public id: number = -1
 	) {}
-	xExtrema: boolean = false;
-	xStrongExtrema: boolean = false;
-	yExtrema: boolean = false;
-	yStrongExtrema: boolean = false;
-	atLeft: boolean = false;
-	turn: boolean = false;
-	touched: boolean = false;
-	dontTouch: boolean = false;
-	keyPoint: boolean = false;
-	linkedKey?: AdjPoint;
-	slope?: number;
-	blued?: boolean;
+	public xExtrema: boolean = false;
+	public xStrongExtrema: boolean = false;
+	public yExtrema: boolean = false;
+	public yStrongExtrema: boolean = false;
+	public atLeft: boolean = false;
+	public turn: boolean = false;
+	public touched: boolean = false;
+	public dontTouch: boolean = false;
+	public keyPoint: boolean = false;
+	public linkedKey?: AdjPoint;
+	public slope?: number;
+	public blued?: boolean;
 
-	prev?: AdjPoint;
-	next?: AdjPoint;
-	prevZ?: AdjPoint;
-	nextZ?: AdjPoint;
-	ipKeys?: IpKeys;
-	phantom?: IpPhantom;
+	public prev?: AdjPoint;
+	public next?: AdjPoint;
+	public prevZ?: AdjPoint;
+	public nextZ?: AdjPoint;
+	public ipKeys?: IpKeys;
+	public phantom?: IpPhantom;
 
-	static adjacentZ(p: AdjPoint, q: AdjPoint) {
+	public static adjacentZ(p: AdjPoint, q: AdjPoint) {
 		return p.nextZ === q || p.prevZ === q || q.nextZ === p || q.prevZ === p;
 	}
 
-	static adjacent(p: AdjPoint, q: AdjPoint) {
+	public static adjacent(p: AdjPoint, q: AdjPoint) {
 		return p.next === q || p.prev === q || q.next === p || q.prev === p;
 	}
 }

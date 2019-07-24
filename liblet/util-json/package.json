@@ -1,5 +1,5 @@
 {
-	"name": "@chlorophytum/sink-hltt",
+	"name": "@chlorophytum/util-json",
 	"version": "0.0.1",
 	"description": "",
 	"main": "lib/index.js",
@@ -13,8 +13,8 @@
 	"license": "MIT",
 	"dependencies": {
 		"tslib": "^1.9.3",
-		"@chlorophytum/arch": "^0.0.1",
-		"@chlorophytum/hltt": "^0.0.1"
+		"JSONStream": "^1.3.5",
+		"strip-bom-stream": "^4.0.0"
 	},
 	"devDependencies": {
 		"ava": "^1.4.1"

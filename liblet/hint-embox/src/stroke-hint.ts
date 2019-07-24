@@ -1,35 +1,39 @@
 import { IFinalHintProgramSink, IHint, IHintCompiler, IHintFactory } from "@chlorophytum/arch";
-import { HlttProgramSink } from "@chlorophytum/sink-hltt";
+import { HlttProgramSink } from "@chlorophytum/final-hint-format-hltt";
 
-import { PREFIX } from "./constants";
+import { getEmBoxPoints } from "./constants";
 import {
+	DefaultStretch,
+	StretchProps,
 	THintBottomStroke,
-	THintBottomStrokeFree,
-	THintTopStroke,
-	THintTopStrokeFree
+	THintStrokeFreeAuto,
+	THintTopStroke
 } from "./programs";
 
 export namespace EmBoxStroke {
 	const TAG = "Chlorophytum::EmBox::Stroke";
+	export type Stretch = StretchProps;
 	export class Hint implements IHint {
 		constructor(
 			private readonly boxName: string,
 			private readonly top: boolean,
 			private readonly spur: boolean,
 			private readonly zSBot: number,
-			private readonly zsTop: number
+			private readonly zsTop: number,
+			private readonly stretch: StretchProps | null = null
 		) {}
-		toJSON() {
+		public toJSON() {
 			return {
 				type: TAG,
 				boxName: this.boxName,
 				top: this.top,
 				spur: this.spur,
 				zsBot: this.zSBot,
-				zsTop: this.zsTop
+				zsTop: this.zsTop,
+				stretch: this.stretch
 			};
 		}
-		createCompiler(sink: IFinalHintProgramSink): IHintCompiler | null {
+		public createCompiler(sink: IFinalHintProgramSink): IHintCompiler | null {
 			if (sink instanceof HlttProgramSink) {
 				return new HlttCompiler(
 					sink,
@@ -37,7 +41,8 @@ export namespace EmBoxStroke {
 					this.top,
 					this.spur,
 					this.zSBot,
-					this.zsTop
+					this.zsTop,
+					this.stretch
 				);
 			}
 			return null;
@@ -45,10 +50,17 @@ export namespace EmBoxStroke {
 	}
 
 	export class HintFactory implements IHintFactory {
-		readonly type = TAG;
-		readJson(json: any) {
+		public readonly type = TAG;
+		public readJson(json: any) {
 			if (json && json.type === TAG) {
-				return new Hint(json.boxName, json.top, json.spur, json.zsBot, json.zsTop);
+				return new Hint(
+					json.boxName,
+					json.top,
+					json.spur,
+					json.zsBot,
+					json.zsTop,
+					json.stretch || null
+				);
 			}
 			return null;
 		}
@@ -61,24 +73,48 @@ export namespace EmBoxStroke {
 			private readonly top: boolean,
 			private readonly spur: boolean,
 			private readonly zsBot: number,
-			private readonly zsTop: number
+			private readonly zsTop: number,
+			private readonly stretch: StretchProps | null
 		) {}
-		doCompile() {
-			const { boxName, top, spur, zsBot, zsTop } = this;
+		public doCompile() {
+			const { boxName, top, spur, zsBot, zsTop, stretch } = this;
 			this.sink.addSegment(function*($) {
-				const strokeBottom = $.globalTwilight(`${PREFIX}::${boxName}::StrokeBottom`);
-				const strokeTop = $.globalTwilight(`${PREFIX}::${boxName}::StrokeTop`);
-				const spurBottom = $.globalTwilight(`${PREFIX}::${boxName}::SpurBottom`);
-				const spurTop = $.globalTwilight(`${PREFIX}::${boxName}::SpurTop`);
+				const {
+					strokeBottom,
+					strokeTop,
+					archBottom,
+					archTop,
+					spurBottom,
+					spurTop
+				} = getEmBoxPoints($, boxName);
 
 				if (spur) {
-					if (top) yield $.call(THintTopStroke, spurBottom, spurTop, zsBot, zsTop);
-					else yield $.call(THintBottomStroke, spurBottom, spurTop, zsBot, zsTop);
+					if (top) {
+						yield $.call(THintStrokeFreeAuto, spurBottom, spurTop, zsBot, zsTop);
+					} else {
+						yield $.call(THintStrokeFreeAuto, spurBottom, spurTop, zsBot, zsTop);
+					}
 				} else {
 					if (top) {
-						yield $.call(THintTopStrokeFree, spurBottom, spurTop, zsBot, zsTop);
+						yield $.call(
+							THintTopStroke(stretch || DefaultStretch),
+							strokeBottom,
+							strokeTop,
+							archBottom,
+							archTop,
+							zsBot,
+							zsTop
+						);
 					} else {
-						yield $.call(THintBottomStrokeFree, spurBottom, spurTop, zsBot, zsTop);
+						yield $.call(
+							THintBottomStroke(stretch || DefaultStretch),
+							strokeBottom,
+							strokeTop,
+							archBottom,
+							archTop,
+							zsBot,
+							zsTop
+						);
 					}
 				}
 			});

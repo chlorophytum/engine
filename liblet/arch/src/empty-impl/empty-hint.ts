@@ -3,23 +3,23 @@ import { IFinalHintProgramSink, IHint, IHintCompiler, IHintFactory } from "../in
 export namespace Empty {
 	const TAG = "Chlorophytum::EmptyHint";
 	export class Hint implements IHint {
-		toJSON() {
+		public toJSON() {
 			return { type: TAG };
 		}
-		createCompiler(sink: IFinalHintProgramSink): IHintCompiler | null {
+		public createCompiler(sink: IFinalHintProgramSink): IHintCompiler | null {
 			return new Compiler();
 		}
 	}
 
-	export class HintFactory implements IHintFactory {
-		readonly type = TAG;
-		readJson(json: any) {
+	export class Factory implements IHintFactory {
+		public readonly type = TAG;
+		public readJson(json: any) {
 			if (json && json.type === TAG) return new Hint();
 			return null;
 		}
 	}
 
 	class Compiler implements IHintCompiler {
-		doCompile() {}
+		public doCompile() {}
 	}
 }

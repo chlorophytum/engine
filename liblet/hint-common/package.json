@@ -14,7 +14,7 @@
 	"dependencies": {
 		"tslib": "^1.9.3",
 		"@chlorophytum/arch": "^0.0.1",
-		"@chlorophytum/sink-hltt": "^0.0.1"
+		"@chlorophytum/final-hint-format-hltt": "^0.0.1"
 	},
 	"devDependencies": {
 		"ava": "^1.4.1"

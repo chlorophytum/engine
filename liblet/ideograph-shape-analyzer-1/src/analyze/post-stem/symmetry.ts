@@ -1,5 +1,5 @@
 import { atGlyphBottom, atGlyphTop } from "../../si-common/stem-spatial";
-import HintingStrategy from "../../strategy";
+import { HintingStrategy } from "../../strategy";
 import Stem from "../../types/stem";
 
 export default function analyzeSymmetry(

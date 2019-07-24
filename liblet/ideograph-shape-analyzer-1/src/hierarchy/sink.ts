@@ -9,33 +9,24 @@ export enum DependentHintType {
 	DiagHighToLow
 }
 export default class HierarchySink {
-	addInterpolate(rp1: number, rp2: number, z: number) {}
-	addLink(rp0: number, z: number) {}
-	addBlue(top: boolean, z: AdjPoint) {}
-	addBoundaryStem(stem: Stem, locTop: boolean, atBottom: boolean, atTop: boolean) {}
-	addStemHint(bot: Stem, middle: Stem[], top: Stem, annex: number[]) {}
-	addDependentHint(type: DependentHintType, from: Stem, to: Stem) {}
-	addStemEdgeAlign(stem: Stem) {}
-}
-
-export class LogSink extends HierarchySink {
-	addBoundaryStem(stem: Stem, locTop: boolean, atBottom: boolean, atTop: boolean) {
-		console.log("BOUND", [stem.lowKey.id, stem.highKey.id], atBottom, atTop);
-	}
-	addStemHint(bot: Stem, middle: Stem[], top: Stem, annex: number[]) {
-		console.log(
-			"STEMS",
-			bot === middle[0] ? bot.lowKey.id : bot.highKey.id,
-			_.flatten(middle.map(s => [s.lowKey.id, s.highKey.id])).join(" "),
-			top === middle[middle.length - 1] ? top.highKey.id : top.lowKey.id
-		);
-		console.log("ANNEX  ", annex);
-	}
-	addDependentHint(type: DependentHintType, from: Stem, to: Stem) {
-		console.log(
-			DependentHintType[type],
-			[from.lowKey.id, from.highKey.id],
-			[to.lowKey.id, to.highKey.id]
-		);
-	}
+	public addInterpolate(rp1: number, rp2: number, z: number) {}
+	public addLink(rp0: number, z: number) {}
+	public addBlue(top: boolean, z: AdjPoint) {}
+	public addBoundaryStem(stem: Stem, locTop: boolean, atBottom: boolean, atTop: boolean) {}
+	public addStemPileHint(
+		bot: null | Stem,
+		middle: Stem[],
+		top: null | Stem,
+		botBound: boolean,
+		topBound: boolean,
+		annex: number[]
+	) {}
+	public addDependentHint(
+		type: DependentHintType,
+		belowFrom: null | Stem,
+		from: Stem,
+		aboveFrom: null | Stem,
+		to: Stem
+	) {}
+	public addStemEdgeAlign(stem: Stem) {}
 }

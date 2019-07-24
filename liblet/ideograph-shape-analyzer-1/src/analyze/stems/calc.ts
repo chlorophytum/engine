@@ -9,7 +9,7 @@ import {
 	rightmostZ_SS,
 	slopeOf
 } from "../../si-common/seg";
-import HintingStrategy from "../../strategy";
+import { HintingStrategy } from "../../strategy";
 import Radical from "../../types/radical";
 import { SegSpan } from "../../types/seg";
 import Stem from "../../types/stem";

@@ -8,14 +8,6 @@ export function analyzeStemKeyPoints(stems: Stem[]) {
 		const { highKey, lowKey } = correctYWForStem(stem);
 		highKey.touched = lowKey.touched = true;
 
-		// Identify bottom stems, when it does not have folds or entire contour below it, and
-		// - is below half of the character frame, or
-		// - has a stem above it and not being the top frame of enclosed radical
-		const posKeyShouldAtBottom =
-			!stem.hasGlyphStemBelow &&
-			!(stem.hasGlyphFoldBelow || stem.hasEntireContourBelow) &&
-			!(stem.diagHigh || stem.diagLow);
-
 		// get non-key points
 		let highNonKey: AdjPoint[] = [],
 			lowNonKey: AdjPoint[] = [];

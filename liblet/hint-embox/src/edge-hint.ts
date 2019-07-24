@@ -1,7 +1,7 @@
 import { IFinalHintProgramSink, IHint, IHintCompiler, IHintFactory } from "@chlorophytum/arch";
-import { HlttProgramSink } from "@chlorophytum/sink-hltt";
+import { HlttProgramSink } from "@chlorophytum/final-hint-format-hltt";
 
-import { PREFIX } from "./constants";
+import { getEmBoxPoints, PREFIX } from "./constants";
 import { THintBottomEdge, THintTopEdge } from "./programs";
 
 export namespace EmBoxEdge {
@@ -12,7 +12,7 @@ export namespace EmBoxEdge {
 			private readonly top: boolean,
 			private readonly zEdge: number
 		) {}
-		toJSON() {
+		public toJSON() {
 			return {
 				type: TAG,
 				boxName: this.boxName,
@@ -20,7 +20,7 @@ export namespace EmBoxEdge {
 				zEdge: this.zEdge
 			};
 		}
-		createCompiler(sink: IFinalHintProgramSink): IHintCompiler | null {
+		public createCompiler(sink: IFinalHintProgramSink): IHintCompiler | null {
 			if (sink instanceof HlttProgramSink) {
 				return new HlttCompiler(sink, this.boxName, this.top, this.zEdge);
 			}
@@ -29,8 +29,8 @@ export namespace EmBoxEdge {
 	}
 
 	export class HintFactory implements IHintFactory {
-		readonly type = TAG;
-		readJson(json: any) {
+		public readonly type = TAG;
+		public readJson(json: any) {
 			if (json && json.type === TAG) {
 				return new Hint(json.boxName, json.top, json.zEdge);
 			}
@@ -45,14 +45,13 @@ export namespace EmBoxEdge {
 			private readonly top: boolean,
 			private readonly zEdge: number
 		) {}
-		doCompile() {
+		public doCompile() {
 			const { boxName, top, zEdge } = this;
 			this.sink.addSegment(function*($) {
-				const spurBottom = $.globalTwilight(`${PREFIX}::${boxName}::SpurBottom`);
-				const spurTop = $.globalTwilight(`${PREFIX}::${boxName}::SpurTop`);
+				const pts = getEmBoxPoints($, boxName);
 
-				if (top) yield $.call(THintTopEdge, spurBottom, spurTop, zEdge);
-				else yield $.call(THintBottomEdge, spurBottom, spurTop, zEdge);
+				if (top) yield $.call(THintTopEdge, pts.spurBottom, pts.spurTop, zEdge);
+				else yield $.call(THintBottomEdge, pts.spurBottom, pts.spurTop, zEdge);
 			});
 		}
 	}

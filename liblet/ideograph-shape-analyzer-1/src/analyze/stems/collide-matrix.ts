@@ -7,7 +7,7 @@ import {
 	atRadicalTop,
 	isCapShape
 } from "../../si-common/stem-spatial";
-import HintingStrategy from "../../strategy";
+import { HintingStrategy } from "../../strategy";
 import Stem from "../../types/stem";
 
 export function computePQMatrices(
@@ -196,8 +196,8 @@ class ACSComputer {
 
 	private isInRadicalTolerableShapeLoss(sj: Stem, sk: Stem) {
 		return (
-			Math.abs(sj.xMin - sk.xMin) < this.strategy.Y_FUZZ &&
-			Math.abs(sj.xMax - sk.xMax) < this.strategy.Y_FUZZ &&
+			Math.abs(sj.xMin - sk.xMin) < this.strategy.Y_FUZZ * this.strategy.UPM &&
+			Math.abs(sj.xMax - sk.xMax) < this.strategy.Y_FUZZ * this.strategy.UPM &&
 			!(
 				(sj.proximityDown > sj.proximityUp && sk.proximityUp >= sk.proximityDown) ||
 				(sj.proximityDown >= sj.proximityUp && sk.proximityUp > sk.proximityDown)

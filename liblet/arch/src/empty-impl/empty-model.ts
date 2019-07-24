@@ -1,25 +1,28 @@
-import { IHintingModel, IHintingModelFactory } from "../interfaces";
+import { IHintingModel, IHintingModelPlugin } from "../interfaces";
 
 import { Empty } from "./empty-hint";
+import { Sequence } from "./sequence-hint";
 
-export const EmptyHintingModelFactory: IHintingModelFactory = {
+export const EmptyHintingModelFactory: IHintingModelPlugin = {
+	type: "Chlorophytum::EmptyHinting",
 	adopt<GID, VAR, MASTER>() {
 		return new EmptyHintingModel<GID>();
-	}
+	},
+	hintFactories: [new Empty.Factory(), new Sequence.Factory()]
 };
 
 export class EmptyHintingModel<GID> implements IHintingModel<GID> {
-	readonly type = "Chlorophytum::EmptyHintingModel";
+	public readonly type = "Chlorophytum::EmptyHinting";
 
 	constructor() {}
 
-	analyzeSharedParameters() {
+	public async analyzeSharedParameters() {
 		return null;
 	}
-	getSharedHints() {
+	public async getSharedHints() {
 		return new Empty.Hint();
 	}
-	analyzeGlyph(gid: GID) {
+	public async analyzeGlyph(gid: GID) {
 		return new Empty.Hint();
 	}
 }

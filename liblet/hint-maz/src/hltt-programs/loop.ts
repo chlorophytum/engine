@@ -54,19 +54,33 @@ export const InitMSDGapEntries = LibFunc("IdeographProgram::initMSDGapEntries", 
 		yield e.call(
 			InitMSDistEntry,
 			e.toFloat(N),
+			e.mul(e.coerce.toF26D6(2), j),
 			vpTotalDist,
 			vpA,
 			vpB,
 			vpC,
 			vpDiv,
 			vpAlloc,
-			j,
 			gapDist,
 			e.coerce.toF26D6(1),
 			e.part(pGapMD, j)
 		);
 		yield e.set(j, e.add(1, j));
 	});
+});
+
+const AdjustStrokeDist = LibFunc("IdeographProgram::AdjustStrokeDist", function*($) {
+	const [d] = $.args(1);
+	const One = $.coerce.toF26D6(1);
+	yield $.return(
+		$.add(
+			$.max(One, $.floor(d)),
+			$.mul(
+				$.sub(d, $.max(One, $.floor(d))),
+				$.sub(One, $.div(One, $.max(One, $.mul($.coerce.toF26D6(16), $.mppem()))))
+			)
+		)
+	);
 });
 
 export const InitMSDInkEntries = LibFunc("IdeographProgram::initMSDInkEntries", function*(e) {
@@ -81,14 +95,17 @@ export const InitMSDInkEntries = LibFunc("IdeographProgram::initMSDInkEntries", 
 		yield e.call(
 			InitMSDistEntry,
 			e.toFloat(N),
+			e.add(1, e.mul(e.coerce.toF26D6(2), j)),
 			vpTotalDist,
 			vpA,
 			vpB,
 			vpC,
 			vpDiv,
 			vpAlloc,
-			j,
-			e.call(OctDistOrig, midBot(e, pZMids, j), midTop(e, pZMids, j)),
+			e.call(
+				AdjustStrokeDist,
+				e.call(OctDistOrig, midBot(e, pZMids, j), midTop(e, pZMids, j))
+			),
 			e.coerce.toF26D6(1),
 			e.part(pStrokeMD, j)
 		);
@@ -97,7 +114,7 @@ export const InitMSDInkEntries = LibFunc("IdeographProgram::initMSDInkEntries", 
 });
 
 const InitMSDistEntry = LibFunc("IdeographProgram::initMSDistEntry", function*(e) {
-	const [N, vpTotalDist, vpA, vpB, vpC, vpDiv, vpAlloc, j, x, r, p] = e.args(11);
+	const [N, j, vpTotalDist, vpA, vpB, vpC, vpDiv, vpAlloc, x, r, p] = e.args(11);
 	const pTotalDist = e.coerce.fromIndex.variable(vpTotalDist);
 	const pA = e.coerce.fromIndex.variable(vpA);
 	const pB = e.coerce.fromIndex.variable(vpB);
@@ -114,7 +131,7 @@ const InitMSDistEntry = LibFunc("IdeographProgram::initMSDistEntry", function*(e
 });
 
 export const MaxAverageLoop = LibFunc("IdeographProgram::maxAverageLoop", function*(e) {
-	const [vpA, vpB, vpC, vpDiv, vpAlloc, N, scalar, rest] = e.args(8);
+	const [N, vpA, vpB, vpC, vpDiv, vpAlloc, scalar, rest] = e.args(8);
 	const pA = e.coerce.fromIndex.variable(vpA);
 	const pB = e.coerce.fromIndex.variable(vpB);
 	const pC = e.coerce.fromIndex.variable(vpC);
@@ -139,7 +156,10 @@ export const MaxAverageLoop = LibFunc("IdeographProgram::maxAverageLoop", functi
 						e.part(pAlloc, jLoop),
 						e.add(e.coerce.toF26D6(2), e.mul(scalar, e.part(pA, jLoop)))
 					),
-					e.gt(e.part(pC, jLoop), dOpt)
+					e.or(
+						e.and(e.odd(jLoop), e.gt(e.part(pC, jLoop), dOpt)),
+						e.and(e.not(e.odd(jLoop)), e.gteq(e.part(pC, jLoop), dOpt))
+					)
 				),
 				function*() {
 					yield e.set(jOpt, jLoop);

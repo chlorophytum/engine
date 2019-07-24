@@ -1,16 +1,17 @@
 import { IFinalHintProgramSink, IHint, IHintCompiler, IHintFactory } from "@chlorophytum/arch";
-import { HlttProgramSink } from "@chlorophytum/sink-hltt";
+import { HlttProgramSink } from "@chlorophytum/final-hint-format-hltt";
 
-import { PREFIX } from "./constants";
+import { getEmBoxPoints } from "./constants";
+import { TInitEmBoxTwilightPoints } from "./programs";
 
 export namespace EmBoxInit {
 	const TAG = "Chlorophytum::EmBox::Init";
 	export class Hint implements IHint {
 		constructor(private readonly name: string) {}
-		toJSON() {
+		public toJSON() {
 			return { type: TAG, name: this.name };
 		}
-		createCompiler(sink: IFinalHintProgramSink): IHintCompiler | null {
+		public createCompiler(sink: IFinalHintProgramSink): IHintCompiler | null {
 			if (sink instanceof HlttProgramSink) {
 				return new HlttCompiler(sink, this.name);
 			}
@@ -19,8 +20,8 @@ export namespace EmBoxInit {
 	}
 
 	export class HintFactory implements IHintFactory {
-		readonly type = TAG;
-		readJson(json: any) {
+		public readonly type = TAG;
+		public readJson(json: any) {
 			if (json && json.type === TAG) return new Hint(json.name);
 			return null;
 		}
@@ -28,18 +29,27 @@ export namespace EmBoxInit {
 
 	export class HlttCompiler implements IHintCompiler {
 		constructor(private readonly sink: HlttProgramSink, private readonly name: string) {}
-		doCompile() {
+		public doCompile() {
 			const { name } = this;
 			this.sink.addSegment(function*($) {
-				const strokeBottom = $.globalTwilight(`${PREFIX}::${name}::StrokeBottom`);
-				const strokeTop = $.globalTwilight(`${PREFIX}::${name}::StrokeTop`);
-				const spurBottom = $.globalTwilight(`${PREFIX}::${name}::SpurBottom`);
-				const spurTop = $.globalTwilight(`${PREFIX}::${name}::SpurTop`);
+				const {
+					strokeBottom,
+					strokeTop,
+					archBottom,
+					archTop,
+					spurBottom,
+					spurTop
+				} = getEmBoxPoints($, name);
 
-				yield $.mdap.round(strokeBottom);
-				yield $.mdrp.round(strokeBottom, strokeTop);
-				yield $.mdrp(strokeBottom, spurBottom);
-				yield $.mdrp(strokeTop, spurTop);
+				yield $.call(
+					TInitEmBoxTwilightPoints,
+					strokeBottom,
+					strokeTop,
+					archBottom,
+					archTop,
+					spurBottom,
+					spurTop
+				);
 			});
 		}
 	}

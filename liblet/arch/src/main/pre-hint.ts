@@ -1,19 +1,33 @@
-import { IFontSource, IHintingModelFactory } from "../interfaces";
+import { HintingModelConfig, IFontSource, IHintingModelPlugin } from "../interfaces";
 
-export default function preHint<GID, VAR, MASTER>(
+function findMatchingFactory(type: string, modelFactories: IHintingModelPlugin[]) {
+	for (const mf of modelFactories) if (mf.type === type) return mf;
+	return null;
+}
+
+export default async function mainPreHint<GID, VAR, MASTER>(
 	font: IFontSource<GID, VAR, MASTER>,
-	modelFactories: IHintingModelFactory[]
+	modelFactories: IHintingModelPlugin[],
+	modelConfig: HintingModelConfig[]
 ) {
 	const hs = font.createHintStore();
-	for (const mf of modelFactories) {
-		const hm = mf.adopt(font);
+	for (const { type, parameters } of modelConfig) {
+		const mf = findMatchingFactory(type, modelFactories);
+		if (!mf) continue;
+		console.log(`Apply model ${type}`);
+		const hm = mf.adopt(font, parameters);
 		if (!hm) continue;
-		const glyphs = hm.analyzeSharedParameters();
+		const glyphs = await hm.analyzeSharedParameters();
 		if (!glyphs) continue;
 		for (const glyph of glyphs) {
-			hs.setGlyphHints(font.getUniqueGlyphName(glyph), hm.analyzeGlyph(glyph));
+			const gName = await font.getUniqueGlyphName(glyph);
+			if (!gName) continue;
+			const hints = await hm.analyzeGlyph(glyph);
+			if (hints) await hs.setGlyphHints(gName, hints);
+			console.log(gName);
 		}
-		hs.setSharedHints(hm.type, hm.getSharedHints());
+		const sharedHints = await hm.getSharedHints();
+		if (sharedHints) await hs.setSharedHints(hm.type, sharedHints);
 	}
 	return hs;
 }

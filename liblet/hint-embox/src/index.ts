@@ -1,10 +1,5 @@
-import { PREFIX } from "./constants";
-
+export { TranslateEmboxTwilightName } from "./constants";
+export * from "./edge-hint";
 export * from "./em-box-init";
 export * from "./em-box-shared";
 export * from "./stroke-hint";
-export * from "./edge-hint";
-
-export function TranslateEmboxTwilightName(boxName: string, pointName: string) {
-	return `${PREFIX}::${boxName}::${pointName}`;
-}

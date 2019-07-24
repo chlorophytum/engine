@@ -9,16 +9,6 @@ import {
 } from "./loop";
 import { VisCeil } from "./vis-dist";
 
-const GetInkDistFromTotalDist = LibFunc("IdeographProgram::getGapDistFromTotalDist", function*(e) {
-	const [dCur, iOrig, gOrig, gReq, iReq] = e.args(5);
-	yield e.return(
-		e.min(
-			e.sub(dCur, gReq),
-			e.max(iReq, e.round.black(e.mul(dCur, e.div(iOrig, e.add(gOrig, iOrig)))))
-		)
-	);
-});
-
 export const DecideRequiredGap = LibFunc(`IdeographProgram::decideRequiredGap`, function*(e) {
 	const [N, vpGapMD] = e.args(2);
 	const pGapMD = e.coerce.fromIndex.variable(vpGapMD);
@@ -45,18 +35,11 @@ export const THintMultipleStrokesMidSize = Template(
 
 		const totalInk = e.local();
 		const totalGap = e.local();
-		const aGapDist = e.local(NMax + 1);
-		const bGapDist = e.local(NMax + 1);
-		const cGapDist = e.local(NMax + 1);
-		const gapDivisor = e.local(NMax + 1);
-		const gaps = e.local(NMax + 1);
-		const gapOcc = e.local(NMax + 1);
-		const aInkDist = e.local(NMax);
-		const bInkDist = e.local(NMax);
-		const cInkDist = e.local(NMax);
-		const inkDivisor = e.local(NMax);
-		const inks = e.local(NMax);
-		const inkOcc = e.local(NMax);
+		const aDist = e.local(2 * NMax + 1);
+		const bDist = e.local(2 * NMax + 1);
+		const cDist = e.local(2 * NMax + 1);
+		const divisor = e.local(2 * NMax + 1);
+		const alloc = e.local(2 * NMax + 1);
 
 		const scalar = e.local();
 		yield e.set(scalar, e.div(dist, e.sub(e.gc.orig(zTop), e.gc.orig(zBot))));
@@ -68,11 +51,11 @@ export const THintMultipleStrokesMidSize = Template(
 			InitMSDGapEntries,
 			N,
 			totalGap.ptr,
-			aGapDist.ptr,
-			bGapDist.ptr,
-			cGapDist.ptr,
-			gapDivisor.ptr,
-			gaps.ptr,
+			aDist.ptr,
+			bDist.ptr,
+			cDist.ptr,
+			divisor.ptr,
+			alloc.ptr,
 			zBot,
 			zTop,
 			vpZMids,
@@ -82,43 +65,36 @@ export const THintMultipleStrokesMidSize = Template(
 			InitMSDInkEntries,
 			N,
 			totalInk.ptr,
-			aInkDist.ptr,
-			bInkDist.ptr,
-			cInkDist.ptr,
-			inkDivisor.ptr,
-			inks.ptr,
+			aDist.ptr,
+			bDist.ptr,
+			cDist.ptr,
+			divisor.ptr,
+			alloc.ptr,
 			vpZMids,
 			vpInkMD
 		);
 
-		const actualInk = e.local();
-		yield e.set(
-			actualInk,
-			e.call(GetInkDistFromTotalDist, dist, totalInk, totalGap, pxReqGap, pxReqInk)
+		yield e.call(
+			MaxAverageLoop,
+			e.add(1, e.mul(e.coerce.toF26D6(2), N)),
+			aDist.ptr,
+			bDist.ptr,
+			cDist.ptr,
+			divisor.ptr,
+			alloc.ptr,
+			scalar,
+			e.sub(e.sub(dist, pxReqInk), pxReqGap)
 		);
 
-		yield e.call(
-			MaxAverageLoop,
-			aGapDist.ptr,
-			bGapDist.ptr,
-			cGapDist.ptr,
-			gapDivisor.ptr,
-			gaps.ptr,
-			e.add(1, N),
-			scalar,
-			e.sub(e.sub(dist, actualInk), pxReqGap)
-		);
-		yield e.call(
-			MaxAverageLoop,
-			aInkDist.ptr,
-			bInkDist.ptr,
-			cInkDist.ptr,
-			inkDivisor.ptr,
-			inks.ptr,
-			N,
-			scalar,
-			e.sub(actualInk, pxReqInk)
-		);
+		const aGapDist = e.local(NMax + 1);
+		const gaps = e.local(NMax + 1);
+		const gapOcc = e.local(NMax + 1);
+		const aInkDist = e.local(NMax);
+		const inks = e.local(NMax);
+		const inkOcc = e.local(NMax);
+
+		yield e.call(splitGapInkArrayData, N, aDist.ptr, aGapDist.ptr, aInkDist.ptr);
+		yield e.call(splitGapInkArrayData, N, alloc.ptr, gaps.ptr, inks.ptr);
 
 		// Balance
 		yield e.call(
@@ -145,3 +121,18 @@ export const THintMultipleStrokesMidSize = Template(
 		);
 	}
 );
+
+const splitGapInkArrayData = LibFunc("IdeographProgram::splitGapInkArrayData", function*($) {
+	const [N, vp, vpGap, vpInk] = $.args(4);
+	const p = $.coerce.fromIndex.variable(vp);
+	const pGap = $.coerce.fromIndex.variable(vpGap);
+	const pInk = $.coerce.fromIndex.variable(vpInk);
+	const j = $.local();
+	yield $.set(j, 0);
+	yield $.while($.lt(j, N), function*() {
+		yield $.set($.part(pGap, j), $.part(p, $.mul($.coerce.toF26D6(2), j)));
+		yield $.set($.part(pInk, j), $.part(p, $.add(1, $.mul($.coerce.toF26D6(2), j))));
+		yield $.set(j, $.add(1, j));
+	});
+	yield $.set($.part(pGap, N), $.part(p, $.mul($.coerce.toF26D6(2), N)));
+});

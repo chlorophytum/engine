@@ -1,26 +1,29 @@
 import { IFinalHintProgramSink, IHint, IHintCompiler, IHintFactory } from "@chlorophytum/arch";
-import { HlttProgramSink } from "@chlorophytum/sink-hltt";
+import { HlttProgramSink } from "@chlorophytum/final-hint-format-hltt";
 
-import { PREFIX } from "./constants";
+import { getEmBoxPoints } from "./constants";
+import { TInitEmBoxPointPrep } from "./programs/index";
 
 export namespace EmBoxShared {
 	export interface EmBoxProps {
 		name: string;
 		strokeBottom: number;
 		strokeTop: number;
+		archBottom: number;
+		archTop: number;
 		spurBottom: number;
 		spurTop: number;
 	}
 	const TAG = "Chlorophytum::EmBox::Shared";
 	export class Hint implements IHint {
 		constructor(private readonly props: EmBoxProps) {}
-		toJSON() {
+		public toJSON() {
 			return {
 				type: TAG,
 				props: this.props
 			};
 		}
-		createCompiler(sink: IFinalHintProgramSink): IHintCompiler | null {
+		public createCompiler(sink: IFinalHintProgramSink): IHintCompiler | null {
 			if (sink instanceof HlttProgramSink) {
 				return new HlttCompiler(sink, this.props);
 			}
@@ -29,8 +32,8 @@ export namespace EmBoxShared {
 	}
 
 	export class HintFactory implements IHintFactory {
-		readonly type = TAG;
-		readJson(json: any) {
+		public readonly type = TAG;
+		public readJson(json: any) {
 			if (json && json.type === TAG) {
 				return new Hint(json.props);
 			}
@@ -40,43 +43,18 @@ export namespace EmBoxShared {
 
 	export class HlttCompiler implements IHintCompiler {
 		constructor(private readonly sink: HlttProgramSink, private readonly props: EmBoxProps) {}
-		doCompile() {
+		public doCompile() {
 			const props = this.props;
 			this.sink.addSegment(function*($) {
-				const strokeBottom = $.globalTwilight(`${PREFIX}::${props.name}::StrokeBottom`);
-				const strokeTop = $.globalTwilight(`${PREFIX}::${props.name}::StrokeTop`);
-				const spurBottom = $.globalTwilight(`${PREFIX}::${props.name}::SpurBottom`);
-				const spurTop = $.globalTwilight(`${PREFIX}::${props.name}::SpurTop`);
+				const pts = getEmBoxPoints($, props.name);
 
 				yield $.svtca.y();
-				yield $.scfs(
-					strokeBottom,
-					$.div(
-						$.mul($.coerce.toF26D6(props.strokeBottom * 64), $.toFloat($.mppem())),
-						$.coerce.toF26D6(64)
-					)
-				);
-				yield $.scfs(
-					strokeTop,
-					$.div(
-						$.mul($.coerce.toF26D6(props.strokeTop * 64), $.toFloat($.mppem())),
-						$.coerce.toF26D6(64)
-					)
-				);
-				yield $.scfs(
-					spurBottom,
-					$.div(
-						$.mul($.coerce.toF26D6(props.spurBottom * 64), $.toFloat($.mppem())),
-						$.coerce.toF26D6(64)
-					)
-				);
-				yield $.scfs(
-					spurTop,
-					$.div(
-						$.mul($.coerce.toF26D6(props.spurTop * 64), $.toFloat($.mppem())),
-						$.coerce.toF26D6(64)
-					)
-				);
+				yield TInitEmBoxPointPrep($, pts.strokeBottom, props.strokeBottom);
+				yield TInitEmBoxPointPrep($, pts.strokeTop, props.strokeTop);
+				yield TInitEmBoxPointPrep($, pts.archBottom, props.archBottom);
+				yield TInitEmBoxPointPrep($, pts.archTop, props.archTop);
+				yield TInitEmBoxPointPrep($, pts.spurBottom, props.spurBottom);
+				yield TInitEmBoxPointPrep($, pts.spurTop, props.spurTop);
 			});
 		}
 	}
