@@ -42,6 +42,15 @@ interface DependentHint {
 	toStem: number;
 }
 
+interface MergeDecideGap {
+	index: number;
+	sidAbove: number;
+	sidBelow: number;
+	multiplier: number;
+	order: number;
+	merged: boolean;
+}
+
 export default class HierarchyAnalyzer {
 	private stemMask: number[];
 	public lastPathWeight = 0;
@@ -186,36 +195,67 @@ export default class HierarchyAnalyzer {
 		j: number,
 		k: number,
 		index: number,
-		mergeS: [number, number, number][],
-		priMulS: number[]
+		gaps: MergeDecideGap[]
 	) {
 		const sj = this.analysis.stems[j];
 		const sk = this.analysis.stems[k];
-		const merge = m[j][k];
-		const priMul =
+		const multiplier =
 			j === k || m[j][k] >= this.strategy.DEADLY_MERGE
 				? 0
 				: sj.xMin >= sk.xMin && sj.xMax <= sk.xMax
 				? -1
 				: 1;
-		mergeS.push([merge, index, 0]);
-		priMulS.push(priMul);
+		gaps.push({ index, sidAbove: j, sidBelow: k, multiplier, order: 0, merged: false });
+	}
+
+	private optimizeMergeGaps(m: number[][], gaps: MergeDecideGap[]) {
+		let n = 1 + gaps.length;
+		for (;;) {
+			let mergeGapId = -1;
+			let minCost = this.strategy.DEADLY_MERGE;
+			for (let j = 0; j < gaps.length; j++) {
+				const gap = gaps[j];
+				if (!gap.multiplier || gap.merged) continue;
+				gap.merged = true; // pretend we are merged
+				let jMin = j,
+					jMax = j;
+				while (jMin >= 0 && gaps[jMin].merged) jMin--;
+				while (jMax < gaps.length && gaps[jMax].merged) jMax++;
+
+				let cost = 0;
+				for (let p = jMin + 1; p < jMax; p++) {
+					for (let q = jMin + 1; q <= p; q++) {
+						cost += m[gaps[p].sidAbove][gaps[q].sidBelow];
+					}
+				}
+
+				if (cost < minCost) {
+					minCost = cost;
+					mergeGapId = j;
+				}
+
+				gap.merged = false;
+			}
+			if (mergeGapId >= 0) {
+				gaps[mergeGapId].order = n;
+				gaps[mergeGapId].merged = true;
+				n--;
+			} else {
+				break;
+			}
+		}
 	}
 
 	private getMergePriority(m: number[][], top: number, bot: number, middle: number[]) {
-		let merge: [number, number, number][] = [];
-		let priMul: number[] = [];
-		this.getMergePairData(m, middle[0], bot, 0, merge, priMul);
+		let gaps: MergeDecideGap[] = [];
+		this.getMergePairData(m, middle[0], bot, 0, gaps);
 		for (let j = 1; j < middle.length; j++) {
-			this.getMergePairData(m, middle[j], middle[j - 1], j, merge, priMul);
+			this.getMergePairData(m, middle[j], middle[j - 1], j, gaps);
 		}
-		this.getMergePairData(m, top, middle[middle.length - 1], middle.length, merge, priMul);
-		merge.sort((a, b) => b[0] - a[0]);
-		for (let j = 0; j < merge.length; j++) {
-			merge[j][2] = 1 + j;
-		}
-		merge.sort((a, b) => a[1] - b[1]);
-		return merge.map((x, j) => x[2] * priMul[j]);
+		this.getMergePairData(m, top, middle[middle.length - 1], middle.length, gaps);
+		this.optimizeMergeGaps(m, gaps);
+		// console.log(gaps.map(x => x.order * x.multiplier));
+		return gaps.map(x => x.order * x.multiplier);
 	}
 
 	private getKeyPath() {
