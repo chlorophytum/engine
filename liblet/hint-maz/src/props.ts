@@ -48,13 +48,8 @@ function getRecPathImpl(a: number[], b: number[], N: number): number[] {
 		return [pri, ...getRecPathImpl(drop(a, 0), drop(b, 0), N - 1)];
 	} else if (ma.mergeIndex === N) {
 		return [pri, ...getRecPathImpl(drop(a, N - 1), drop(b, N - 1), N - 1)];
-	} else if (ma.mergeDown) {
-		return [pri, ...getRecPathImpl(drop(a, ma.mergeIndex), drop(b, ma.mergeIndex), N - 1)];
 	} else {
-		return [
-			pri,
-			...getRecPathImpl(drop(a, ma.mergeIndex - 1), drop(b, ma.mergeIndex - 1), N - 1)
-		];
+		return [pri, ...getRecPathImpl(drop(a, ma.mergeIndex), drop(b, ma.mergeIndex), N - 1)];
 	}
 }
 
