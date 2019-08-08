@@ -171,9 +171,9 @@ export class OtdFontSource extends OpenTypeFont<string> {
 	public readonly metadata: IFontSourceMetadata;
 	protected support: IOpenTypeFileSupport<string>;
 
-	constructor(otd: any) {
+	constructor(otd: any, identifier: string) {
 		super();
 		this.support = new OtdSupport(otd);
-		this.metadata = { upm: otd.head.unitsPerEm };
+		this.metadata = { upm: otd.head.unitsPerEm, identifier };
 	}
 }

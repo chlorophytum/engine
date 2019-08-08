@@ -32,9 +32,9 @@ async function parseJsonGz(input: stream.Readable) {
 class OtdFontFormatPlugin implements IFontFormatPlugin {
 	private readonly hsSupport = new OtdHsSupport();
 
-	public async createFontSource(input: stream.Readable) {
+	public async createFontSource(input: stream.Readable, identifier: string) {
 		const otd = await StreamJson.parse(input);
-		return new OtdFontSource(otd);
+		return new OtdFontSource(otd, identifier);
 	}
 
 	public async createHintStore(input: stream.Readable, plugins: IHintingModelPlugin[]) {
@@ -88,6 +88,7 @@ class OtdFontFormatPlugin implements IFontFormatPlugin {
 				symmetric_gridfit: true
 			}
 		];
+		otd.maxp.maxZones = 2;
 		otd.maxp.maxFunctionDefs = 2048;
 		otd.maxp.maxStackElements = 2048;
 		otd.maxp.maxStorage = 2048;

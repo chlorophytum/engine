@@ -28,7 +28,10 @@ export interface GlyphRelation<Glyph> {
 // Font source
 export interface IFontFormatPlugin {
 	// "any"s are actually existential types
-	createFontSource(input: stream.Readable): Promise<IFontSource<any, any, any>>;
+	createFontSource(
+		input: stream.Readable,
+		identifier: string
+	): Promise<IFontSource<any, any, any>>;
 	createHintStore(input: stream.Readable, plugins: IHintingModelPlugin[]): Promise<IHintStore>;
 	saveFinalHint(
 		col: IFinalHintCollector,
@@ -42,6 +45,7 @@ export interface IFontFormatPlugin {
 	): Promise<void>;
 }
 export interface IFontSourceMetadata {
+	readonly identifier: string;
 	readonly upm: number;
 }
 export interface IFontSource<Glyph, VAR, MASTER> {
@@ -129,4 +133,9 @@ export interface IFinalHintCollector {
 	readonly format: string;
 	createSession(): IFinalHintSession;
 	consolidate(): void;
+}
+
+// Logging
+export interface ILogger {
+	log(what: string): void;
 }

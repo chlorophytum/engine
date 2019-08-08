@@ -5,6 +5,7 @@ import mainPreHint from "./main/pre-hint";
 import * as _Support from "./support/index";
 
 export * from "./interfaces/index";
+export * from "./logger";
 export import EmptyImpl = _EmptyImpl;
 export import Support = _Support;
 
