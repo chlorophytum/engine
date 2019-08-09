@@ -128,6 +128,10 @@ export default class HierarchyAnalyzer {
 				),
 				this.getMinGap(this.analysis.collisionMatrices.flips, top, bot, sidPileMiddle)
 			);
+		} else if (botIsBoundary && !topIsBoundary && !botAtGlyphBottom) {
+			sink.addBottomSemiBoundaryStem(this.analysis.stems[bot], this.analysis.stems[top]);
+		} else if (topIsBoundary && !topAtGlyphTop && !botIsBoundary) {
+			sink.addTopSemiBoundaryStem(this.analysis.stems[top], this.analysis.stems[bot]);
 		}
 
 		for (const dependent of dependents) {

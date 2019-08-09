@@ -11,50 +11,50 @@ function midTop(e: ProgramDsl, zMids: Variable, index: Expression) {
 	return e.part(zMids, e.add(1, e.mul(e.coerce.toF26D6(2), index)));
 }
 
-export const InitMSDGapEntries = LibFunc("IdeographProgram::initMSDGapEntries", function*(e) {
-	const [N, vpTotalDist, vpA, vpB, vpC, vpDiv, vpAlloc, zBot, zTop, vpZMids, vpGapMD] = e.args(
+export const InitMSDGapEntries = LibFunc("IdeographProgram::initMSDGapEntries", function*($) {
+	const [N, vpTotalDist, vpA, vpB, vpC, vpDiv, vpAlloc, zBot, zTop, vpZMids, vpGapMD] = $.args(
 		11
 	);
 
-	const pZMids = e.coerce.fromIndex.variable(vpZMids);
-	const pGapMD = e.coerce.fromIndex.variable(vpGapMD);
+	const pZMids = $.coerce.fromIndex.variable(vpZMids);
+	const pGapMD = $.coerce.fromIndex.variable(vpGapMD);
 
-	const j = e.local();
-	const gapDist = e.local();
-	yield e.set(j, 0);
-	yield e.set(gapDist, 0);
-	yield e.while(e.lteq(j, N), function*() {
-		yield e.if(
-			e.eq(j, 0),
+	const j = $.local();
+	const gapDist = $.local();
+	yield $.set(j, 0);
+	yield $.set(gapDist, 0);
+	yield $.while($.lteq(j, N), function*() {
+		yield $.if(
+			$.eq(j, 0),
 			function*() {
-				yield e.set(gapDist, e.call(OctDistOrig, zBot, midBot(e, pZMids, j)));
+				yield $.set(gapDist, $.call(OctDistOrig, zBot, midBot($, pZMids, j)));
 			},
 			function*() {
-				yield e.if(
-					e.eq(j, N),
+				yield $.if(
+					$.eq(j, N),
 					function*() {
-						yield e.set(
+						yield $.set(
 							gapDist,
-							e.call(OctDistOrig, midTop(e, pZMids, e.sub(j, 1)), zTop)
+							$.call(OctDistOrig, midTop($, pZMids, $.sub(j, 1)), zTop)
 						);
 					},
 					function*() {
-						yield e.set(
+						yield $.set(
 							gapDist,
-							e.call(
+							$.call(
 								OctDistOrig,
-								midTop(e, pZMids, e.sub(j, 1)),
-								midBot(e, pZMids, j)
+								midTop($, pZMids, $.sub(j, 1)),
+								midBot($, pZMids, j)
 							)
 						);
 					}
 				);
 			}
 		);
-		yield e.call(
+		yield $.call(
 			InitMSDistEntry,
-			e.toFloat(N),
-			e.mul(e.coerce.toF26D6(2), j),
+			$.toFloat(N),
+			$.mul($.coerce.toF26D6(2), j),
 			vpTotalDist,
 			vpA,
 			vpB,
@@ -62,10 +62,10 @@ export const InitMSDGapEntries = LibFunc("IdeographProgram::initMSDGapEntries", 
 			vpDiv,
 			vpAlloc,
 			gapDist,
-			e.coerce.toF26D6(1),
-			e.part(pGapMD, j)
+			$.coerce.toF26D6(1),
+			$.part(pGapMD, j)
 		);
-		yield e.set(j, e.add(1, j));
+		yield $.set(j, $.add(1, j));
 	});
 });
 
@@ -83,140 +83,140 @@ const AdjustStrokeDist = LibFunc("IdeographProgram::AdjustStrokeDist", function*
 	);
 });
 
-export const InitMSDInkEntries = LibFunc("IdeographProgram::initMSDInkEntries", function*(e) {
-	const [N, vpTotalDist, vpA, vpB, vpC, vpDiv, vpAlloc, vpZMids, vpStrokeMD] = e.args(9);
+export const InitMSDInkEntries = LibFunc("IdeographProgram::initMSDInkEntries", function*($) {
+	const [N, vpTotalDist, vpA, vpB, vpC, vpDiv, vpAlloc, vpZMids, vpStrokeMD] = $.args(9);
 
-	const pZMids = e.coerce.fromIndex.variable(vpZMids);
-	const pStrokeMD = e.coerce.fromIndex.variable(vpStrokeMD);
+	const pZMids = $.coerce.fromIndex.variable(vpZMids);
+	const pStrokeMD = $.coerce.fromIndex.variable(vpStrokeMD);
 
-	const j = e.local();
-	yield e.set(j, 0);
-	yield e.while(e.lt(j, N), function*() {
-		yield e.call(
+	const j = $.local();
+	yield $.set(j, 0);
+	yield $.while($.lt(j, N), function*() {
+		yield $.call(
 			InitMSDistEntry,
-			e.toFloat(N),
-			e.add(1, e.mul(e.coerce.toF26D6(2), j)),
+			$.toFloat(N),
+			$.add(1, $.mul($.coerce.toF26D6(2), j)),
 			vpTotalDist,
 			vpA,
 			vpB,
 			vpC,
 			vpDiv,
 			vpAlloc,
-			e.call(
+			$.call(
 				AdjustStrokeDist,
-				e.call(OctDistOrig, midBot(e, pZMids, j), midTop(e, pZMids, j))
+				$.call(OctDistOrig, midBot($, pZMids, j), midTop($, pZMids, j))
 			),
-			e.coerce.toF26D6(1),
-			e.part(pStrokeMD, j)
+			$.coerce.toF26D6(1),
+			$.part(pStrokeMD, j)
 		);
-		yield e.set(j, e.add(1, j));
+		yield $.set(j, $.add(1, j));
 	});
 });
 
-const InitMSDistEntry = LibFunc("IdeographProgram::initMSDistEntry", function*(e) {
-	const [N, j, vpTotalDist, vpA, vpB, vpC, vpDiv, vpAlloc, x, r, p] = e.args(11);
-	const pTotalDist = e.coerce.fromIndex.variable(vpTotalDist);
-	const pA = e.coerce.fromIndex.variable(vpA);
-	const pB = e.coerce.fromIndex.variable(vpB);
-	const pC = e.coerce.fromIndex.variable(vpC);
-	const pDiv = e.coerce.fromIndex.variable(vpDiv);
-	const pAlloc = e.coerce.fromIndex.variable(vpAlloc);
-	const divisor = e.add(e.coerce.toF26D6(1), e.mul(e.coerce.toF26D6(DIV_STEP), p));
-	yield e.set(e.part(pA, j), e.max(0, x));
-	yield e.set(e.part(pB, j), e.max(0, e.sub(e.mul(r, x), e.div(e.coerce.toF26D6(1), N))));
-	yield e.set(e.part(pC, j), e.div(e.part(pB, j), divisor));
-	yield e.set(pTotalDist, e.add(pTotalDist, e.part(pA, j)));
-	yield e.set(e.part(pDiv, j), divisor);
-	yield e.set(e.part(pAlloc, j), p);
+const InitMSDistEntry = LibFunc("IdeographProgram::initMSDistEntry", function*($) {
+	const [N, j, vpTotalDist, vpA, vpB, vpC, vpDiv, vpAlloc, x, r, p] = $.args(11);
+	const pTotalDist = $.coerce.fromIndex.variable(vpTotalDist);
+	const pA = $.coerce.fromIndex.variable(vpA);
+	const pB = $.coerce.fromIndex.variable(vpB);
+	const pC = $.coerce.fromIndex.variable(vpC);
+	const pDiv = $.coerce.fromIndex.variable(vpDiv);
+	const pAlloc = $.coerce.fromIndex.variable(vpAlloc);
+	const divisor = $.add($.coerce.toF26D6(1), $.mul($.coerce.toF26D6(DIV_STEP), p));
+	yield $.set($.part(pA, j), $.max(0, x));
+	yield $.set($.part(pB, j), $.max(0, $.sub($.mul(r, x), $.div($.coerce.toF26D6(1), N))));
+	yield $.set($.part(pC, j), $.div($.part(pB, j), divisor));
+	yield $.set(pTotalDist, $.add(pTotalDist, $.part(pA, j)));
+	yield $.set($.part(pDiv, j), divisor);
+	yield $.set($.part(pAlloc, j), p);
 });
 
-export const MaxAverageLoop = LibFunc("IdeographProgram::maxAverageLoop", function*(e) {
-	const [N, vpA, vpB, vpC, vpDiv, vpAlloc, scalar, rest] = e.args(8);
-	const pA = e.coerce.fromIndex.variable(vpA);
-	const pB = e.coerce.fromIndex.variable(vpB);
-	const pC = e.coerce.fromIndex.variable(vpC);
-	const pDiv = e.coerce.fromIndex.variable(vpDiv);
-	const pAlloc = e.coerce.fromIndex.variable(vpAlloc);
+export const MaxAverageLoop = LibFunc("IdeographProgram::maxAverageLoop", function*($) {
+	const [N, vpA, vpB, vpC, vpDiv, vpAlloc, scalar, rest] = $.args(8);
+	const pA = $.coerce.fromIndex.variable(vpA);
+	const pB = $.coerce.fromIndex.variable(vpB);
+	const pC = $.coerce.fromIndex.variable(vpC);
+	const pDiv = $.coerce.fromIndex.variable(vpDiv);
+	const pAlloc = $.coerce.fromIndex.variable(vpAlloc);
 
-	const ONE = e.coerce.toF26D6(1);
+	const ONE = $.coerce.toF26D6(1);
 
-	const restInk = e.local();
-	const jOpt = e.local();
-	const jLoop = e.local();
-	const dOpt = e.local();
-	yield e.set(restInk, rest);
-	yield e.while(e.gt(restInk, 0), function*() {
-		yield e.set(jOpt, -1);
-		yield e.set(dOpt, -255);
-		yield e.set(jLoop, 0);
-		yield e.while(e.lt(jLoop, N), function*() {
-			yield e.if(
-				e.and(
-					e.lt(
-						e.part(pAlloc, jLoop),
-						e.add(e.coerce.toF26D6(2), e.mul(scalar, e.part(pA, jLoop)))
+	const restInk = $.local();
+	const jOpt = $.local();
+	const jLoop = $.local();
+	const dOpt = $.local();
+	yield $.set(restInk, rest);
+	yield $.while($.gt(restInk, 0), function*() {
+		yield $.set(jOpt, -1);
+		yield $.set(dOpt, -255);
+		yield $.set(jLoop, 0);
+		yield $.while($.lt(jLoop, N), function*() {
+			yield $.if(
+				$.and(
+					$.lt(
+						$.part(pAlloc, jLoop),
+						$.add($.coerce.toF26D6(2), $.mul(scalar, $.part(pA, jLoop)))
 					),
-					e.or(
-						e.and(e.odd(jLoop), e.gt(e.part(pC, jLoop), dOpt)),
-						e.and(e.not(e.odd(jLoop)), e.gteq(e.part(pC, jLoop), dOpt))
+					$.or(
+						$.and($.odd(jLoop), $.gt($.part(pC, jLoop), dOpt)),
+						$.and($.not($.odd(jLoop)), $.gteq($.part(pC, jLoop), dOpt))
 					)
 				),
 				function*() {
-					yield e.set(jOpt, jLoop);
-					yield e.set(dOpt, e.part(pC, jLoop));
+					yield $.set(jOpt, jLoop);
+					yield $.set(dOpt, $.part(pC, jLoop));
 				}
 			);
-			yield e.set(jLoop, e.add(jLoop, 1));
+			yield $.set(jLoop, $.add(jLoop, 1));
 		});
 
-		yield e.if(e.gteq(jOpt, 0), function*() {
-			yield e.set(e.part(pAlloc, jOpt), e.add(e.part(pAlloc, jOpt), e.min(restInk, ONE)));
-			yield e.set(e.part(pDiv, jOpt), e.add(e.part(pDiv, jOpt), e.coerce.toF26D6(DIV_STEP)));
-			yield e.set(e.part(pC, jOpt), e.div(e.part(pB, jOpt), e.part(pDiv, jOpt)));
+		yield $.if($.gteq(jOpt, 0), function*() {
+			yield $.set($.part(pAlloc, jOpt), $.add($.part(pAlloc, jOpt), $.min(restInk, ONE)));
+			yield $.set($.part(pDiv, jOpt), $.add($.part(pDiv, jOpt), $.coerce.toF26D6(DIV_STEP)));
+			yield $.set($.part(pC, jOpt), $.div($.part(pB, jOpt), $.part(pDiv, jOpt)));
 		});
-		yield e.set(restInk, e.sub(restInk, ONE));
+		yield $.set(restInk, $.sub(restInk, ONE));
 	});
 });
 
-const PlaceStrokeDist2 = LibFunc("IdeographProgram::placeStrokeDist2", function*(e) {
-	const [vpY, zBot, zTop, gap, ink] = e.args(5);
-	const pY = e.coerce.fromIndex.variable(vpY);
-	yield e.set(pY, e.add(pY, gap));
-	yield e.mdap(zBot);
-	yield e.scfs(zBot, pY);
-	yield e.set(pY, e.add(pY, ink));
-	yield e.scfs(zTop, pY);
+const PlaceStrokeDist2 = LibFunc("IdeographProgram::placeStrokeDist2", function*($) {
+	const [vpY, zBot, zTop, gap, ink] = $.args(5);
+	const pY = $.coerce.fromIndex.variable(vpY);
+	yield $.set(pY, $.add(pY, gap));
+	yield $.mdap(zBot);
+	yield $.scfs(zBot, pY);
+	yield $.set(pY, $.add(pY, ink));
+	yield $.scfs(zTop, pY);
 });
 
 export const MovePointsForMiddleHint = LibFunc(
 	"IdeographProgram::movePointsForMiddleHint",
-	function*(e) {
-		const [N, zBot, zTop, y0, vpGaps, vpInks, vpZMids] = e.args(7);
-		const pGaps = e.coerce.fromIndex.variable(vpGaps);
-		const pInks = e.coerce.fromIndex.variable(vpInks);
-		const pZMids = e.coerce.fromIndex.variable(vpZMids);
+	function*($) {
+		const [N, zBot, zTop, y0, vpGaps, vpInks, vpZMids] = $.args(7);
+		const pGaps = $.coerce.fromIndex.variable(vpGaps);
+		const pInks = $.coerce.fromIndex.variable(vpInks);
+		const pZMids = $.coerce.fromIndex.variable(vpZMids);
 
-		const j = e.local();
-		const y = e.local();
-		const yBot = e.local();
-		const yTop = e.local();
+		const j = $.local();
+		const y = $.local();
+		const yBot = $.local();
+		const yTop = $.local();
 
-		yield e.set(j, 0);
-		yield e.set(y, y0);
-		yield e.set(yBot, e.gc.cur(zBot));
-		yield e.set(yTop, e.gc.cur(zTop));
-		yield e.while(e.lt(j, N), function*() {
-			yield e.call(
+		yield $.set(j, 0);
+		yield $.set(y, y0);
+		yield $.set(yBot, $.gc.cur(zBot));
+		yield $.set(yTop, $.gc.cur(zTop));
+		yield $.while($.lt(j, N), function*() {
+			yield $.call(
 				PlaceStrokeDist2,
 				y.ptr,
-				midBot(e, pZMids, j),
-				midTop(e, pZMids, j),
-				e.part(pGaps, j),
-				e.part(pInks, j)
+				midBot($, pZMids, j),
+				midTop($, pZMids, j),
+				$.part(pGaps, j),
+				$.part(pInks, j)
 			);
-			yield e.set(j, e.add(1, j));
+			yield $.set(j, $.add(1, j));
 		});
-		yield e.scfs(zBot, yBot);
-		yield e.scfs(zTop, yTop);
+		yield $.scfs(zBot, yBot);
+		yield $.scfs(zTop, yTop);
 	}
 );

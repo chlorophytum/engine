@@ -70,9 +70,13 @@ export namespace MultipleAlignZone {
 				const bottomPoint = props.bottomPoint < 0 ? spurBottom : props.bottomPoint;
 				const topPoint = props.topPoint < 0 ? spurTop : props.topPoint;
 
+				let simple = true;
+				for (let md of props.gapMinDist) if (md !== 1) simple = false;
+				for (let md of props.inkMinDist) if (md !== 1) simple = false;
+
 				// We'll generate stub functions for the cases that the stroke quantity are small
 				// to prevent producing too many functions and the consequent overflow.
-				if (N <= 3) {
+				if (simple && N <= 3) {
 					yield $.call(
 						THintMultipleStrokesStub(N, { ...props, recPath, recPathCollide }),
 						bottomPoint,

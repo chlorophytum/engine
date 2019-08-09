@@ -159,6 +159,23 @@ export const THintBottomStroke = Template(
 	}
 );
 
+const AdjustStrokeDist = LibFunc(
+	"Chlorophytum::EmBox::HlttSupportPrograms::AdjustStrokeDist",
+	function*($) {
+		const [d] = $.args(1);
+		const One = $.coerce.toF26D6(1);
+		yield $.return(
+			$.add(
+				$.max(One, $.floor(d)),
+				$.mul(
+					$.sub(d, $.max(One, $.floor(d))),
+					$.sub(One, $.div(One, $.max(One, $.mul($.coerce.toF26D6(16), $.mppem()))))
+				)
+			)
+		);
+	}
+);
+
 export const THintBottomStrokeFree = LibFunc(
 	`Chlorophytum::EmBox::HlttSupportPrograms::THintBottomStrokeFree`,
 	function*(e) {
@@ -171,7 +188,7 @@ export const THintBottomStrokeFree = LibFunc(
 		yield e.set(dBelowOrig, e.sub(e.gc.orig(zsBot), e.gc.orig(zBot)));
 		yield e.set(dAboveOrig, e.sub(e.gc.orig(zTop), e.gc.orig(zsTop)));
 		yield e.set(wOrig, e.sub(e.gc.orig(zsTop), e.gc.orig(zsBot)));
-		yield e.set(wCur, e.max(e.coerce.toF26D6(3 / 5), wOrig));
+		yield e.set(wCur, e.max(e.coerce.toF26D6(3 / 5), e.call(AdjustStrokeDist, wOrig)));
 		yield e.set(spaceCur, e.sub(e.sub(e.gc.cur(zTop), e.gc.cur(zBot)), wCur));
 		yield e.scfs(
 			zsBot,
@@ -223,7 +240,7 @@ export const THintTopStrokeFree = LibFunc(
 		yield e.set(dBelowOrig, e.sub(e.gc.orig(zsBot), e.gc.orig(zBot)));
 		yield e.set(dAboveOrig, e.sub(e.gc.orig(zTop), e.gc.orig(zsTop)));
 		yield e.set(wOrig, e.sub(e.gc.orig(zsTop), e.gc.orig(zsBot)));
-		yield e.set(wCur, e.max(e.coerce.toF26D6(3 / 5), wOrig));
+		yield e.set(wCur, e.max(e.coerce.toF26D6(3 / 5), e.call(AdjustStrokeDist, wOrig)));
 		yield e.set(spaceCur, e.sub(e.sub(e.gc.cur(zTop), e.gc.cur(zBot)), wCur));
 		yield e.scfs(
 			zsTop,
@@ -254,7 +271,7 @@ export const THintStrokeFreeAuto = LibFunc(
 		yield e.set(dBelowOrig, e.sub(e.gc.orig(zsBot), e.gc.orig(zBot)));
 		yield e.set(dAboveOrig, e.sub(e.gc.orig(zTop), e.gc.orig(zsTop)));
 		yield e.set(wOrig, e.sub(e.gc.orig(zsTop), e.gc.orig(zsBot)));
-		yield e.set(wCur, e.max(e.coerce.toF26D6(3 / 5), wOrig));
+		yield e.set(wCur, e.max(e.coerce.toF26D6(3 / 5), e.call(AdjustStrokeDist, wOrig)));
 		yield e.set(spaceCur, e.sub(e.sub(e.gc.cur(zTop), e.gc.cur(zBot)), wCur));
 		yield e.set(
 			urTop,

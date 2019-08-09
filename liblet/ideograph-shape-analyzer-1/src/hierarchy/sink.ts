@@ -13,6 +13,8 @@ export default class HierarchySink {
 	public addLink(rp0: number, z: number) {}
 	public addBlue(top: boolean, z: AdjPoint) {}
 	public addBoundaryStem(stem: Stem, locTop: boolean, atBottom: boolean, atTop: boolean) {}
+	public addTopSemiBoundaryStem(stem: Stem, below: Stem) {}
+	public addBottomSemiBoundaryStem(stem: Stem, above: Stem) {}
 	public addStemPileHint(
 		bot: null | Stem,
 		middle: Stem[],

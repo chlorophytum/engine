@@ -1,6 +1,6 @@
 import { EmptyImpl, IHint } from "@chlorophytum/arch";
 import { Interpolate, LinkChain, Smooth, WithDirection } from "@chlorophytum/hint-common";
-import { EmBoxEdge, EmBoxInit, EmBoxStroke } from "@chlorophytum/hint-embox";
+import { EmBoxEdge, EmBoxInit, EmBoxStroke, getEmBoxPoints } from "@chlorophytum/hint-embox";
 import { MultipleAlignZone } from "@chlorophytum/hint-maz";
 import * as _ from "lodash";
 
@@ -40,6 +40,40 @@ export default class HintGenSink extends HierarchySink {
 			);
 		}
 	}
+
+	public addTopSemiBoundaryStem(stem: Stem, below: Stem) {
+		this.subHints.push(
+			new MultipleAlignZone.Hint({
+				emBoxName: this.glyphKind,
+				gapMinDist: [1, 1],
+				inkMinDist: [1],
+				bottomFree: false,
+				topFree: false,
+				mergePriority: [0, 0],
+				allowCollide: [false, false],
+				topPoint: -1,
+				middleStrokes: [[stem.lowKey.id, stem.highKey.id]],
+				bottomPoint: below.highKey.id
+			})
+		);
+	}
+	public addBottomSemiBoundaryStem(stem: Stem, above: Stem) {
+		this.subHints.push(
+			new MultipleAlignZone.Hint({
+				emBoxName: this.glyphKind,
+				gapMinDist: [1, 1],
+				inkMinDist: [1],
+				bottomFree: false,
+				topFree: false,
+				mergePriority: [0, 0],
+				allowCollide: [false, false],
+				topPoint: above.lowKey.id,
+				middleStrokes: [[stem.lowKey.id, stem.highKey.id]],
+				bottomPoint: -1
+			})
+		);
+	}
+
 	public addStemPileHint(
 		bot: null | Stem,
 		middle: Stem[],
