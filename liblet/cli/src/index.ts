@@ -2,7 +2,8 @@ import * as program from "commander";
 import * as fs from "fs";
 import * as _ from "lodash";
 
-import { doHint } from "./hint";
+import { HintOptions } from "./env";
+import { doHint } from "./hint-main";
 import { doInstruct } from "./instruct";
 import { doIntegrate, IntegrateJob } from "./integrate";
 
@@ -11,9 +12,11 @@ program.version("0.0.1");
 program
 	.command("hint <font> <toHint> [...others]")
 	.option("-c, --config <json>", "Configuration file")
+	.option("-j, --jobs <jobs>", "Jobs in parallel")
 	.action(async (font, toHint, rest, options) => {
 		if (!options.config) throw new TypeError("Configuration file is mandatory");
-		const ho = JSON.parse(fs.readFileSync(options.config, "utf-8"));
+		const ho: HintOptions = JSON.parse(fs.readFileSync(options.config, "utf-8"));
+		if (options.jobs) ho.jobs = options.jobs || 0;
 		const jobFiles = [font, toHint, ...(rest || [])];
 		await doHint(ho, _.chunk(jobFiles, 2) as [string, string][]);
 	});

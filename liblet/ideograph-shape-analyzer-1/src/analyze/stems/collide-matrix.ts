@@ -98,7 +98,7 @@ class ACSComputer {
 		return (sj.xMin < sk.xMin && sj.xMax < sk.xMax) || (sj.xMin > sk.xMin && sj.xMax > sk.xMax);
 	}
 
-	compute(j: number, k: number) {
+	public compute(j: number, k: number) {
 		const sj = this.stems[j];
 		const sjRadBot = atRadicalBottom(sj, this.strategy) && !isCapShape(sj, this.strategy);
 

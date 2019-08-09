@@ -5,10 +5,10 @@ export namespace WithDirection {
 	const TAG = "Chlorophytum::CommonHints::WithDirection";
 	export class Hint implements IHint {
 		constructor(private readonly y: boolean, private readonly inner: IHint) {}
-		toJSON() {
+		public toJSON() {
 			return { type: TAG, y: this.y, inner: this.inner };
 		}
-		createCompiler(sink: IFinalHintProgramSink): IHintCompiler | null {
+		public createCompiler(sink: IFinalHintProgramSink): IHintCompiler | null {
 			const innerCompiler = this.inner.createCompiler(sink);
 			if (!innerCompiler) return null;
 			if (sink instanceof HlttProgramSink) {
@@ -19,8 +19,8 @@ export namespace WithDirection {
 	}
 
 	export class HintFactory implements IHintFactory {
-		readonly type = TAG;
-		readJson(json: any, general: IHintFactory) {
+		public readonly type = TAG;
+		public readJson(json: any, general: IHintFactory) {
 			if (json && json.type === TAG && json.inner) {
 				const inner = general.readJson(json.inner, general);
 				if (inner) return new Hint(json.y, inner);
@@ -35,7 +35,7 @@ export namespace WithDirection {
 			private readonly y: boolean,
 			private readonly innerCompiler: IHintCompiler
 		) {}
-		doCompile() {
+		public doCompile() {
 			if (this.y) this.sink.addSegment($ => [$.svtca.y()]);
 			else this.sink.addSegment($ => [$.svtca.x()]);
 			this.innerCompiler.doCompile();

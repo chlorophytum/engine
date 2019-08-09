@@ -432,33 +432,6 @@ export function analyzePointBetweenStems(
 	return res;
 }
 
-export function analyzeEntireContourBetweenStems(glyph: Glyph, stems: Stem[]) {
-	let ans: number[][] = [];
-	for (let j = 0; j < stems.length; j++) {
-		ans[j] = [];
-		for (let k = 0; k < stems.length; k++) {
-			ans[j][k] = 0;
-			if (!(stems[j].y > stems[k].y)) continue;
-			for (let c = 0; c < glyph.contours.length; c++) {
-				let cr = glyph.contours[c];
-				let sj = stems[j];
-				let sk = stems[k];
-				if (
-					cr.stats.xMin >= sj.xMin &&
-					cr.stats.xMax <= sj.xMax &&
-					cr.stats.xMin >= sk.xMin &&
-					cr.stats.xMax <= sk.xMax &&
-					cr.stats.yMax <= sj.y &&
-					cr.stats.yMin >= sk.y
-				) {
-					ans[j][k] += 1;
-				}
-			}
-		}
-	}
-	return ans;
-}
-
 export function analyzeEntireContourAboveBelow(glyph: Glyph, stems: Stem[]) {
 	for (let j = 0; j < stems.length; j++) {
 		let sj = stems[j];

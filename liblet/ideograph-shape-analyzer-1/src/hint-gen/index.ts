@@ -46,7 +46,8 @@ export default class HintGenSink extends HierarchySink {
 		top: null | Stem,
 		botIsBoundary: boolean,
 		topIsBoundary: boolean,
-		annex: number[]
+		annex: number[],
+		turning: number[]
 	) {
 		if (!middle.length) return;
 
@@ -55,7 +56,7 @@ export default class HintGenSink extends HierarchySink {
 		const zBot = !bot ? -1 : botSame ? bot.lowKey.id : bot.highKey.id;
 		const zTop = !top ? -1 : topSame ? top.highKey.id : top.lowKey.id;
 		let inkMD: number[] = Array(middle.length).fill(1);
-		let gapMD: number[] = Array(middle.length + 1).fill(1);
+		let gapMD: number[] = turning.map(t => (t ? 2 : 1));
 
 		const allowCollide = annex.map(a => !!a);
 

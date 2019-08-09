@@ -125,7 +125,8 @@ export default class HierarchyAnalyzer {
 					top,
 					bot,
 					sidPileMiddle
-				)
+				),
+				this.getMinGap(this.analysis.collisionMatrices.flips, top, bot, sidPileMiddle)
 			);
 		}
 
@@ -241,7 +242,7 @@ export default class HierarchyAnalyzer {
 				gaps[mergeGapId].merged = true;
 				n--;
 			} else {
-				break;
+				return;
 			}
 		}
 	}
@@ -254,8 +255,20 @@ export default class HierarchyAnalyzer {
 		}
 		this.getMergePairData(m, top, middle[middle.length - 1], middle.length, gaps);
 		this.optimizeMergeGaps(m, gaps);
-		// console.log(gaps.map(x => x.order * x.multiplier));
 		return gaps.map(x => x.order * x.multiplier);
+	}
+
+	private getMinGapData(f: number[][], j: number, k: number, gaps: number[]) {
+		gaps.push(f[j][k] > 3 || f[k][j] > 3 ? 1 : 0);
+	}
+	private getMinGap(f: number[][], top: number, bot: number, middle: number[]) {
+		let gaps: number[] = [];
+		this.getMinGapData(f, middle[0], bot, gaps);
+		for (let j = 1; j < middle.length; j++) {
+			this.getMinGapData(f, middle[j], middle[j - 1], gaps);
+		}
+		this.getMinGapData(f, top, middle[middle.length - 1], gaps);
+		return gaps;
 	}
 
 	private getKeyPath() {

@@ -1,6 +1,7 @@
 import { EmptyImpl, HintingModelConfig, IHintingModelPlugin, Plugins } from "@chlorophytum/arch";
 
 export interface HintOptions {
+	jobs?: number;
 	fontFormat: string;
 	finalFormat: string;
 	hintPasses: { plugin: string; options?: any }[];

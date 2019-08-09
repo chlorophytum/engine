@@ -13,6 +13,7 @@ export const EmptyHintingModelFactory: IHintingModelPlugin = {
 
 export class EmptyHintingModel<GID> implements IHintingModel<GID> {
 	public readonly type = "Chlorophytum::EmptyHinting";
+	public readonly allowParallel = false;
 
 	constructor() {}
 

@@ -94,6 +94,7 @@ export interface IHintCompiler {
 // Shape analysis (auto hinting)
 export interface IHintingModel<Glyph> {
 	readonly type: string;
+	readonly allowParallel: boolean;
 	// Analyze shared parameters (usually CVT)
 	// Return the glyphs needed to be hinted
 	analyzeSharedParameters(): Promise<null | Set<Glyph>>;

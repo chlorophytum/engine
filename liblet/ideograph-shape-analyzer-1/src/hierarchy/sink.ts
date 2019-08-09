@@ -19,7 +19,8 @@ export default class HierarchySink {
 		top: null | Stem,
 		botBound: boolean,
 		topBound: boolean,
-		annex: number[]
+		annex: number[],
+		turning: number[]
 	) {}
 	public addDependentHint(
 		type: DependentHintType,
