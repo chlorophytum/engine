@@ -1,9 +1,10 @@
-import { EmptyLogger, HintMain, IFontSource, IHintingModelPlugin } from "@chlorophytum/arch";
+import { EmptyLogger, IFontSource, IHint, IHintingModelPlugin } from "@chlorophytum/arch";
+import * as Procs from "@chlorophytum/procs";
 import * as fs from "fs";
 import { MessagePort, parentPort, workerData } from "worker_threads";
 
 import { getFontPlugin, getHintingModelsAndParams } from "./env";
-import { HintWorkData } from "./hint-shared";
+import { HintResults, HintWorkData } from "./hint-shared";
 
 async function main(data: HintWorkData, parentPort: MessagePort) {
 	const FontFormatPlugin = getFontPlugin(data.options);
@@ -23,19 +24,22 @@ async function main(data: HintWorkData, parentPort: MessagePort) {
 	parentPort.postMessage({ ready: true });
 }
 
+class Sender implements Procs.GlyphHintSender {
+	public results: HintResults = [];
+	public push(type: string, glyph: string, hints: IHint) {
+		this.results.push({ type, glyph, hintRep: hints.toJSON() });
+	}
+}
+
 async function doHint(
 	models: IHintingModelPlugin[],
 	params: any,
 	fontSource: IFontSource<any, any, any>,
-	job: HintMain.JobControl
+	job: Procs.GlyphHintJobs
 ) {
-	const res = await HintMain.preHint(fontSource, models, params, job, new EmptyLogger());
-	let results: { glyph: string; hintRep: any }[] = [];
-	for (const g of await res.hints.listGlyphs()) {
-		const hint = await res.hints.getGlyphHints(g);
-		if (hint) results.push({ glyph: g, hintRep: hint.toJSON() });
-	}
-	return JSON.stringify(results);
+	const sender = new Sender();
+	await Procs.parallelGlyphHintWork(fontSource, models, params, job, sender, new EmptyLogger());
+	return JSON.stringify(sender.results);
 }
 
 if (!parentPort) throw new Error("Must run inside a worker.");

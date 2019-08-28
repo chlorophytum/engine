@@ -95,13 +95,13 @@ export interface IHintCompiler {
 export interface IHintingModel<Glyph> {
 	readonly type: string;
 	readonly allowParallel: boolean;
-	// Analyze shared parameters (usually CVT)
-	// Return the glyphs needed to be hinted
-	analyzeSharedParameters(): Promise<null | Set<Glyph>>;
+	// Analyze glyphs worth hinting
+	analyzeEffectiveGlyphs(): Promise<null | Set<Glyph>>;
+	prepare?(): Promise<void>;
 	// Create glyph analyzer
 	analyzeGlyph(gid: Glyph): Promise<null | IHint>;
 	// Create a compiler to compile shared functions / parameters
-	getSharedHints(): Promise<null | IHint>;
+	getSharedHints(glyphHints: ReadonlyMap<Glyph, IHint>): Promise<null | IHint>;
 }
 export interface IHintingModelPlugin {
 	readonly type: string;

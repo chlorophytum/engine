@@ -12,5 +12,3 @@ export function lerp(x: number, x1: number, x2: number, y1: number, y2: number) 
 export function clamp(low: number, x: number, high: number) {
 	return x < low ? low : x > high ? high : x;
 }
-
-export { Progress } from "./progress";

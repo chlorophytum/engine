@@ -1,4 +1,4 @@
-import { ILogger } from "../interfaces";
+import { ILogger } from "@chlorophytum/arch";
 
 function formatDuration(ms: number) {
 	const sec_num = ms / 1000;

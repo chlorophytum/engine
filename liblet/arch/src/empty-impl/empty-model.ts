@@ -17,7 +17,7 @@ export class EmptyHintingModel<GID> implements IHintingModel<GID> {
 
 	constructor() {}
 
-	public async analyzeSharedParameters() {
+	public async analyzeEffectiveGlyphs() {
 		return null;
 	}
 	public async getSharedHints() {

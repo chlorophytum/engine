@@ -1,4 +1,5 @@
-import { HintMain, IFinalHintSession } from "@chlorophytum/arch";
+import { IFinalHintSession } from "@chlorophytum/arch";
+import * as Procs from "@chlorophytum/procs";
 import * as fs from "fs";
 import * as stream from "stream";
 
@@ -21,7 +22,7 @@ export async function doInstruct(options: HintOptions, jobs: [string, string][])
 		const gzFhStream = fs.createWriteStream(output);
 		const hs = await FontFormatPlugin.createHintStore(gzHsStream, models);
 		const ttSession = ttCol.createSession();
-		await HintMain.midHint(hs, ttSession);
+		await Procs.mainMidHint(hs, ttSession);
 		ttSession.consolidate();
 		exportPlans.push({ to: gzFhStream, session: ttSession });
 	}

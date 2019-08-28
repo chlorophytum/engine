@@ -33,7 +33,7 @@ class IdeographHintingModel1<GID, VAR, MASTER> implements IHintingModel<GID> {
 	public readonly type = "Chlorophytum::IdeographHintingModel1";
 	public readonly allowParallel = true;
 
-	public async analyzeSharedParameters() {
+	public async analyzeEffectiveGlyphs() {
 		const charSet = await this.font.getCharacterSet();
 		let gidSet: Set<GID> = new Set();
 		for (const unicode of charSet) {

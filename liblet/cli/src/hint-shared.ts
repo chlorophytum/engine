@@ -1,4 +1,4 @@
-import { HintMain } from "@chlorophytum/arch";
+import * as Procs from "@chlorophytum/procs";
 
 import { HintOptions } from "./env";
 
@@ -7,7 +7,7 @@ export interface HintWorkData {
 	options: HintOptions;
 }
 export interface JobMessage {
-	job: HintMain.JobControl;
+	job: Procs.GlyphHintJobs;
 }
 
 export interface ReadyMessage {
@@ -17,4 +17,4 @@ export interface LogMessage {
 	log: string;
 }
 
-export type HintResults = { glyph: string; hintRep: any }[];
+export type HintResults = { type: string; glyph: string; hintRep: any }[];

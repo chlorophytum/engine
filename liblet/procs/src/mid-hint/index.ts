@@ -1,4 +1,4 @@
-import { IFinalHintSession, IHintStore } from "../interfaces";
+import { IFinalHintSession, IHintStore } from "@chlorophytum/arch";
 
 export async function mainMidHint(store: IHintStore, fhs: IFinalHintSession) {
 	const glyphList = await store.listGlyphs();

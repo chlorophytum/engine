@@ -1,18 +1,17 @@
 import {
 	ConsoleLogger,
 	EmptyImpl,
-	HintMain,
+	HintingModelConfig,
+	IFontSource,
 	IHintFactory,
-	IHintingModelPlugin,
-	IHintStore,
-	ILogger,
-	Support
+	IHintingModelPlugin
 } from "@chlorophytum/arch";
-import { MainHintJobControl } from "@chlorophytum/arch/lib/main/pre-hint";
+import * as Procs from "@chlorophytum/procs";
 import * as fs from "fs";
 import { Worker } from "worker_threads";
 
 import { getFontPlugin, getHintingModelsAndParams, HintOptions } from "./env";
+import { HintArbitrator } from "./hint-arbitrator";
 import { HintResults, HintWorkData } from "./hint-shared";
 
 function createHintFactory(models: IHintingModelPlugin[]): IHintFactory {
@@ -33,75 +32,54 @@ export async function doHint(options: HintOptions, jobs: [string, string][]) {
 	for (const [input, output] of jobs) {
 		const otdStream = fs.createReadStream(input);
 		const fontSource = await FontFormatPlugin.createFontSource(otdStream, input);
-		const jc: MainHintJobControl = { generateJob: options.jobs || 0 };
-		const res = await HintMain.preHint(fontSource, models, params, jc, new ConsoleLogger());
-		if (options.jobs) {
-			console.log(`Process with ${options.jobs} threads...`);
-			await startWorkers(options.jobs, input, options, res.remainingJobs, hf, res.hints);
-		}
+		const hintStore = await hintFont(options, input, fontSource, models, params);
 		const out = fs.createWriteStream(output);
-		await res.hints.save(out);
+		await hintStore.save(out);
 	}
 }
 
-class Arbitrator {
-	private items: [string, string][] = [];
-	private ptr: number = 0;
-	constructor(
-		jc: HintMain.JobControl,
-		private parallelJobs: number,
-		prefix: string,
-		private logger: ILogger
-	) {
-		if (!jc.jobs) throw new Error("jobs must be present");
-		for (const k in jc.jobs) {
-			const gsList = jc.jobs[k];
-			for (let gName of gsList) this.items.push([k, gName]);
-		}
+async function hintFont(
+	options: HintOptions,
+	input: string,
+	fontSource: IFontSource<any, any, any>,
+	models: IHintingModelPlugin[],
+	modelConfig: HintingModelConfig[]
+) {
+	const logger = new ConsoleLogger();
+	const serial = await Procs.serialGlyphHint(fontSource, models, modelConfig, logger);
+	const { jobs, ghsMap: parallel } = await Procs.generateParallelGlyphHintJobs(
+		fontSource,
+		models,
+		modelConfig
+	);
 
-		this.progress = new Support.Progress(prefix, this.items.length);
-	}
-	public fetch() {
-		if (this.ptr >= this.items.length) return null;
-
-		let jc: HintMain.JobControl = { jobs: {} };
-		const step = Math.max(
-			this.parallelJobs,
-			Math.min(
-				0x100,
-				Math.round(
-					Math.max(1, this.items.length - this.ptr) / Math.max(1, this.parallelJobs)
-				)
-			)
-		);
-
-		for (let count = 0; count < step && this.ptr < this.items.length; count++, this.ptr++) {
-			const [ty, gName] = this.items[this.ptr];
-			if (!jc.jobs![ty]) jc.jobs![ty] = [];
-			jc.jobs![ty].push(gName);
-		}
-		return jc;
+	const parallelJobs = options.jobs || 1;
+	if (parallel.size) {
+		const hf = createHintFactory(models);
+		await parallelGlyphHint(parallelJobs, input, options, jobs, hf, parallel);
+		await Procs.parallelGlyphHintShared(fontSource, models, modelConfig, parallel);
 	}
 
-	private progress: Support.Progress;
-
-	public updateProgress() {
-		this.progress.update(this.logger);
+	const hintStore = fontSource.createHintStore();
+	for (const [type, ghs] of [...serial, ...parallel]) {
+		for (const [g, hints] of ghs.glyphHints) await hintStore.setGlyphHints(g, hints);
+		if (ghs.sharedHints) await hintStore.setSharedHints(type, ghs.sharedHints);
 	}
+	return hintStore;
 }
 
-async function startWorkers(
+async function parallelGlyphHint(
 	n: number,
 	input: string,
 	options: HintOptions,
-	jc: MainHintJobControl,
+	jc: Procs.GlyphHintJobs,
 	hf: IHintFactory,
-	hs: IHintStore
+	ghsMap: Map<string, Procs.GlyphHintStore>
 ) {
 	let promises: Promise<unknown>[] = [];
-	const arbitrator = new Arbitrator(jc, n, `Parallel hinting ${input}`, new ConsoleLogger());
+	const arbitrator = new HintArbitrator(jc, n, `Parallel hinting ${input}`, new ConsoleLogger());
 	for (let nth = 0; nth < n; nth++) {
-		promises.push(startWorker(input, options, arbitrator, hf, hs));
+		promises.push(startWorker(input, options, arbitrator, hf, ghsMap));
 	}
 	await Promise.all(promises);
 }
@@ -109,9 +87,9 @@ async function startWorkers(
 function startWorker(
 	input: string,
 	options: HintOptions,
-	queue: Arbitrator,
+	arb: HintArbitrator,
 	hf: IHintFactory,
-	hs: IHintStore
+	ghsMap: Map<string, Procs.GlyphHintStore>
 ) {
 	return new Promise((resolve, reject) => {
 		const workerData: HintWorkData = {
@@ -125,18 +103,21 @@ function startWorker(
 		});
 
 		function next() {
-			const nextJob = queue.fetch();
+			const nextJob = arb.fetch();
 			if (nextJob) worker.postMessage({ job: nextJob });
 			else worker.postMessage({ terminate: true });
 		}
 
-		async function saveResults(results: HintResults) {
-			for (const { glyph, hintRep } of results) {
+		function saveResults(results: HintResults) {
+			for (const { type, glyph, hintRep } of results) {
+				const ghs = ghsMap.get(type);
+				if (!ghs) continue;
 				const hint = hf.readJson(hintRep, hf);
 				if (hint) {
-					await hs.setGlyphHints(glyph, hint);
-					queue.updateProgress();
+					ghs.glyphHints.set(glyph, hint);
+					arb.updateProgress();
 				}
+				arb.updateProgress();
 			}
 		}
 
@@ -147,7 +128,8 @@ function startWorker(
 				console.log(_msg.log);
 			} else if (_msg.results) {
 				const results: HintResults = JSON.parse(_msg.results);
-				saveResults(results).then(() => next());
+				saveResults(results);
+				next();
 			}
 		});
 		worker.on("exit", () => resolve(null));
