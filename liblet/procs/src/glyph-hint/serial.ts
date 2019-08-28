@@ -9,6 +9,7 @@ export async function serialGlyphHint<GID, VAR, MASTER>(
 	font: IFontSource<GID, VAR, MASTER>,
 	modelFactories: IHintingModelPlugin[],
 	modelConfig: HintingModelConfig[],
+	forceSerial: boolean,
 	logger: ILogger
 ) {
 	let ghsMap: Map<string, GlyphHintStore> = new Map();
@@ -18,7 +19,7 @@ export async function serialGlyphHint<GID, VAR, MASTER>(
 		if (!mf) continue;
 		const hm = mf.adopt(font, parameters);
 		if (!hm) continue;
-		if (hm.allowParallel) continue;
+		if (!forceSerial && hm.allowParallel) continue;
 
 		const ghs = new GlyphHintStore();
 		const glyphs = await hm.analyzeEffectiveGlyphs();

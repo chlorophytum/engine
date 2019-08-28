@@ -46,14 +46,21 @@ async function hintFont(
 	modelConfig: HintingModelConfig[]
 ) {
 	const logger = new ConsoleLogger();
-	const serial = await Procs.serialGlyphHint(fontSource, models, modelConfig, logger);
+	const parallelJobs = options.jobs || 1;
+	const serial = await Procs.serialGlyphHint(
+		fontSource,
+		models,
+		modelConfig,
+		parallelJobs <= 1,
+		logger
+	);
 	const { jobs, ghsMap: parallel } = await Procs.generateParallelGlyphHintJobs(
 		fontSource,
 		models,
-		modelConfig
+		modelConfig,
+		parallelJobs <= 1
 	);
 
-	const parallelJobs = options.jobs || 1;
 	if (parallel.size) {
 		const hf = createHintFactory(models);
 		await parallelGlyphHint(parallelJobs, input, options, jobs, hf, parallel);

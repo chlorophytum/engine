@@ -5,7 +5,8 @@ import { findMatchingFactory, GlyphHintJobs, GlyphHintStore } from "./common";
 export async function generateParallelGlyphHintJobs<GID, VAR, MASTER>(
 	font: IFontSource<GID, VAR, MASTER>,
 	modelFactories: IHintingModelPlugin[],
-	modelConfig: HintingModelConfig[]
+	modelConfig: HintingModelConfig[],
+	forceSerial: boolean
 ) {
 	let ghsMap: Map<string, GlyphHintStore> = new Map();
 	let jobs: GlyphHintJobs = {};
@@ -15,7 +16,7 @@ export async function generateParallelGlyphHintJobs<GID, VAR, MASTER>(
 		if (!mf) continue;
 		const hm = mf.adopt(font, parameters);
 		if (!hm) continue;
-		if (!hm.allowParallel) continue;
+		if (forceSerial || !hm.allowParallel) continue;
 
 		const glyphs = await hm.analyzeEffectiveGlyphs();
 		if (!glyphs) continue;
