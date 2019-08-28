@@ -104,7 +104,7 @@ class ACSComputer {
 
 		const sk = this.stems[k];
 		const skRadTop = atRadicalTop(sk, this.strategy);
-		const nothingInBetween = this.F[j][k] <= 3 || (this.dov && !this.dov[j][k]);
+		const nothingInBetween = this.F[j][k] <= 1 || (this.dov && !this.dov[j][k]);
 		// Overlap weight
 		let ovr = this.overlapLengths[j][k];
 		const tb = this.computeTB(j, k);

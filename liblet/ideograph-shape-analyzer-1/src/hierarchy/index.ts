@@ -263,7 +263,7 @@ export default class HierarchyAnalyzer {
 	}
 
 	private getMinGapData(f: number[][], j: number, k: number, gaps: number[]) {
-		gaps.push(f[j][k] > 3 || f[k][j] > 3 ? 1 : 0);
+		gaps.push(f[j][k] > 1 || f[k][j] > 1 ? 1 : 0);
 	}
 	private getMinGap(f: number[][], top: number, bot: number, middle: number[]) {
 		let gaps: number[] = [];
