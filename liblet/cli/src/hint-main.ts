@@ -89,6 +89,7 @@ async function parallelGlyphHint(
 		promises.push(startWorker(input, options, arbitrator, hf, ghsMap));
 	}
 	await Promise.all(promises);
+	arbitrator.updateProgress();
 }
 
 function startWorker(
@@ -124,7 +125,6 @@ function startWorker(
 					ghs.glyphHints.set(glyph, hint);
 					arb.updateProgress();
 				}
-				arb.updateProgress();
 			}
 		}
 
