@@ -12,10 +12,9 @@ export async function parallelGlyphHintShared<GID, VAR, MASTER>(
 	for (const { type, parameters } of modelConfig) {
 		// Get the hinting model, skip if absent
 		const mf = findMatchingFactory(type, modelFactories);
-		if (!mf) continue;
+		if (!mf || !mf.adoptParallel) continue;
 		const hm = mf.adopt(font, parameters);
 		if (!hm) continue;
-		if (!hm.allowParallel) continue;
 
 		const ghs = ghsMap.get(hm.type);
 		if (!ghs) continue;

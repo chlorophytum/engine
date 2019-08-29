@@ -1,35 +1,28 @@
 import { Expression, LibFunc, ProgramDsl, Variable } from "@chlorophytum/hltt";
 
-const VIS_DIST_MAX = 4 / 5;
-const VIS_DIST_MIN = 1 / 2 + 1 / 8;
+const ConsideredDark = 3 / 5;
 
-export const VisFloor = LibFunc("IdeographProgram::visFloor", function*(e) {
-	const [x, fillRate] = e.args(2);
-	yield e.if(
-		e.gteq(
-			e.sub(x, e.floor(x)),
-			e.max(e.coerce.toF26D6(VIS_DIST_MIN), e.min(e.coerce.toF26D6(VIS_DIST_MAX), fillRate))
-		),
+export const VisFloor = LibFunc("IdeographProgram::visFloor", function*($) {
+	const [x, fillRate] = $.args(2);
+	yield $.if(
+		$.gteq($.sub(x, $.floor(x)), $.coerce.toF26D6(ConsideredDark)),
 		function*() {
-			yield e.return(e.floor(e.add(e.coerce.toF26D6(1), e.floor(x))));
+			yield $.return($.floor($.add($.coerce.toF26D6(1), $.floor(x))));
 		},
 		function*() {
-			yield e.return(e.floor(e.floor(x)));
+			yield $.return($.floor($.floor(x)));
 		}
 	);
 });
-export const VisCeil = LibFunc("IdeographProgram::visCeil", function*(e) {
-	const [x, fillRate] = e.args(2);
-	yield e.if(
-		e.gteq(
-			e.sub(e.ceiling(x), x),
-			e.max(e.coerce.toF26D6(VIS_DIST_MIN), e.min(e.coerce.toF26D6(VIS_DIST_MAX), fillRate))
-		),
+export const VisCeil = LibFunc("IdeographProgram::visCeil", function*($) {
+	const [x, fillRate] = $.args(2);
+	yield $.if(
+		$.gteq($.sub($.ceiling(x), x), $.coerce.toF26D6(ConsideredDark)),
 		function*() {
-			yield e.return(e.ceiling(e.sub(e.ceiling(x), e.coerce.toF26D6(1))));
+			yield $.return($.ceiling($.sub($.ceiling(x), $.coerce.toF26D6(1))));
 		},
 		function*() {
-			yield e.return(e.ceiling(e.ceiling(x)));
+			yield $.return($.ceiling($.ceiling(x)));
 		}
 	);
 });
@@ -52,60 +45,60 @@ function midBot(e: ProgramDsl, zMids: Variable, index: Expression) {
 function midTop(e: ProgramDsl, zMids: Variable, index: Expression) {
 	return e.part(zMids, e.add(1, e.mul(e.coerce.toF26D6(2), index)));
 }
-export const GetFillRate = LibFunc("IdeographProgram::GetFillRate", function*(e) {
-	const [N, zBot, zTop, vpZMids] = e.args(4);
-	const ink = e.local();
-	const gap = e.local();
+export const GetFillRate = LibFunc("IdeographProgram::GetFillRate", function*($) {
+	const [N, zBot, zTop, vpZMids] = $.args(4);
+	const ink = $.local();
+	const gap = $.local();
 
-	const pZMids = e.coerce.fromIndex.variable(vpZMids);
+	const pZMids = $.coerce.fromIndex.variable(vpZMids);
 
-	yield e.set(ink, 0);
-	yield e.set(gap, 0);
+	yield $.set(ink, 0);
+	yield $.set(gap, 0);
 
-	const j = e.local();
-	const gapDist = e.local();
-	yield e.set(j, 0);
-	yield e.set(gapDist, 0);
-	yield e.while(e.lteq(j, N), function*() {
-		yield e.if(
-			e.eq(j, 0),
+	const j = $.local();
+	const gapDist = $.local();
+	yield $.set(j, 0);
+	yield $.set(gapDist, 0);
+	yield $.while($.lteq(j, N), function*() {
+		yield $.if(
+			$.eq(j, 0),
 			function*() {
-				yield e.set(gapDist, e.call(OctDistOrig, zBot, midBot(e, pZMids, j)));
+				yield $.set(gapDist, $.call(OctDistOrig, zBot, midBot($, pZMids, j)));
 			},
 			function*() {
-				yield e.if(
-					e.eq(j, N),
+				yield $.if(
+					$.eq(j, N),
 					function*() {
-						yield e.set(
+						yield $.set(
 							gapDist,
-							e.call(OctDistOrig, midTop(e, pZMids, e.sub(j, 1)), zTop)
+							$.call(OctDistOrig, midTop($, pZMids, $.sub(j, 1)), zTop)
 						);
 					},
 					function*() {
-						yield e.set(
+						yield $.set(
 							gapDist,
-							e.call(
+							$.call(
 								OctDistOrig,
-								midTop(e, pZMids, e.sub(j, 1)),
-								midBot(e, pZMids, j)
+								midTop($, pZMids, $.sub(j, 1)),
+								midBot($, pZMids, j)
 							)
 						);
 					}
 				);
 			}
 		);
-		yield e.set(gap, e.add(gap, gapDist));
-		yield e.set(j, e.add(1, j));
+		yield $.set(gap, $.add(gap, gapDist));
+		yield $.set(j, $.add(1, j));
 	});
 
-	yield e.set(j, 0);
-	yield e.while(e.lt(j, N), function*() {
-		yield e.set(
+	yield $.set(j, 0);
+	yield $.while($.lt(j, N), function*() {
+		yield $.set(
 			ink,
-			e.add(ink, e.call(OctDistOrig, midBot(e, pZMids, j), midTop(e, pZMids, j)))
+			$.add(ink, $.call(OctDistOrig, midBot($, pZMids, j), midTop($, pZMids, j)))
 		);
-		yield e.set(j, e.add(1, j));
+		yield $.set(j, $.add(1, j));
 	});
 
-	yield e.return(e.div(gap, e.add(gap, ink)));
+	yield $.return($.div(gap, $.add(gap, ink)));
 });

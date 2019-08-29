@@ -38,10 +38,10 @@ export async function doHint(options: HintOptions, jobs: [string, string][]) {
 	}
 }
 
-async function hintFont(
+async function hintFont<GID, VAR, MASTER>(
 	options: HintOptions,
 	input: string,
-	fontSource: IFontSource<any, any, any>,
+	fontSource: IFontSource<GID, VAR, MASTER>,
 	models: IHintingModelPlugin[],
 	modelConfig: HintingModelConfig[]
 ) {
@@ -63,7 +63,7 @@ async function hintFont(
 
 	if (parallel.size) {
 		const hf = createHintFactory(models);
-		await parallelGlyphHint(parallelJobs, input, options, jobs, hf, parallel);
+		await parallelGlyphHint(fontSource, parallelJobs, input, options, jobs, hf, parallel);
 		await Procs.parallelGlyphHintShared(fontSource, models, modelConfig, parallel);
 	}
 
@@ -75,7 +75,8 @@ async function hintFont(
 	return hintStore;
 }
 
-async function parallelGlyphHint(
+async function parallelGlyphHint<GID, VAR, MASTER>(
+	fontSource: IFontSource<GID, VAR, MASTER>,
 	n: number,
 	input: string,
 	options: HintOptions,
@@ -84,7 +85,13 @@ async function parallelGlyphHint(
 	ghsMap: Map<string, Procs.GlyphHintStore>
 ) {
 	let promises: Promise<unknown>[] = [];
-	const arbitrator = new HintArbitrator(jc, n, `Parallel hinting ${input}`, new ConsoleLogger());
+	const arbitrator = new HintArbitrator(
+		fontSource,
+		jc,
+		n,
+		`Parallel hinting ${input}`,
+		new ConsoleLogger()
+	);
 	for (let nth = 0; nth < n; nth++) {
 		promises.push(startWorker(input, options, arbitrator, hf, ghsMap));
 	}
@@ -92,10 +99,10 @@ async function parallelGlyphHint(
 	arbitrator.updateProgress();
 }
 
-function startWorker(
+function startWorker<GID, VAR, MASTER>(
 	input: string,
 	options: HintOptions,
-	arb: HintArbitrator,
+	arb: HintArbitrator<GID, VAR, MASTER>,
 	hf: IHintFactory,
 	ghsMap: Map<string, Procs.GlyphHintStore>
 ) {
@@ -111,9 +118,10 @@ function startWorker(
 		});
 
 		function next() {
-			const nextJob = arb.fetch();
-			if (nextJob) worker.postMessage({ job: nextJob });
-			else worker.postMessage({ terminate: true });
+			arb.fetch().then(nextJob => {
+				if (nextJob) worker.postMessage(nextJob);
+				else worker.postMessage({ terminate: true });
+			});
 		}
 
 		function saveResults(results: HintResults) {
@@ -123,8 +131,8 @@ function startWorker(
 				const hint = hf.readJson(hintRep, hf);
 				if (hint) {
 					ghs.glyphHints.set(glyph, hint);
-					arb.updateProgress();
 				}
+				arb.updateProgress();
 			}
 		}
 

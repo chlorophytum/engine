@@ -17,9 +17,10 @@ export async function serialGlyphHint<GID, VAR, MASTER>(
 		// Get the hinting model, skip if absent
 		const mf = findMatchingFactory(type, modelFactories);
 		if (!mf) continue;
+		if (!forceSerial && mf.adoptParallel) continue;
+
 		const hm = mf.adopt(font, parameters);
 		if (!hm) continue;
-		if (!forceSerial && hm.allowParallel) continue;
 
 		const ghs = new GlyphHintStore();
 		const glyphs = await hm.analyzeEffectiveGlyphs();

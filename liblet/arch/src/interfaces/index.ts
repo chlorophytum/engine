@@ -25,6 +25,11 @@ export interface GlyphRelation<Glyph> {
 	readonly relationTag: string;
 }
 
+export type MasterRep<VAR, MASTER> = { peak: VAR; master: MASTER };
+export interface GlyphRep<VAR, MASTER> {
+	readonly shapes: [null | MasterRep<VAR, MASTER>, GlyphShape][];
+}
+
 // Font source
 export interface IFontFormatPlugin {
 	// "any"s are actually existential types
@@ -62,7 +67,7 @@ export interface IFontSource<Glyph, VAR, MASTER> {
 	// Get related glyphs
 	getRelatedGlyphs(from: Glyph): Promise<GlyphRelation<Glyph>[] | null | undefined>;
 	// Get master list
-	getGlyphMasters(glyph: Glyph): Promise<{ peak: VAR; master: MASTER }[]>;
+	getGlyphMasters(glyph: Glyph): Promise<ReadonlyArray<MasterRep<VAR, MASTER>>>;
 	// Get geometry
 	getGeometry(glyph: Glyph, instance: null | VAR): Promise<GlyphShape>;
 
@@ -103,12 +108,20 @@ export interface IHintingModel<Glyph> {
 	// Create a compiler to compile shared functions / parameters
 	getSharedHints(glyphHints: ReadonlyMap<Glyph, IHint>): Promise<null | IHint>;
 }
+export interface IParallelHintingModel<VAR, MASTER> {
+	readonly type: string;
+	analyzeGlyph(shape: GlyphRep<VAR, MASTER>): Promise<null | IHint>;
+}
 export interface IHintingModelPlugin {
 	readonly type: string;
 	adopt<GID, VAR, MASTER>(
 		font: IFontSource<GID, VAR, MASTER>,
 		parameters: any
 	): IHintingModel<GID> | null | undefined;
+	adoptParallel?<VAR, MASTER>(
+		metadata: IFontSourceMetadata,
+		parameters: any
+	): IParallelHintingModel<VAR, MASTER> | null | undefined;
 	hintFactories: IHintFactory[];
 }
 export interface HintingModelConfig {

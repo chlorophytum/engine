@@ -1,6 +1,12 @@
-import { IFontSource, IHint, IHintingModel } from "@chlorophytum/arch";
+import {
+	GlyphRep,
+	IFontSource,
+	IHint,
+	IHintingModel,
+	IParallelHintingModel
+} from "@chlorophytum/arch";
 
-import { GlyphHintJobs, GlyphHintSender, GlyphHintStore } from "./common";
+import { GlyphHintJobs, GlyphHintRequest, GlyphHintSender, GlyphHintStore } from "./common";
 
 export async function hintGlyphSimple<GID, VAR, MASTER>(
 	font: IFontSource<GID, VAR, MASTER>,
@@ -16,32 +22,13 @@ export async function hintGlyphSimple<GID, VAR, MASTER>(
 	return true;
 }
 
-export class JobFilter {
-	constructor(jobs: GlyphHintJobs) {
-		this.sets = {};
-		for (const type in jobs) {
-			this.sets[type] = new Set(jobs[type]);
-		}
-	}
-	private sets: { [type: string]: Set<string> };
-	public has(type: string, gName: string) {
-		if (!this.sets[type]) return false;
-		return this.sets[type].has(gName);
-	}
-}
-
-export async function hintGlyphWorker<GID, VAR, MASTER>(
-	font: IFontSource<GID, VAR, MASTER>,
-	hm: IHintingModel<GID>,
+export async function hintGlyphWorker<VAR, MASTER>(
+	hm: IParallelHintingModel<VAR, MASTER>,
 	ghs: GlyphHintSender,
-	jf: JobFilter,
-	glyph: GID
+	gName: string,
+	glyphRep: GlyphRep<VAR, MASTER>
 ) {
-	const gName = await font.getUniqueGlyphName(glyph);
-	if (!gName) return false;
-	if (!jf.has(hm.type, gName)) return false;
-
-	const hints = await hm.analyzeGlyph(glyph);
+	const hints = await hm.analyzeGlyph(glyphRep);
 	if (hints) ghs.push(hm.type, gName, hints);
 	return true;
 }

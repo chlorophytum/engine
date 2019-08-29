@@ -1,3 +1,4 @@
+import { IFontSourceMetadata } from "@chlorophytum/arch";
 import * as Procs from "@chlorophytum/procs";
 
 import { HintOptions } from "./env";
@@ -6,8 +7,9 @@ export interface HintWorkData {
 	input: string;
 	options: HintOptions;
 }
-export interface JobMessage {
-	job: Procs.GlyphHintJobs;
+export interface JobMessage<VAR, MASTER> {
+	fontMetadata: IFontSourceMetadata;
+	jobRequest: Procs.GlyphHintRequest<VAR, MASTER>;
 }
 
 export interface ReadyMessage {

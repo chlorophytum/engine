@@ -1,4 +1,13 @@
-import { EmptyImpl, IFontSource, IHintingModel, IHintingModelPlugin } from "@chlorophytum/arch";
+import {
+	EmptyImpl,
+	GlyphRep,
+	GlyphShape,
+	IFontSource,
+	IFontSourceMetadata,
+	IHintingModel,
+	IHintingModelPlugin,
+	IParallelHintingModel
+} from "@chlorophytum/arch";
 import { Interpolate, LinkChain, Smooth, WithDirection } from "@chlorophytum/hint-common";
 import { EmBoxEdge, EmBoxInit, EmBoxShared, EmBoxStroke } from "@chlorophytum/hint-embox";
 import { MultipleAlignZone } from "@chlorophytum/hint-maz";
@@ -9,6 +18,19 @@ import HierarchyAnalyzer from "./hierarchy";
 import HintGenSink from "./hint-gen";
 import { createSharedHints } from "./shared-hints";
 import { createHintingStrategy, HintingStrategy } from "./strategy";
+
+function hintGlyphGeometry(geometry: GlyphShape, params: HintingStrategy) {
+	const glyph = createGlyph(geometry.eigen); // Care about outline glyphs only
+	const analysis = analyzeGlyph(glyph, params);
+	const sink = new HintGenSink(params.groupName);
+	const ha = new HierarchyAnalyzer(analysis, params);
+	ha.pre(sink);
+	do {
+		ha.fetch(sink);
+	} while (ha.lastPathWeight && ha.loops < 256);
+	ha.post(sink);
+	return sink.getHint();
+}
 
 function isIdeographCodePoint(code: number) {
 	// return code === 0x2fd0;
@@ -46,23 +68,24 @@ class IdeographHintingModel1<GID, VAR, MASTER> implements IHintingModel<GID> {
 	public async analyzeGlyph(gid: GID) {
 		const geometry = await this.font.getGeometry(gid, null);
 		if (!geometry) return new EmptyImpl.Empty.Hint();
-
-		const glyph = createGlyph(geometry.eigen); // Care about outline glyphs only
-
-		const analysis = analyzeGlyph(glyph, this.params);
-		const sink = new HintGenSink(this.params.groupName);
-		const ha = new HierarchyAnalyzer(analysis, this.params);
-
-		ha.pre(sink);
-		do {
-			ha.fetch(sink);
-		} while (ha.lastPathWeight && ha.loops < 256);
-		ha.post(sink);
-
-		return sink.getHint();
+		return hintGlyphGeometry(geometry, this.params);
 	}
 	public async getSharedHints() {
 		return createSharedHints(this.params);
+	}
+}
+
+class IdeographParallelHintingModel1<VAR, MASTER> implements IParallelHintingModel<VAR, MASTER> {
+	public readonly type = "Chlorophytum::IdeographHintingModel1";
+	constructor(private readonly fmd: IFontSourceMetadata, ptParams: Partial<HintingStrategy>) {
+		this.params = createHintingStrategy(ptParams);
+	}
+	private readonly params: HintingStrategy;
+	public async analyzeGlyph(rep: GlyphRep<VAR, MASTER>) {
+		const shapeMap = new Map(rep.shapes);
+		const geometry = shapeMap.get(null);
+		if (!geometry) return new EmptyImpl.Empty.Hint();
+		return hintGlyphGeometry(geometry, this.params);
 	}
 }
 
@@ -73,6 +96,9 @@ class CIdeographHintingModelFactory1 implements IHintingModelPlugin {
 		parameters: any
 	): IHintingModel<GID> | null | undefined {
 		return new IdeographHintingModel1<GID, VAR, MASTER>(font, parameters);
+	}
+	public adoptParallel(metadata: IFontSourceMetadata, parameters: any) {
+		return new IdeographParallelHintingModel1(metadata, parameters);
 	}
 	public readonly hintFactories = [
 		new WithDirection.HintFactory(),

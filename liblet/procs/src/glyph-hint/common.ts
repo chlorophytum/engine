@@ -1,4 +1,4 @@
-import { IHint, IHintingModelPlugin } from "@chlorophytum/arch";
+import { GlyphRep, IHint, IHintingModelPlugin } from "@chlorophytum/arch";
 
 export class GlyphHintStore {
 	public glyphHints: Map<string, IHint> = new Map();
@@ -10,6 +10,9 @@ export interface GlyphHintSender {
 
 export interface GlyphHintJobs {
 	[type: string]: string[];
+}
+export interface GlyphHintRequest<VAR, MASTER> {
+	[type: string]: [string, GlyphRep<VAR, MASTER>][];
 }
 
 export function findMatchingFactory(type: string, modelFactories: IHintingModelPlugin[]) {
