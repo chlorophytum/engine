@@ -20,12 +20,14 @@ export class Progress {
 	private lastProgress = 0;
 	private hinted = 0;
 	private startDate = new Date();
+	private lastDate = new Date();
 
 	public update(logger: ILogger, hide?: boolean) {
 		let currentProgress = Math.floor(Math.min(100, (this.hinted / this.total) * 100));
-		if (currentProgress !== this.lastProgress) {
+		const now = new Date();
+		if (this.shouldUpdateProgress(currentProgress, now)) {
 			this.lastProgress = currentProgress;
-			const now = new Date();
+			this.lastDate = now;
 			const elapsedTime = now.valueOf() - this.startDate.valueOf();
 			const remainingTime = elapsedTime * Math.max(0, this.total / this.hinted - 1);
 			if (!hide) {
@@ -38,5 +40,12 @@ export class Progress {
 			}
 		}
 		this.hinted += 1;
+	}
+
+	private shouldUpdateProgress(currentProgress: number, now: Date) {
+		return (
+			currentProgress !== this.lastProgress &&
+			(currentProgress >= 100 || now.valueOf() - this.lastDate.valueOf() >= 5000)
+		);
 	}
 }

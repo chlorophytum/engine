@@ -1,42 +1,40 @@
-import { HintingModelConfig, IFontSource, IHintingModelPlugin, ILogger } from "@chlorophytum/arch";
+import { HintingPass, IFontSource, ILogger } from "@chlorophytum/arch";
 
 import { Progress } from "../support/progress";
 
-import { findMatchingFactory, GlyphHintStore } from "./common";
+import { GlyphHintStore, IHintCacheManager } from "./common";
 import { GhsToGlyphMap, hintGlyphSimple } from "./glyph";
 
 export async function serialGlyphHint<GID, VAR, MASTER>(
 	font: IFontSource<GID, VAR, MASTER>,
-	modelFactories: IHintingModelPlugin[],
-	modelConfig: HintingModelConfig[],
+	passes: HintingPass[],
+	cache: IHintCacheManager,
 	forceSerial: boolean,
 	logger: ILogger
 ) {
 	let ghsMap: Map<string, GlyphHintStore> = new Map();
-	for (const { type, parameters } of modelConfig) {
+	for (const { uniqueID, plugin, parameters } of passes) {
 		// Get the hinting model, skip if absent
-		const mf = findMatchingFactory(type, modelFactories);
-		if (!mf) continue;
-		if (!forceSerial && mf.adoptParallel) continue;
+		if (!forceSerial && plugin.adoptParallel) continue;
 
-		const hm = mf.adopt(font, parameters);
+		const hm = plugin.adopt(font, parameters);
 		if (!hm) continue;
 
 		const ghs = new GlyphHintStore();
 		const glyphs = await hm.analyzeEffectiveGlyphs();
 		if (!glyphs) continue;
 
-		const progress = new Progress(`${font.metadata.identifier} | ${type}`, glyphs.size);
+		const progress = new Progress(`${font.metadata.identifier} | ${plugin.type}`, glyphs.size);
 
 		for (const glyph of glyphs) {
-			const hinted = await hintGlyphSimple(font, hm, ghs, glyph);
+			const hinted = await hintGlyphSimple(font, hm, cache, ghs, glyph);
 			progress.update(logger, !hinted);
 		}
 		progress.update(logger);
 
 		// Hint the shared parts
 		ghs.sharedHints = await hm.getSharedHints(await GhsToGlyphMap(font, ghs));
-		ghsMap.set(hm.type, ghs);
+		ghsMap.set(uniqueID, ghs);
 	}
 	return ghsMap;
 }

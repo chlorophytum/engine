@@ -38,14 +38,17 @@ export interface IFontFormatPlugin {
 		identifier: string
 	): Promise<IFontSource<any, any, any>>;
 	createHintStore(input: stream.Readable, plugins: IHintingModelPlugin[]): Promise<IHintStore>;
-	saveFinalHint(
-		col: IFinalHintCollector,
-		fhs: IFinalHintSession,
-		output: stream.Writable
-	): Promise<void>;
+	createFinalHintSaver(): IFontFinalHintSaver;
 	integrateFinalHintsToFont(
 		hints: stream.Readable,
 		font: stream.Readable,
+		output: stream.Writable
+	): Promise<void>;
+}
+export interface IFontFinalHintSaver {
+	saveFinalHint(
+		col: IFinalHintCollector,
+		fhs: IFinalHintSession,
 		output: stream.Writable
 	): Promise<void>;
 }
@@ -77,6 +80,8 @@ export interface IHintStore {
 	listGlyphs(): Promise<Iterable<string>>;
 	getGlyphHints(glyph: string): Promise<IHint | null | undefined>;
 	setGlyphHints(glyph: string, hint: IHint): Promise<void>;
+	getGlyphHintsCacheKey(glyph: string): Promise<null | undefined | string>;
+	setGlyphHintsCacheKey(glyph: string, ck: string): Promise<void>;
 	listSharedTypes(): Promise<Iterable<string>>;
 	getSharedHints(type: string): Promise<IHint | null | undefined>;
 	setSharedHints(type: string, hint: IHint): Promise<void>;
@@ -102,10 +107,11 @@ export interface IHintingModel<Glyph> {
 	readonly allowParallel: boolean;
 	// Analyze glyphs worth hinting
 	analyzeEffectiveGlyphs(): Promise<null | Set<Glyph>>;
-	prepare?(): Promise<void>;
-	// Create glyph analyzer
+	// Caching -- Get the cache key of a glyph if usable
+	getGlyphCacheKey(gid: Glyph): Promise<null | string>;
+	// Analyze a glyph
 	analyzeGlyph(gid: Glyph): Promise<null | IHint>;
-	// Create a compiler to compile shared functions / parameters
+	// Analyze shared hints
 	getSharedHints(glyphHints: ReadonlyMap<Glyph, IHint>): Promise<null | IHint>;
 }
 export interface IParallelHintingModel<VAR, MASTER> {
@@ -124,8 +130,9 @@ export interface IHintingModelPlugin {
 	): IParallelHintingModel<VAR, MASTER> | null | undefined;
 	hintFactories: IHintFactory[];
 }
-export interface HintingModelConfig {
-	readonly type: string;
+export interface HintingPass {
+	readonly plugin: IHintingModelPlugin;
+	readonly uniqueID: string;
 	readonly parameters?: any;
 }
 
@@ -139,7 +146,10 @@ export interface IFinalHintProgramSink {
 }
 export interface IFinalHintSession {
 	readonly format: string;
-	createGlyphProgramSink(gid: string): IFinalHintProgramSink;
+	createGlyphProgramSink(
+		gid: string,
+		glyphCacheKey?: null | undefined | string
+	): IFinalHintProgramSink;
 	createSharedProgramSink(type: string): IFinalHintProgramSink;
 	consolidate(): void;
 }

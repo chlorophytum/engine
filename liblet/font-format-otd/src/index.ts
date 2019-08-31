@@ -43,23 +43,8 @@ class OtdFontFormatPlugin implements IFontFormatPlugin {
 		return hs;
 	}
 
-	public async saveFinalHint(
-		col: IFinalHintCollector,
-		fhs: IFinalHintSession,
-		output: stream.Writable
-	) {
-		if (!(fhs instanceof HlttSession) || !(col instanceof HlttCollector)) {
-			throw new TypeError("Type not supported");
-		}
-		const fpgm = [...col.getFunctionDefs(FontForgeTextInstr).values()].join("\n");
-		const prep = fhs.getPreProgram(FontForgeTextInstr);
-		const glyf: { [key: string]: string } = {};
-		for (let gid of fhs.glyphPrograms.keys()) {
-			glyf[gid] = fhs.getGlyphProgram(gid, FontForgeTextInstr);
-		}
-
-		const obj = { fpgm, prep, glyf };
-		return stringifyJsonGz(obj, output);
+	public createFinalHintSaver() {
+		return new OtdFileFormatSaver();
 	}
 
 	public async integrateFinalHintsToFont(
@@ -96,6 +81,28 @@ class OtdFontFormatPlugin implements IFontFormatPlugin {
 		otd.TSI_01 = otd.TSI_23 = otd.TSI5 = null;
 
 		await StreamJson.stringify(otd, output);
+	}
+}
+
+class OtdFileFormatSaver {
+	private readonly instructionCache: Map<string, string> = new Map();
+	public async saveFinalHint(
+		col: IFinalHintCollector,
+		fhs: IFinalHintSession,
+		output: stream.Writable
+	) {
+		if (!(fhs instanceof HlttSession) || !(col instanceof HlttCollector)) {
+			throw new TypeError("Type not supported");
+		}
+		const fpgm = [...col.getFunctionDefs(FontForgeTextInstr).values()].join("\n");
+		const prep = fhs.getPreProgram(FontForgeTextInstr);
+		const glyf: { [key: string]: string } = {};
+		for (let gid of fhs.listGlyphNames()) {
+			glyf[gid] = fhs.getGlyphProgram(gid, FontForgeTextInstr, this.instructionCache);
+		}
+
+		const obj = { fpgm, prep, glyf };
+		return stringifyJsonGz(obj, output);
 	}
 }
 

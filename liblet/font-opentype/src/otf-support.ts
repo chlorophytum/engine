@@ -7,6 +7,8 @@ import {
 } from "@chlorophytum/arch";
 import * as stream from "stream";
 
+import { OpenTypeHintStore } from "./hint-store";
+
 export type OpenTypeVariation = { [axis: string]: number };
 export type OpenTypeMaster = { [axis: string]: { min: number; peak: number; max: number } };
 
@@ -36,11 +38,7 @@ export interface IOpenTypeFileSupport<Glyph> {
 }
 
 export interface IOpenTypeHsSupport {
-	saveHintStore(
-		glyphHints: Map<string, IHint>,
-		sharedHints: Map<string, IHint>,
-		output: stream.Writable
-	): Promise<void>;
+	saveHintStore(hs: OpenTypeHintStore, output: stream.Writable): Promise<void>;
 	populateHintStore(
 		input: stream.Readable,
 		models: IHintingModelPlugin[],

@@ -3,7 +3,8 @@ import { IFinalHintSession, IHintStore } from "@chlorophytum/arch";
 export async function mainMidHint(store: IHintStore, fhs: IFinalHintSession) {
 	const glyphList = await store.listGlyphs();
 	for (const gid of glyphList) {
-		const ps = fhs.createGlyphProgramSink(gid);
+		const ck = await store.getGlyphHintsCacheKey(gid);
+		const ps = fhs.createGlyphProgramSink(gid, ck);
 		const hints = await store.getGlyphHints(gid);
 		if (!hints) continue;
 		const hc = hints.createCompiler(ps);

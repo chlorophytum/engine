@@ -6,7 +6,7 @@ export namespace WithDirection {
 	export class Hint implements IHint {
 		constructor(private readonly y: boolean, private readonly inner: IHint) {}
 		public toJSON() {
-			return { type: TAG, y: this.y, inner: this.inner };
+			return { type: TAG, y: this.y, inner: this.inner.toJSON() };
 		}
 		public createCompiler(sink: IFinalHintProgramSink): IHintCompiler | null {
 			const innerCompiler = this.inner.createCompiler(sink);

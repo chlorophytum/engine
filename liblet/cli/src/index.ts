@@ -10,7 +10,7 @@ import { doIntegrate, IntegrateJob } from "./integrate";
 program.version("0.0.1");
 
 program
-	.command("hint <font> <toHint> [...others]")
+	.command("hint <font> <toHint> [others...]")
 	.option("-c, --config <json>", "Configuration file")
 	.option("-j, --jobs <jobs>", "Jobs in parallel")
 	.action(async (font, toHint, rest, options) => {
@@ -22,7 +22,7 @@ program
 	});
 
 program
-	.command("instruct <hints> <instr> [...others]")
+	.command("instruct <hints> <instr> [others...]")
 	.option("-c, --config <json>", "Configuration file")
 	.action(async (hints, instr, rest, options) => {
 		if (!options.config) throw new TypeError("Configuration file is mandatory");
@@ -32,7 +32,7 @@ program
 	});
 
 program
-	.command("integrate <instr> <input> <output> [...others]")
+	.command("integrate <instr> <input> <output> [others...]")
 	.option("-c, --config <json>", "Configuration file")
 	.action(async (instr, input, output, rest, options) => {
 		if (!options.config) throw new TypeError("Configuration file is mandatory");

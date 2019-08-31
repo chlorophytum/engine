@@ -14,6 +14,7 @@ import {
 	ISimpleGetBimap,
 	ISimpleGetMap,
 	OpenTypeFont,
+	OpenTypeHintStore,
 	OpenTypeVariation
 } from "@chlorophytum/font-opentype";
 import { StreamJson } from "@chlorophytum/util-json";
@@ -129,15 +130,19 @@ export class OtdHsSupport implements IOpenTypeHsSupport {
 		}
 		return dict;
 	}
+	private stringMapToDict(map: Map<string, string>) {
+		const dict: { [key: string]: string } = Object.create(null);
+		for (const [k, v] of map) {
+			dict[k] = v;
+		}
+		return dict;
+	}
 
-	public saveHintStore(
-		glyphHints: Map<string, IHint>,
-		sharedHints: Map<string, IHint>,
-		output: stream.Writable
-	) {
+	public saveHintStore(hs: OpenTypeHintStore, output: stream.Writable) {
 		const obj = {
-			glyphs: this.hintMapToDict(glyphHints),
-			sharedHints: this.hintMapToDict(sharedHints)
+			glyphs: this.hintMapToDict(hs.glyphHints),
+			glyphHintCacheKeys: this.stringMapToDict(hs.glyphHintCacheKeys),
+			sharedHints: this.hintMapToDict(hs.sharedHintTypes)
 		};
 		return stringifyJsonGz(obj, output);
 	}
@@ -157,11 +162,14 @@ export class OtdHsSupport implements IOpenTypeHsSupport {
 		const hf = new EmptyImpl.FallbackHintFactory(hfs);
 		for (const k in hsRep.glyphs) {
 			const hint = hf.readJson(hsRep.glyphs[k], hf);
-			if (hint) store.setGlyphHints(k, hint);
+			if (hint) await store.setGlyphHints(k, hint);
 		}
 		for (const k in hsRep.sharedHints) {
 			const hint = hf.readJson(hsRep.sharedHints[k], hf);
-			if (hint) store.setSharedHints(k, hint);
+			if (hint) await store.setSharedHints(k, hint);
+		}
+		for (const k in hsRep.glyphHintCacheKeys) {
+			await store.setGlyphHintsCacheKey(k, hsRep.glyphHintCacheKeys[k]);
 		}
 	}
 }

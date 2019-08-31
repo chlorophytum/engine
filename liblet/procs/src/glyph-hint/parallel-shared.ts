@@ -1,22 +1,20 @@
-import { HintingModelConfig, IFontSource, IHintingModelPlugin } from "@chlorophytum/arch";
+import { HintingPass, IFontSource } from "@chlorophytum/arch";
 
-import { findMatchingFactory, GlyphHintStore } from "./common";
+import { GlyphHintStore } from "./common";
 import { GhsToGlyphMap } from "./glyph";
 
 export async function parallelGlyphHintShared<GID, VAR, MASTER>(
 	font: IFontSource<GID, VAR, MASTER>,
-	modelFactories: IHintingModelPlugin[],
-	modelConfig: HintingModelConfig[],
+	passes: HintingPass[],
 	ghsMap: ReadonlyMap<string, GlyphHintStore>
 ) {
-	for (const { type, parameters } of modelConfig) {
+	for (const { uniqueID, plugin, parameters } of passes) {
 		// Get the hinting model, skip if absent
-		const mf = findMatchingFactory(type, modelFactories);
-		if (!mf || !mf.adoptParallel) continue;
-		const hm = mf.adopt(font, parameters);
+		if (!plugin.adoptParallel) continue;
+		const hm = plugin.adopt(font, parameters);
 		if (!hm) continue;
 
-		const ghs = ghsMap.get(hm.type);
+		const ghs = ghsMap.get(uniqueID);
 		if (!ghs) continue;
 
 		// Hint the shared parts

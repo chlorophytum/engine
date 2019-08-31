@@ -1,18 +1,18 @@
-import { IFontSourceMetadata, IHint, IHintingModelPlugin } from "@chlorophytum/arch";
+import { HintingPass, IFontSourceMetadata, IHint } from "@chlorophytum/arch";
 import * as Procs from "@chlorophytum/procs";
 import { MessagePort, parentPort, workerData } from "worker_threads";
 
-import { getHintingModelsAndParams } from "./env";
+import { getHintingPasses } from "./env";
 import { HintResults, HintWorkData, JobMessage } from "./hint-shared";
 
 async function main(data: HintWorkData, parentPort: MessagePort) {
-	const { models, params } = getHintingModelsAndParams(data.options);
+	const passes = getHintingPasses(data.options);
 	parentPort.on("message", _msg => {
 		if (_msg.terminate) {
 			process.exit(0);
-		} else if (_msg.fontMetadata && _msg.jobRequest) {
+		} else if (_msg.fontMetadata && _msg.jobRequests) {
 			const msg = _msg as JobMessage<any, any>;
-			doHint(models, params, msg.fontMetadata, msg.jobRequest).then(results =>
+			doHint(passes, msg.fontMetadata, msg.jobRequests).then(results =>
 				parentPort.postMessage({ results })
 			);
 		}
@@ -22,19 +22,18 @@ async function main(data: HintWorkData, parentPort: MessagePort) {
 
 class Sender implements Procs.GlyphHintSender {
 	public results: HintResults = [];
-	public push(type: string, glyph: string, hints: IHint) {
-		this.results.push({ type, glyph, hintRep: hints.toJSON() });
+	public push(passID: string, glyph: string, cacheKey: null | string, hints: IHint) {
+		this.results.push({ passID, glyph, cacheKey, hintRep: hints.toJSON() });
 	}
 }
 
 async function doHint<VAR, MASTER>(
-	models: IHintingModelPlugin[],
-	params: any,
+	passes: HintingPass[],
 	fmd: IFontSourceMetadata,
-	job: Procs.GlyphHintRequest<VAR, MASTER>
+	job: Procs.GlyphHintRequests<VAR, MASTER>
 ) {
 	const sender = new Sender();
-	await Procs.parallelGlyphHintWork(fmd, models, params, job, sender);
+	await Procs.parallelGlyphHintWork(fmd, passes, job, sender);
 	return JSON.stringify(sender.results);
 }
 

@@ -3,7 +3,7 @@ import * as Procs from "@chlorophytum/procs";
 import * as fs from "fs";
 import * as stream from "stream";
 
-import { getFinalHintPlugin, getFontPlugin, getHintingModelsAndParams, HintOptions } from "./env";
+import { getFinalHintPlugin, getFontPlugin, getHintingPasses, HintOptions } from "./env";
 
 interface ExportPlan {
 	to: stream.Writable;
@@ -13,7 +13,8 @@ interface ExportPlan {
 export async function doInstruct(options: HintOptions, jobs: [string, string][]) {
 	const FontFormatPlugin = getFontPlugin(options);
 	const FinalHintPlugin = getFinalHintPlugin(options);
-	const { models } = getHintingModelsAndParams(options);
+	const passes = getHintingPasses(options);
+	const models = Array.from(new Set(passes.map(p => p.plugin)));
 	const ttCol = FinalHintPlugin.createFinalHintCollector();
 	const exportPlans: ExportPlan[] = [];
 
@@ -28,7 +29,8 @@ export async function doInstruct(options: HintOptions, jobs: [string, string][])
 	}
 
 	ttCol.consolidate();
+	const saver = FontFormatPlugin.createFinalHintSaver();
 	for (const plan of exportPlans) {
-		await FontFormatPlugin.saveFinalHint(ttCol, plan.session, plan.to);
+		await saver.saveFinalHint(ttCol, plan.session, plan.to);
 	}
 }

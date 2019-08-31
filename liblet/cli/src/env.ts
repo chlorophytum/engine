@@ -1,4 +1,4 @@
-import { EmptyImpl, HintingModelConfig, IHintingModelPlugin, Plugins } from "@chlorophytum/arch";
+import { EmptyImpl, HintingPass, Plugins } from "@chlorophytum/arch";
 
 export interface HintOptions {
 	jobs?: number;
@@ -15,19 +15,21 @@ export function getFinalHintPlugin(hOpt: HintOptions) {
 	const mFinalFormat: Plugins.FinalHintModule = require(hOpt.finalFormat);
 	return mFinalFormat.FinalHintPlugin;
 }
-export function getHintingModelsAndParams(hOpt: HintOptions) {
-	const models: IHintingModelPlugin[] = [];
-	const params: HintingModelConfig[] = [];
+export function getHintingPasses(hOpt: HintOptions) {
+	const passes: HintingPass[] = [];
+	let passN = 0;
 
 	for (const { plugin, options } of hOpt.hintPasses) {
 		const mModel: Plugins.HintingModelModule = require(plugin);
-		models.push(mModel.HintingModelPlugin);
-		params.push({ type: mModel.HintingModelPlugin.type, parameters: options });
+		passes.push({
+			uniqueID: `Pass${passN++}`,
+			plugin: mModel.HintingModelPlugin,
+			parameters: options
+		});
 	}
 
 	// Pad with empty-impl
-	models.push(EmptyImpl.EmptyHintingModelFactory);
-	params.push({ type: EmptyImpl.EmptyHintingModelFactory.type });
+	passes.push({ uniqueID: `Pass${passN++}`, plugin: EmptyImpl.EmptyHintingModelFactory });
 
-	return { models, params };
+	return passes;
 }

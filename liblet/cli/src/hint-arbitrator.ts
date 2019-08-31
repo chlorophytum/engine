@@ -1,10 +1,11 @@
 import { IFontSource, ILogger } from "@chlorophytum/arch";
 import * as Procs from "@chlorophytum/procs";
+import { GlyphHintJob } from "@chlorophytum/procs";
 
 import { JobMessage } from "./hint-shared";
 
 export class HintArbitrator<GID, VAR, MASTER> {
-	private items: [string, string][] = [];
+	private items: [string, GlyphHintJob][] = [];
 	private ptr: number = 0;
 	constructor(
 		private readonly font: IFontSource<GID, VAR, MASTER>,
@@ -14,8 +15,8 @@ export class HintArbitrator<GID, VAR, MASTER> {
 		private logger: ILogger
 	) {
 		for (const hmType in jobs) {
-			const gsList = jobs[hmType];
-			for (let gName of gsList) this.items.push([hmType, gName]);
+			const jobList = jobs[hmType];
+			for (let job of jobList) this.items.push([hmType, job]);
 		}
 		this.progress = new Procs.Progress(prefix, this.items.length);
 	}
@@ -41,7 +42,7 @@ export class HintArbitrator<GID, VAR, MASTER> {
 
 		return {
 			fontMetadata: this.font.metadata,
-			jobRequest: await Procs.createJobRequest(this.font, workerJobs)
+			jobRequests: await Procs.createJobRequest(this.font, workerJobs)
 		};
 	}
 

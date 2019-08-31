@@ -1,4 +1,4 @@
-import IdeographHintingModelFactory1 from "./hinting-model";
+import IdeographHintingModelFactory1 from "./plugin";
 
 export { createSharedHints } from "./shared-hints";
 export * from "./strategy";

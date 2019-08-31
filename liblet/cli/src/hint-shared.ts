@@ -9,7 +9,7 @@ export interface HintWorkData {
 }
 export interface JobMessage<VAR, MASTER> {
 	fontMetadata: IFontSourceMetadata;
-	jobRequest: Procs.GlyphHintRequest<VAR, MASTER>;
+	jobRequests: Procs.GlyphHintRequests<VAR, MASTER>;
 }
 
 export interface ReadyMessage {
@@ -19,4 +19,9 @@ export interface LogMessage {
 	log: string;
 }
 
-export type HintResults = { type: string; glyph: string; hintRep: any }[];
+export type HintResults = {
+	passID: string;
+	glyph: string;
+	cacheKey: null | string;
+	hintRep: any;
+}[];

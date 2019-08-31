@@ -26,4 +26,7 @@ export class EmptyHintingModel<GID> implements IHintingModel<GID> {
 	public async analyzeGlyph(gid: GID) {
 		return new Empty.Hint();
 	}
+	public async getGlyphCacheKey() {
+		return null;
+	}
 }

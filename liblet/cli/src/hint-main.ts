@@ -1,16 +1,18 @@
 import {
 	ConsoleLogger,
 	EmptyImpl,
-	HintingModelConfig,
+	HintingPass,
 	IFontSource,
+	IHint,
 	IHintFactory,
 	IHintingModelPlugin
 } from "@chlorophytum/arch";
 import * as Procs from "@chlorophytum/procs";
+import { IHintCacheManager } from "@chlorophytum/procs";
 import * as fs from "fs";
 import { Worker } from "worker_threads";
 
-import { getFontPlugin, getHintingModelsAndParams, HintOptions } from "./env";
+import { getFontPlugin, getHintingPasses, HintOptions } from "./env";
 import { HintArbitrator } from "./hint-arbitrator";
 import { HintResults, HintWorkData } from "./hint-shared";
 
@@ -25,14 +27,31 @@ function createHintFactory(models: IHintingModelPlugin[]): IHintFactory {
 	return new EmptyImpl.FallbackHintFactory(hfs);
 }
 
+class HintCache implements IHintCacheManager {
+	constructor(private readonly hf: IHintFactory) {}
+	private store = new Map<string, any>();
+	public getCache(id: null | string) {
+		if (!id) return undefined;
+		const hintRep = this.store.get(id);
+		if (!hintRep) return undefined;
+		return this.hf.readJson(hintRep, this.hf);
+	}
+	public setCache(id: null | string, hint: IHint) {
+		if (!id || !hint) return;
+		this.store.set(id, hint.toJSON());
+	}
+}
+
 export async function doHint(options: HintOptions, jobs: [string, string][]) {
 	const FontFormatPlugin = getFontPlugin(options);
-	const { models, params } = getHintingModelsAndParams(options);
-	const hf = createHintFactory(models);
+	const passes = getHintingPasses(options);
+	const modelPlugins = Array.from(new Set(passes.map(p => p.plugin)));
+	const hf = createHintFactory(modelPlugins);
+	const hc = new HintCache(hf);
 	for (const [input, output] of jobs) {
 		const otdStream = fs.createReadStream(input);
 		const fontSource = await FontFormatPlugin.createFontSource(otdStream, input);
-		const hintStore = await hintFont(options, input, fontSource, models, params);
+		const hintStore = await hintFont(options, input, fontSource, hf, hc, passes);
 		const out = fs.createWriteStream(output);
 		await hintStore.save(out);
 	}
@@ -42,35 +61,34 @@ async function hintFont<GID, VAR, MASTER>(
 	options: HintOptions,
 	input: string,
 	fontSource: IFontSource<GID, VAR, MASTER>,
-	models: IHintingModelPlugin[],
-	modelConfig: HintingModelConfig[]
+	hf: IHintFactory,
+	hc: HintCache,
+	passes: HintingPass[]
 ) {
 	const logger = new ConsoleLogger();
 	const parallelJobs = options.jobs || 1;
-	const serial = await Procs.serialGlyphHint(
-		fontSource,
-		models,
-		modelConfig,
-		parallelJobs <= 1,
-		logger
-	);
+	const serial = await Procs.serialGlyphHint(fontSource, passes, hc, parallelJobs <= 1, logger);
 	const { jobs, ghsMap: parallel } = await Procs.generateParallelGlyphHintJobs(
 		fontSource,
-		models,
-		modelConfig,
+		passes,
+		hc,
 		parallelJobs <= 1
 	);
 
 	if (parallel.size) {
-		const hf = createHintFactory(models);
-		await parallelGlyphHint(fontSource, parallelJobs, input, options, jobs, hf, parallel);
-		await Procs.parallelGlyphHintShared(fontSource, models, modelConfig, parallel);
+		await parallelGlyphHint(fontSource, parallelJobs, input, options, jobs, hf, hc, parallel);
+		await Procs.parallelGlyphHintShared(fontSource, passes, parallel);
 	}
 
 	const hintStore = fontSource.createHintStore();
-	for (const [type, ghs] of [...serial, ...parallel]) {
-		for (const [g, hints] of ghs.glyphHints) await hintStore.setGlyphHints(g, hints);
-		if (ghs.sharedHints) await hintStore.setSharedHints(type, ghs.sharedHints);
+	for (const [passID, ghs] of [...serial, ...parallel]) {
+		for (const [g, hints] of ghs.glyphHints) {
+			await hintStore.setGlyphHints(g, hints);
+			const ck = ghs.glyphCacheKeys.get(g);
+			if (ck) await hintStore.setGlyphHintsCacheKey(g, ck);
+		}
+
+		if (ghs.sharedHints) await hintStore.setSharedHints(passID, ghs.sharedHints);
 	}
 	return hintStore;
 }
@@ -82,6 +100,7 @@ async function parallelGlyphHint<GID, VAR, MASTER>(
 	options: HintOptions,
 	jc: Procs.GlyphHintJobs,
 	hf: IHintFactory,
+	hc: HintCache,
 	ghsMap: Map<string, Procs.GlyphHintStore>
 ) {
 	let promises: Promise<unknown>[] = [];
@@ -93,7 +112,7 @@ async function parallelGlyphHint<GID, VAR, MASTER>(
 		new ConsoleLogger()
 	);
 	for (let nth = 0; nth < n; nth++) {
-		promises.push(startWorker(input, options, arbitrator, hf, ghsMap));
+		promises.push(startWorker(input, options, arbitrator, hf, hc, ghsMap));
 	}
 	await Promise.all(promises);
 	arbitrator.updateProgress();
@@ -104,6 +123,7 @@ function startWorker<GID, VAR, MASTER>(
 	options: HintOptions,
 	arb: HintArbitrator<GID, VAR, MASTER>,
 	hf: IHintFactory,
+	hc: HintCache,
 	ghsMap: Map<string, Procs.GlyphHintStore>
 ) {
 	return new Promise((resolve, reject) => {
@@ -125,12 +145,13 @@ function startWorker<GID, VAR, MASTER>(
 		}
 
 		function saveResults(results: HintResults) {
-			for (const { type, glyph, hintRep } of results) {
-				const ghs = ghsMap.get(type);
+			for (const { passID, glyph, cacheKey, hintRep } of results) {
+				const ghs = ghsMap.get(passID);
 				if (!ghs) continue;
 				const hint = hf.readJson(hintRep, hf);
 				if (hint) {
 					ghs.glyphHints.set(glyph, hint);
+					if (cacheKey && !hc.getCache(cacheKey)) hc.setCache(cacheKey, hint);
 				}
 				arb.updateProgress();
 			}
