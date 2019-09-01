@@ -1,12 +1,12 @@
 import * as crypto from "crypto";
 
-import Glyph from "./glyph";
+import CGlyph from "./glyph";
 export function combineHash(...texts: string[]) {
 	const hash = crypto.createHash("sha1");
 	for (const text of texts) hash.update(text);
 	return hash.digest("hex");
 }
-export function hashGlyphContours(glyph: Glyph) {
+export function hashGlyphContours(glyph: CGlyph) {
 	const input = glyph.contours;
 	let buf = "";
 	for (let j = 0; j < input.length; j++) {

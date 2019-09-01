@@ -1,12 +1,13 @@
 import {
 	EmptyImpl,
-	GlyphGeometry,
-	GlyphPoint,
+	Geometry,
+	Glyph,
 	IFontSourceMetadata,
 	IHint,
 	IHintFactory,
 	IHintingModelPlugin,
-	IHintStore
+	IHintStore,
+	Variation
 } from "@chlorophytum/arch";
 import {
 	IOpenTypeFileSupport,
@@ -14,8 +15,7 @@ import {
 	ISimpleGetBimap,
 	ISimpleGetMap,
 	OpenTypeFont,
-	OpenTypeHintStore,
-	OpenTypeVariation
+	OpenTypeHintStore
 } from "@chlorophytum/font-opentype";
 import { StreamJson } from "@chlorophytum/util-json";
 import * as stream from "stream";
@@ -78,15 +78,15 @@ export class OtdSupport implements IOpenTypeFileSupport<string> {
 		this.glyphSet = new Glyf(otd.glyf);
 	}
 
-	private getGlyphContours(gid: string, instance: null | OpenTypeVariation): GlyphGeometry {
+	private getGlyphContours(gid: string, instance: null | Variation.Instance): Glyph.Geom {
 		const g = this.otd.glyf[gid];
 		if (!g) return [];
 
 		let zid: number = 0;
-		let c1: GlyphPoint[][] = [];
+		let c1: Geometry.GlyphPoint[][] = [];
 		if (g.contours) {
 			for (const c of g.contours) {
-				const contour: GlyphPoint[] = [];
+				const contour: Geometry.GlyphPoint[] = [];
 				for (const z of c) contour.push({ x: z.x, y: z.y, on: z.on, id: zid++ });
 				c1.push(contour);
 			}
@@ -94,7 +94,7 @@ export class OtdSupport implements IOpenTypeFileSupport<string> {
 		return c1;
 	}
 
-	public async getGeometry(gid: string, instance: null | OpenTypeVariation) {
+	public async getGeometry(gid: string, instance: null | Variation.Instance) {
 		return { eigen: this.getGlyphContours(gid, instance) };
 	}
 	public async getGsubRelatedGlyphs(source: string) {

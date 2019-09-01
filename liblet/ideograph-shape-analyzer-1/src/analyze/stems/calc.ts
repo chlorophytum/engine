@@ -1,4 +1,4 @@
-import { GlyphPoint } from "@chlorophytum/arch";
+import { Geometry } from "@chlorophytum/arch";
 
 import { correctYWForStem } from "../../si-common/hlkey";
 import {
@@ -53,8 +53,8 @@ export function calculateMinMax(stem: Stem, radicals: Radical[], strategy: Hinti
 	stem.xMax = Math.max(rightmostZ_SS(stem.high).x, rightmostZ_SS(stem.low).x);
 }
 function _expandSeg(seg: SegSpan, radical: Radical, slope: number) {
-	let z0: GlyphPoint = leftmostZ_S(seg),
-		zm: GlyphPoint = rightmostZ_S(seg);
+	let z0: Geometry.GlyphPoint = leftmostZ_S(seg),
+		zm: Geometry.GlyphPoint = rightmostZ_S(seg);
 	if (radical) {
 		z0 = expandZ(radical, z0, -1, -slope, 1000);
 		zm = expandZ(radical, zm, 1, slope, 1000);

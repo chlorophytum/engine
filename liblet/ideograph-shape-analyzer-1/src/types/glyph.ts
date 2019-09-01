@@ -1,17 +1,17 @@
-import { Point } from "@chlorophytum/arch";
+import { Geometry } from "@chlorophytum/arch";
 
 import Contour, { inPoly } from "./contour";
 import { CPoint } from "./point";
 import { createStat, Stat } from "./stat";
 
-export default class Glyph {
+export default class CGlyph {
 	constructor(public contours: Contour[] = []) {}
 	public nPoints = 0;
 	public indexedPoints: CPoint[] = [];
 
 	public stats: Stat = createStat();
 
-	public containsPoint(z: Point) {
+	public containsPoint(z: Geometry.Point) {
 		let nCW = 0,
 			nCCW = 0;
 		for (let j = 0; j < this.contours.length; j++) {

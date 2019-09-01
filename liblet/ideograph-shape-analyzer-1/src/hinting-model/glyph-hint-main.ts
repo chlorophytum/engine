@@ -1,4 +1,4 @@
-import { GlyphShape } from "@chlorophytum/arch";
+import { Glyph } from "@chlorophytum/arch";
 
 import analyzeGlyph from "../analyze";
 import { createGlyph } from "../create-glyph";
@@ -6,7 +6,7 @@ import HierarchyAnalyzer from "../hierarchy";
 import HintGenSink from "../hint-gen";
 import { HintingStrategy } from "../strategy";
 
-export function hintGlyphGeometry(geometry: GlyphShape, params: HintingStrategy) {
+export function hintGlyphGeometry(geometry: Glyph.Shape, params: HintingStrategy) {
 	const glyph = createGlyph(geometry.eigen); // Care about outline glyphs only
 	const analysis = analyzeGlyph(glyph, params);
 	const sink = new HintGenSink(params.groupName);

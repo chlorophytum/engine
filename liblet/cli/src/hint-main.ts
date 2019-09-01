@@ -64,10 +64,10 @@ export async function doHint(options: HintOptions, jobs: [string, string][]) {
 	}
 }
 
-async function hintFont<GID, VAR, MASTER>(
+async function hintFont<GID>(
 	options: HintOptions,
 	input: string,
-	fontSource: IFontSource<GID, VAR, MASTER>,
+	fontSource: IFontSource<GID>,
 	hf: IHintFactory,
 	hc: HintCache,
 	passes: HintingPass[]
@@ -100,8 +100,8 @@ async function hintFont<GID, VAR, MASTER>(
 	return hintStore;
 }
 
-async function parallelGlyphHint<GID, VAR, MASTER>(
-	fontSource: IFontSource<GID, VAR, MASTER>,
+async function parallelGlyphHint<GID>(
+	fontSource: IFontSource<GID>,
 	n: number,
 	input: string,
 	options: HintOptions,
@@ -125,10 +125,10 @@ async function parallelGlyphHint<GID, VAR, MASTER>(
 	arbitrator.updateProgress();
 }
 
-function startWorker<GID, VAR, MASTER>(
+function startWorker<GID>(
 	input: string,
 	options: HintOptions,
-	arb: HintArbitrator<GID, VAR, MASTER>,
+	arb: HintArbitrator<GID>,
 	hf: IHintFactory,
 	hc: HintCache,
 	ghsMap: Map<string, Procs.GlyphHintStore>

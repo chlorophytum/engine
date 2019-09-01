@@ -1,10 +1,9 @@
-import { IFontSource, IFontSourceMetadata, IHintStore } from "@chlorophytum/arch";
+import { IFontSource, IFontSourceMetadata, Variation } from "@chlorophytum/arch";
 
 import { OpenTypeHintStore } from "./hint-store";
-import { IOpenTypeFileSupport, OpenTypeMaster, OpenTypeVariation } from "./otf-support";
+import { IOpenTypeFileSupport } from "./otf-support";
 
-export abstract class OpenTypeFont<Glyph>
-	implements IFontSource<Glyph, OpenTypeVariation, OpenTypeMaster> {
+export abstract class OpenTypeFont<Glyph> implements IFontSource<Glyph> {
 	protected abstract support: IOpenTypeFileSupport<Glyph>;
 
 	public abstract readonly format: string;
@@ -32,7 +31,7 @@ export abstract class OpenTypeFont<Glyph>
 	public async getGlyphMasters(glyph: Glyph) {
 		return await this.support.getGlyphMasters(glyph);
 	}
-	public async getGeometry(glyph: Glyph, instance: null | OpenTypeVariation) {
+	public async getGeometry(glyph: Glyph, instance: null | Variation.Instance) {
 		return await this.support.getGeometry(glyph, instance);
 	}
 	public createHintStore() {

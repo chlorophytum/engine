@@ -2,8 +2,8 @@ import { HintingPass, IFontSource } from "@chlorophytum/arch";
 
 import { GlyphHintJobs, GlyphHintStore, IHintCacheManager } from "./common";
 
-export async function generateParallelGlyphHintJobs<GID, VAR, MASTER>(
-	font: IFontSource<GID, VAR, MASTER>,
+export async function generateParallelGlyphHintJobs<GID>(
+	font: IFontSource<GID>,
 	passes: HintingPass[],
 	cache: IHintCacheManager,
 	forceSerial: boolean

@@ -11,7 +11,7 @@ async function main(data: HintWorkData, parentPort: MessagePort) {
 		if (_msg.terminate) {
 			process.exit(0);
 		} else if (_msg.fontMetadata && _msg.jobRequests) {
-			const msg = _msg as JobMessage<any, any>;
+			const msg = _msg as JobMessage;
 			doHint(passes, msg.fontMetadata, msg.jobRequests).then(results =>
 				parentPort.postMessage({ results })
 			);
@@ -27,10 +27,10 @@ class Sender implements Procs.GlyphHintSender {
 	}
 }
 
-async function doHint<VAR, MASTER>(
+async function doHint(
 	passes: HintingPass[],
 	fmd: IFontSourceMetadata,
-	job: Procs.GlyphHintRequests<VAR, MASTER>
+	job: Procs.GlyphHintRequests
 ) {
 	const sender = new Sender();
 	await Procs.parallelGlyphHintWork(fmd, passes, job, sender);

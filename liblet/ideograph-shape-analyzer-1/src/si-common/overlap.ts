@@ -1,4 +1,4 @@
-import { Point } from "@chlorophytum/arch";
+import { Geometry } from "@chlorophytum/arch";
 
 import Radical from "../types/radical";
 import { Seg, SegSpan } from "../types/seg";
@@ -23,8 +23,8 @@ function pushEvents(
 	isA: boolean,
 	radical?: Radical
 ) {
-	let z0: Point = leftmostZ_S(seg),
-		zm: Point = rightmostZ_S(seg);
+	let z0: Geometry.Point = leftmostZ_S(seg),
+		zm: Geometry.Point = rightmostZ_S(seg);
 	// once radical is present we would expand the segments
 	// so that the overlapping factor would be more accurate
 	if (radical) {

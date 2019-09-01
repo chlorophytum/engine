@@ -1,6 +1,6 @@
 import {
 	EmptyImpl,
-	GlyphRep,
+	Glyph,
 	IFontSource,
 	IFontSourceMetadata,
 	IHintingModel,
@@ -26,12 +26,9 @@ function isIdeographCodePoint(code: number) {
 	);
 }
 
-export class IdeographHintingModel1<GID, VAR, MASTER> implements IHintingModel<GID> {
+export class IdeographHintingModel1<GID> implements IHintingModel<GID> {
 	private readonly params: HintingStrategy;
-	constructor(
-		private readonly font: IFontSource<GID, VAR, MASTER>,
-		ptParams: Partial<HintingStrategy>
-	) {
+	constructor(private readonly font: IFontSource<GID>, ptParams: Partial<HintingStrategy>) {
 		this.params = createHintingStrategy(ptParams);
 	}
 	public readonly type = "Chlorophytum::IdeographHintingModel1";
@@ -63,14 +60,13 @@ export class IdeographHintingModel1<GID, VAR, MASTER> implements IHintingModel<G
 	}
 }
 
-export class IdeographParallelHintingModel1<VAR, MASTER>
-	implements IParallelHintingModel<VAR, MASTER> {
+export class IdeographParallelHintingModel1 implements IParallelHintingModel {
 	public readonly type = "Chlorophytum::IdeographHintingModel1";
 	constructor(private readonly fmd: IFontSourceMetadata, ptParams: Partial<HintingStrategy>) {
 		this.params = createHintingStrategy(ptParams);
 	}
 	private readonly params: HintingStrategy;
-	public async analyzeGlyph(rep: GlyphRep<VAR, MASTER>) {
+	public async analyzeGlyph(rep: Glyph.Rep) {
 		const shapeMap = new Map(rep.shapes);
 		const geometry = shapeMap.get(null);
 		if (!geometry) return new EmptyImpl.Empty.Hint();

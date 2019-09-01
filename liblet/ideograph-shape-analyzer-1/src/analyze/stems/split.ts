@@ -1,4 +1,4 @@
-import { Point } from "@chlorophytum/arch";
+import { Geometry } from "@chlorophytum/arch";
 
 import { leftmostZ_SS, rightmostZ_SS } from "../../si-common/seg";
 import { HintingStrategy } from "../../strategy";
@@ -33,7 +33,7 @@ function shouldSplit(
 			Math.abs(ll.y - lr.y) >= strategy.Y_FUZZ_DIAG * strategy.UPM)
 	);
 }
-function contained(z1: Point, z2: Point, segments: Seg, fuzz: number) {
+function contained(z1: Geometry.Point, z2: Geometry.Point, segments: Seg, fuzz: number) {
 	for (let seg of segments) {
 		for (let z of seg) {
 			if (

@@ -1,4 +1,4 @@
-import { Point, Support } from "@chlorophytum/arch";
+import { Geometry, Support } from "@chlorophytum/arch";
 
 import Contour from "./contour";
 import { AdjPoint } from "./point";
@@ -12,7 +12,7 @@ export default class Radical {
 	public segments: SegSpan[] = [];
 	public stems: Stem[] = [];
 
-	public includes(z: Point) {
+	public includes(z: Geometry.Point) {
 		if (!this.outline.includesPoint(z)) return false;
 		for (let j = 0; j < this.holes.length; j++) {
 			if (this.holes[j].includesPoint(z)) return false;
@@ -20,7 +20,7 @@ export default class Radical {
 		return true;
 	}
 
-	public includesEdge(z: Point, mu: number, mv: number) {
+	public includesEdge(z: Geometry.Point, mu: number, mv: number) {
 		if (this.includes(z)) return true;
 		for (let u = -mu; u <= mu; u++) {
 			for (let v = -mv; v <= mv; v++) {
@@ -30,7 +30,7 @@ export default class Radical {
 		return false;
 	}
 
-	public includesSegment(z1: Point, z2: Point) {
+	public includesSegment(z1: Geometry.Point, z2: Geometry.Point) {
 		const SEGMENTS = 64;
 		for (let s = 1; s < SEGMENTS; s++) {
 			let test = {
@@ -43,8 +43,8 @@ export default class Radical {
 	}
 
 	public includesSegmentEdge(
-		z1: Point,
-		z2: Point,
+		z1: Geometry.Point,
+		z2: Geometry.Point,
 		umx: number,
 		umy: number,
 		deltaX: number,

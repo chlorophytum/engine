@@ -1,15 +1,15 @@
-import { Point } from "@chlorophytum/arch";
+import { Geometry } from "@chlorophytum/arch";
 import * as _ from "lodash";
 
 import { HintingStrategy } from "../../strategy";
 import Contour from "../../types/contour";
-import Glyph from "../../types/glyph";
+import CGlyph from "../../types/glyph";
 import { AdjPoint, CPoint } from "../../types/point";
 import Radical from "../../types/radical";
 import Stem from "../../types/stem";
 import { BlueZone, GlyphAnalysis, Interpolation, ShortAbsorption } from "../analysis";
 
-function byPointY(p: Point, q: Point) {
+function byPointY(p: Geometry.Point, q: Geometry.Point) {
 	return p.y - q.y;
 }
 let STEPS = 32;
@@ -406,7 +406,7 @@ function analyzeIpSaRecords(contours: Contour[], shortAbsorptions: ShortAbsorpti
 }
 
 export default function AnalyzeIpSa(
-	glyph: Glyph,
+	glyph: CGlyph,
 	analysis: GlyphAnalysis,
 	strategy: HintingStrategy
 ) {
@@ -498,7 +498,7 @@ export default function AnalyzeIpSa(
 }
 
 function cleanupInterpolations(
-	glyph: Glyph,
+	glyph: CGlyph,
 	strategy: HintingStrategy,
 	interpolations: (Interpolation | null)[],
 	shortAbsorptions: ShortAbsorption[]

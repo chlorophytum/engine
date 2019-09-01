@@ -1,35 +1,35 @@
 import {
-	GlyphRep,
-	GlyphShape,
+	Geometry,
+	Glyph,
 	HintingPass,
 	IFontSource,
 	IFontSourceMetadata,
-	MasterRep
+	Variation
 } from "@chlorophytum/arch";
 
 import { GlyphHintJobs, GlyphHintRequests, GlyphHintSender } from "./common";
 import { hintGlyphWorker } from "./glyph";
 
-export async function getGlyphRep<GID, VAR, MASTER>(
-	font: IFontSource<GID, VAR, MASTER>,
+export async function getGlyphRep<GID>(
+	font: IFontSource<GID>,
 	gName: string
-): Promise<null | GlyphRep<VAR, MASTER>> {
+): Promise<null | Glyph.Rep> {
 	const gid = await font.getGlyphFromName(gName);
 	if (!gid) return null;
-	const shapes: [(null | MasterRep<VAR, MASTER>), GlyphShape][] = [];
-	const masters: (null | MasterRep<VAR, MASTER>)[] = [null, ...(await font.getGlyphMasters(gid))];
+	const shapes: [(null | Variation.Master), Glyph.Shape][] = [];
+	const masters: (null | Variation.MasterRep)[] = [null, ...(await font.getGlyphMasters(gid))];
 	for (const m of masters) {
 		const shape = await font.getGeometry(gid, m ? m.peak : null);
-		shapes.push([m, shape]);
+		shapes.push([m ? m.master : null, shape]);
 	}
 	return { shapes };
 }
 
-export async function createJobRequest<GID, VAR, MASTER>(
-	font: IFontSource<GID, VAR, MASTER>,
+export async function createJobRequest<GID>(
+	font: IFontSource<GID>,
 	jobs: GlyphHintJobs
-): Promise<GlyphHintRequests<VAR, MASTER>> {
-	const req: GlyphHintRequests<VAR, MASTER> = {};
+): Promise<GlyphHintRequests> {
+	const req: GlyphHintRequests = {};
 	for (const type in jobs) {
 		for (const job of jobs[type]) {
 			const glyphRep = await getGlyphRep(font, job.glyphName);
@@ -42,10 +42,10 @@ export async function createJobRequest<GID, VAR, MASTER>(
 	return req;
 }
 
-export async function parallelGlyphHintWork<GID, VAR, MASTER>(
+export async function parallelGlyphHintWork(
 	fmd: IFontSourceMetadata,
 	passes: HintingPass[],
-	jobs: GlyphHintRequests<VAR, MASTER>,
+	jobs: GlyphHintRequests,
 	sender: GlyphHintSender
 ) {
 	for (const { uniqueID, plugin, parameters } of passes) {

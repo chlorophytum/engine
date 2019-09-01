@@ -1,5 +1,5 @@
 import { HintingStrategy } from "../../strategy";
-import Glyph from "../../types/glyph";
+import CGlyph from "../../types/glyph";
 import Stem from "../../types/stem";
 
 const SIZE = 256;
@@ -32,7 +32,7 @@ export class Bitmap {
 	}
 }
 
-export function createImageBitmap(g: Glyph, strategy: HintingStrategy) {
+export function createImageBitmap(g: CGlyph, strategy: HintingStrategy) {
 	let scale = strategy.UPM / SIZE;
 	let yMin = Math.floor((strategy.EMBOX_BOTTOM * strategy.UPM) / scale);
 	let yMax = Math.ceil((strategy.EMBOX_TOP * strategy.UPM) / scale);
@@ -89,7 +89,7 @@ class FlipAnalyzer {
 	}
 }
 
-export default function analyzeTurns(g: Glyph, strategy: HintingStrategy, stems: Stem[]) {
+export default function analyzeTurns(g: CGlyph, strategy: HintingStrategy, stems: Stem[]) {
 	const bitmap = createImageBitmap(g, strategy);
 	const HLimit = bitmap.transform(strategy.UPM / 6, 0).x;
 	const VLimit = bitmap.transform(strategy.CANONICAL_STEM_WIDTH / 2, 0).x;

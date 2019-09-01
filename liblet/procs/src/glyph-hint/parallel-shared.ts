@@ -3,8 +3,8 @@ import { HintingPass, IFontSource } from "@chlorophytum/arch";
 import { GlyphHintStore } from "./common";
 import { GhsToGlyphMap } from "./glyph";
 
-export async function parallelGlyphHintShared<GID, VAR, MASTER>(
-	font: IFontSource<GID, VAR, MASTER>,
+export async function parallelGlyphHintShared<GID>(
+	font: IFontSource<GID>,
 	passes: HintingPass[],
 	ghsMap: ReadonlyMap<string, GlyphHintStore>
 ) {

@@ -12,11 +12,11 @@ import { IdeographHintingModel1, IdeographParallelHintingModel1 } from "./hintin
 
 class CIdeographHintingModelFactory1 implements IHintingModelPlugin {
 	public readonly type = "Chlorophytum::IdeographHintingModel1";
-	public adopt<GID, VAR, MASTER>(
-		font: IFontSource<GID, VAR, MASTER>,
+	public adopt<GID>(
+		font: IFontSource<GID>,
 		parameters: any
 	): IHintingModel<GID> | null | undefined {
-		return new IdeographHintingModel1<GID, VAR, MASTER>(font, parameters);
+		return new IdeographHintingModel1<GID>(font, parameters);
 	}
 	public adoptParallel(metadata: IFontSourceMetadata, parameters: any) {
 		return new IdeographParallelHintingModel1(metadata, parameters);

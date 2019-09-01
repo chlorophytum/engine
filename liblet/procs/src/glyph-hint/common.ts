@@ -1,4 +1,4 @@
-import { GlyphRep, IHint, IHintingModelPlugin } from "@chlorophytum/arch";
+import { Glyph, IHint } from "@chlorophytum/arch";
 
 export class GlyphHintStore {
 	public glyphCacheKeys: Map<string, string> = new Map();
@@ -13,14 +13,14 @@ export interface GlyphHintJob {
 	glyphName: string;
 	cacheKey: null | string;
 }
-export interface GlyphHintRequest<VAR, MASTER> extends GlyphHintJob {
-	glyphRep: GlyphRep<VAR, MASTER>;
+export interface GlyphHintRequest extends GlyphHintJob {
+	glyphRep: Glyph.Rep;
 }
 export interface GlyphHintJobs {
 	[type: string]: GlyphHintJob[];
 }
-export interface GlyphHintRequests<VAR, MASTER> {
-	[type: string]: GlyphHintRequest<VAR, MASTER>[];
+export interface GlyphHintRequests {
+	[type: string]: GlyphHintRequest[];
 }
 
 export interface IHintCacheManager {

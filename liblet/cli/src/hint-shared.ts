@@ -7,9 +7,9 @@ export interface HintWorkData {
 	input: string;
 	options: HintOptions;
 }
-export interface JobMessage<VAR, MASTER> {
+export interface JobMessage {
 	fontMetadata: IFontSourceMetadata;
-	jobRequests: Procs.GlyphHintRequests<VAR, MASTER>;
+	jobRequests: Procs.GlyphHintRequests;
 }
 
 export interface ReadyMessage {

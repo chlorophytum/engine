@@ -1,11 +1,16 @@
-import { Point } from "@chlorophytum/arch";
+import { Geometry } from "@chlorophytum/arch";
 
 import { AdjPoint } from "../types/point";
 import Stem from "../types/stem";
 
 import { slopeOf } from "./seg";
 
-function keyPointPriority(incoming: Point, current: Point, atl?: boolean, atr?: boolean) {
+function keyPointPriority(
+	incoming: Geometry.Point,
+	current: Geometry.Point,
+	atl?: boolean,
+	atr?: boolean
+) {
 	if (atr) {
 		return current.x < incoming.x;
 	} else if (atl) {

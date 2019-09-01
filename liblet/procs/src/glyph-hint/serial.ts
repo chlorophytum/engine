@@ -5,8 +5,8 @@ import { Progress } from "../support/progress";
 import { GlyphHintStore, IHintCacheManager } from "./common";
 import { GhsToGlyphMap, hintGlyphSimple } from "./glyph";
 
-export async function serialGlyphHint<GID, VAR, MASTER>(
-	font: IFontSource<GID, VAR, MASTER>,
+export async function serialGlyphHint<GID>(
+	font: IFontSource<GID>,
 	passes: HintingPass[],
 	cache: IHintCacheManager,
 	forceSerial: boolean,

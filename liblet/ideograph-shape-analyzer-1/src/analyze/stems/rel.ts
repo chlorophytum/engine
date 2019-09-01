@@ -1,19 +1,19 @@
-import { Point } from "@chlorophytum/arch";
+import { Geometry } from "@chlorophytum/arch";
 
 import { HintingStrategy } from "../../strategy";
-import Glyph from "../../types/glyph";
+import CGlyph from "../../types/glyph";
 import { AdjPoint } from "../../types/point";
 import Radical from "../../types/radical";
 import Stem, { StemSharedBoolKeys, StemSharedNumberKeys } from "../../types/stem";
 
 import { calculateMinMax } from "./calc";
 
-function pointBelowStem(point: Point, stem: Stem, fuzz: number) {
+function pointBelowStem(point: Geometry.Point, stem: Stem, fuzz: number) {
 	return point.y < stem.y - stem.width - fuzz;
 }
 
 function PtAbove(
-	point: Point,
+	point: Geometry.Point,
 	stem: Stem,
 	xMin: number,
 	xMax: number,
@@ -30,7 +30,7 @@ function PtAbove(
 	}
 }
 function PtRightAdjAbove(
-	point: Point,
+	point: Geometry.Point,
 	stem: Stem,
 	xMin: number,
 	xMax: number,
@@ -50,7 +50,7 @@ function PtRightAdjAbove(
 	}
 }
 function PtLeftAdjAbove(
-	point: Point,
+	point: Geometry.Point,
 	stem: Stem,
 	xMin: number,
 	xMax: number,
@@ -70,7 +70,7 @@ function PtLeftAdjAbove(
 	}
 }
 function PtRightDistAbove(
-	point: Point,
+	point: Geometry.Point,
 	stem: Stem,
 	xMin: number,
 	xMax: number,
@@ -93,7 +93,7 @@ function PtRightDistAbove(
 	}
 }
 function PtLeftDistAbove(
-	point: Point,
+	point: Geometry.Point,
 	stem: Stem,
 	xMin: number,
 	xMax: number,
@@ -179,7 +179,7 @@ function PtBelow(
 	}
 }
 function PtRightAdjBelow(
-	point: Point,
+	point: Geometry.Point,
 	stem: Stem,
 	xMin: number,
 	xMax: number,
@@ -202,7 +202,7 @@ function PtRightAdjBelow(
 	}
 }
 function PtLeftAdjBelow(
-	point: Point,
+	point: Geometry.Point,
 	stem: Stem,
 	xMin: number,
 	xMax: number,
@@ -225,7 +225,7 @@ function PtLeftAdjBelow(
 	}
 }
 function PtRightDistBelow(
-	point: Point,
+	point: Geometry.Point,
 	stem: Stem,
 	xMin: number,
 	xMax: number,
@@ -248,7 +248,7 @@ function PtRightDistBelow(
 	}
 }
 function PtLeftDistBelow(
-	point: Point,
+	point: Geometry.Point,
 	stem: Stem,
 	xMin: number,
 	xMax: number,
@@ -432,7 +432,7 @@ export function analyzePointBetweenStems(
 	return res;
 }
 
-export function analyzeEntireContourAboveBelow(glyph: Glyph, stems: Stem[]) {
+export function analyzeEntireContourAboveBelow(glyph: CGlyph, stems: Stem[]) {
 	for (let j = 0; j < stems.length; j++) {
 		let sj = stems[j];
 		for (let c = 0; c < glyph.contours.length; c++) {

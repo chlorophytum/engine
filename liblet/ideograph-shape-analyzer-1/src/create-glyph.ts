@@ -1,10 +1,10 @@
-import { GlyphGeometry, Point } from "@chlorophytum/arch";
+import { Geometry, Glyph } from "@chlorophytum/arch";
 
 import Contour from "./types/contour";
-import Glyph from "./types/glyph";
+import CGlyph from "./types/glyph";
 import { CPoint } from "./types/point";
 
-function rotatePoints<A extends Point>(c: A[]) {
+function rotatePoints<A extends Geometry.Point>(c: A[]) {
 	let zm = c[0],
 		jm = 0;
 	for (let j = 1; j < c.length; j++) {
@@ -16,7 +16,7 @@ function rotatePoints<A extends Point>(c: A[]) {
 	return [...c.slice(jm), ...c.slice(0, jm)];
 }
 
-export function createGlyph(input: GlyphGeometry) {
+export function createGlyph(input: Glyph.Geom) {
 	let contours = [],
 		indexedPoints = [];
 	let ptIndex = 0;
@@ -41,7 +41,7 @@ export function createGlyph(input: GlyphGeometry) {
 		);
 		contours.push(currentContour);
 	}
-	const glyph = new Glyph(contours);
+	const glyph = new CGlyph(contours);
 	glyph.unifyZ();
 	glyph.stat();
 	glyph.nPoints = ptIndex - 1;

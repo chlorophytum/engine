@@ -1,15 +1,9 @@
-import {
-	GlyphRep,
-	IFontSource,
-	IHint,
-	IHintingModel,
-	IParallelHintingModel
-} from "@chlorophytum/arch";
+import { IFontSource, IHint, IHintingModel, IParallelHintingModel } from "@chlorophytum/arch";
 
 import { GlyphHintRequest, GlyphHintSender, GlyphHintStore, IHintCacheManager } from "./common";
 
-export async function hintGlyphSimple<GID, VAR, MASTER>(
-	font: IFontSource<GID, VAR, MASTER>,
+export async function hintGlyphSimple<GID>(
+	font: IFontSource<GID>,
 	hm: IHintingModel<GID>,
 	cache: IHintCacheManager,
 	hs: GlyphHintStore,
@@ -29,21 +23,18 @@ export async function hintGlyphSimple<GID, VAR, MASTER>(
 	return true;
 }
 
-export async function hintGlyphWorker<VAR, MASTER>(
+export async function hintGlyphWorker(
 	passID: string,
-	hm: IParallelHintingModel<VAR, MASTER>,
+	hm: IParallelHintingModel,
 	ghs: GlyphHintSender,
-	req: GlyphHintRequest<VAR, MASTER>
+	req: GlyphHintRequest
 ) {
 	const hints = await hm.analyzeGlyph(req.glyphRep);
 	if (hints) ghs.push(passID, req.glyphName, req.cacheKey, hints);
 	return true;
 }
 
-export async function GhsToGlyphMap<GID, VAR, MASTER>(
-	font: IFontSource<GID, VAR, MASTER>,
-	ghs: GlyphHintStore
-) {
+export async function GhsToGlyphMap<GID>(font: IFontSource<GID>, ghs: GlyphHintStore) {
 	const ghm: Map<GID, IHint> = new Map();
 	for (const [gName, hint] of ghs.glyphHints) {
 		if (!hint || !gName) continue;

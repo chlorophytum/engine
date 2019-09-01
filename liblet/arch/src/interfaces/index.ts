@@ -1,42 +1,15 @@
 import * as stream from "stream";
 
-// Geometry data
-export interface Point {
-	readonly x: number;
-	readonly y: number;
-}
-export interface GlyphPoint {
-	readonly x: number;
-	readonly y: number;
-	readonly on: boolean;
-	readonly id: number;
-}
-export type GlyphGeometry = readonly GlyphPoint[][];
-export interface GlyphShapeComponent {
-	readonly shape: GlyphShape; // Shape of resulting geometry, transformed
-}
-export interface GlyphShape {
-	readonly eigen: GlyphGeometry;
-	readonly compositionOperator?: string;
-	readonly components?: GlyphShapeComponent;
-}
-export interface GlyphRelation<Glyph> {
-	readonly target: Glyph;
-	readonly relationTag: string;
-}
+import { Glyph } from "./geometry";
+import { Variation } from "./variation";
 
-export type MasterRep<VAR, MASTER> = { peak: VAR; master: MASTER };
-export interface GlyphRep<VAR, MASTER> {
-	readonly shapes: [null | MasterRep<VAR, MASTER>, GlyphShape][];
-}
+export { Geometry, Glyph } from "./geometry";
+export { Variation } from "./variation";
 
 // Font source
 export interface IFontFormatPlugin {
 	// "any"s are actually existential types
-	createFontSource(
-		input: stream.Readable,
-		identifier: string
-	): Promise<IFontSource<any, any, any>>;
+	createFontSource(input: stream.Readable, identifier: string): Promise<IFontSource<any>>;
 	createPreStatAnalyzer(pss: IFinalHintPreStatSink): null | IFinalHintPreStatAnalyzer;
 	createHintStore(input: stream.Readable, plugins: IHintingModelPlugin[]): Promise<IHintStore>;
 	createFinalHintSaver(collector: IFinalHintCollector): null | IFontFinalHintSaver;
@@ -64,23 +37,23 @@ export interface IFontSourceMetadata {
 	readonly identifier: string;
 	readonly upm: number;
 }
-export interface IFontSource<Glyph, VAR, MASTER> {
+export interface IFontSource<GID> {
 	readonly format: string;
 
 	readonly metadata: IFontSourceMetadata;
 
-	getGlyphFromName(name: string): Promise<Glyph | undefined>;
-	getUniqueGlyphName(glyph: Glyph): Promise<string | undefined>;
+	getGlyphFromName(name: string): Promise<GID | undefined>;
+	getUniqueGlyphName(glyph: GID): Promise<string | undefined>;
 	getCharacterSet(): Promise<Set<number>>;
-	getGlyphSet(): Promise<Set<Glyph>>;
+	getGlyphSet(): Promise<Set<GID>>;
 	// Get a glyph ID from a font
-	getEncodedGlyph(codePoint: number): Promise<Glyph | null | undefined>;
+	getEncodedGlyph(codePoint: number): Promise<GID | null | undefined>;
 	// Get related glyphs
-	getRelatedGlyphs(from: Glyph): Promise<GlyphRelation<Glyph>[] | null | undefined>;
+	getRelatedGlyphs(from: GID): Promise<Glyph.Relation<GID>[] | null | undefined>;
 	// Get master list
-	getGlyphMasters(glyph: Glyph): Promise<ReadonlyArray<MasterRep<VAR, MASTER>>>;
+	getGlyphMasters(glyph: GID): Promise<ReadonlyArray<Variation.MasterRep>>;
 	// Get geometry
-	getGeometry(glyph: Glyph, instance: null | VAR): Promise<GlyphShape>;
+	getGeometry(glyph: GID, instance: null | Variation.Instance): Promise<Glyph.Shape>;
 
 	createHintStore(): IHintStore;
 }
@@ -122,20 +95,20 @@ export interface IHintingModel<Glyph> {
 	// Analyze shared hints
 	getSharedHints(glyphHints: ReadonlyMap<Glyph, IHint>): Promise<null | IHint>;
 }
-export interface IParallelHintingModel<VAR, MASTER> {
+export interface IParallelHintingModel {
 	readonly type: string;
-	analyzeGlyph(shape: GlyphRep<VAR, MASTER>): Promise<null | IHint>;
+	analyzeGlyph(shape: Glyph.Rep): Promise<null | IHint>;
 }
 export interface IHintingModelPlugin {
 	readonly type: string;
 	adopt<GID, VAR, MASTER>(
-		font: IFontSource<GID, VAR, MASTER>,
+		font: IFontSource<GID>,
 		parameters: any
 	): IHintingModel<GID> | null | undefined;
 	adoptParallel?<VAR, MASTER>(
 		metadata: IFontSourceMetadata,
 		parameters: any
-	): IParallelHintingModel<VAR, MASTER> | null | undefined;
+	): IParallelHintingModel | null | undefined;
 	hintFactories: IHintFactory[];
 }
 export interface HintingPass {

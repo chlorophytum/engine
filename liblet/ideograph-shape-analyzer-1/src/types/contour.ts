@@ -1,4 +1,4 @@
-import { Point } from "@chlorophytum/arch";
+import { Geometry } from "@chlorophytum/arch";
 
 import { CPoint } from "./point";
 import { createStat } from "./stat";
@@ -97,7 +97,7 @@ export default class Contour {
 		}
 	}
 
-	public includesPoint(z: Point) {
+	public includesPoint(z: Geometry.Point) {
 		return inPoly(z, this.points);
 	}
 	public includes(that: Contour) {
@@ -108,7 +108,7 @@ export default class Contour {
 	}
 }
 
-export function inPoly(point: Point, vs: Point[]) {
+export function inPoly(point: Geometry.Point, vs: Geometry.Point[]) {
 	// ray-casting algorithm based on
 	// http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
 
