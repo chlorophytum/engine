@@ -70,10 +70,25 @@ export namespace MultipleAlignZone {
 				const bottomPoint = props.bottomPoint < 0 ? spurBottom : props.bottomPoint;
 				const topPoint = props.topPoint < 0 ? spurTop : props.topPoint;
 
+				yield $.call(
+					THintMultipleStrokesExplicit(N),
+					...props.gapMinDist,
+					...props.inkMinDist,
+					...recPath,
+					...recPathCollide,
+					props.bottomFree ? 2 : 1,
+					props.topFree ? 2 : 1,
+					bottomPoint,
+					topPoint,
+					..._.flatten(props.middleStrokes)
+				);
+
+				// Currently we turn off stubbing to reduce size of FPGM as well as loading speed
+				/*
 				let simple = true;
 				for (let md of props.gapMinDist) if (md !== 1) simple = false;
 				for (let md of props.inkMinDist) if (md !== 1) simple = false;
-
+				
 				// We'll generate stub functions for the cases that the stroke quantity are small
 				// to prevent producing too many functions and the consequent overflow.
 				if (simple && N <= 3) {
@@ -97,6 +112,8 @@ export namespace MultipleAlignZone {
 						..._.flatten(props.middleStrokes)
 					);
 				}
+
+				*/
 			});
 		}
 	}

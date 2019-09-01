@@ -48,7 +48,14 @@ export async function doHint(options: HintOptions, jobs: [string, string][]) {
 	const modelPlugins = Array.from(new Set(passes.map(p => p.plugin)));
 	const hf = createHintFactory(modelPlugins);
 	const hc = new HintCache(hf);
+
+	console.log("Auto hint");
 	for (const [input, output] of jobs) {
+		console.log(` * Job: ${input} -> ${output}`);
+	}
+
+	for (const [input, output] of jobs) {
+		console.log(` - Auto hinting ${input} -> ${output}`);
 		const otdStream = fs.createReadStream(input);
 		const fontSource = await FontFormatPlugin.createFontSource(otdStream, input);
 		const hintStore = await hintFont(options, input, fontSource, hf, hc, passes);

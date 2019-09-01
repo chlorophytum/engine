@@ -23,6 +23,11 @@ export async function doInstruct(options: HintOptions, jobs: [string, string, st
 	const passes = getHintingPasses(options);
 	const models = Array.from(new Set(passes.map(p => p.plugin)));
 
+	console.log("Instruction Generation");
+	for (const [font, input, output] of jobs) {
+		console.log(` * Job: ${font} | ${input} -> ${output}`);
+	}
+
 	// Pre-stat
 	const preStatSink = await doPreStat(FontFormatPlugin, FinalHintPlugin, jobs);
 
@@ -31,6 +36,7 @@ export async function doInstruct(options: HintOptions, jobs: [string, string, st
 	const exportPlans = await doInstructImpl(FontFormatPlugin, ttCol, models, jobs);
 
 	// Save
+	console.log(" - Saving instructions");
 	ttCol.consolidate();
 	await saveInstructions(FontFormatPlugin, ttCol, exportPlans);
 }
@@ -44,6 +50,7 @@ async function doPreStat(
 	const preStatAnalyzer = FontFormatPlugin.createPreStatAnalyzer(preStatSink);
 	if (!preStatAnalyzer) throw new TypeError(`Final hint format not supported by font.`);
 	for (const [font, input, output] of jobs) {
+		console.log(` - Pre-stating ${font}`);
 		await preStatAnalyzer.analyzeFontPreStat(fs.createReadStream(font));
 	}
 	return preStatSink;
@@ -56,15 +63,25 @@ async function doInstructImpl(
 ) {
 	const exportPlans: ExportPlan[] = [];
 	for (const [font, input, output] of jobs) {
+		console.log(` - Instructing ${input} -> ${output}`);
 		const gzHsStream = fs.createReadStream(input);
 		const gzFhStream = fs.createWriteStream(output);
-		const hs = await FontFormatPlugin.createHintStore(gzHsStream, models);
 		const ttSession = ttCol.createSession();
-		await Procs.mainMidHint(hs, ttSession);
-		ttSession.consolidate();
+		await readHintsToSession(FontFormatPlugin, ttSession, gzHsStream, models);
 		exportPlans.push({ to: gzFhStream, session: ttSession });
 	}
 	return exportPlans;
+}
+
+async function readHintsToSession(
+	FontFormatPlugin: IFontFormatPlugin,
+	ttSession: IFinalHintSession,
+	gzHsStream: fs.ReadStream,
+	models: IHintingModelPlugin[]
+) {
+	const hs = await FontFormatPlugin.createHintStore(gzHsStream, models);
+	await Procs.mainMidHint(hs, ttSession);
+	ttSession.consolidate();
 }
 
 async function saveInstructions(

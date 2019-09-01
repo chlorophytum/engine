@@ -441,7 +441,7 @@ export const THintMultipleStrokesMainImpl = Lib.Template(function*($, N: number)
 	});
 
 	// If we have *many* pixels, do in a simple way
-	yield $.if($.gt(dist, $.mul($.coerce.toF26D6(8), $.add(pxReqGap, pxReqInk))), function*() {
+	yield $.if($.gteq(dist, $.mul($.coerce.toF26D6(4), $.add(pxReqGap, pxReqInk))), function*() {
 		yield $.call(HintMultipleStrokesSimple, N, zBot, zTop, vpZMids);
 		yield $.return(1);
 	});

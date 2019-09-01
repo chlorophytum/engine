@@ -11,7 +11,13 @@ export async function doIntegrate(
 	const FontFormatPlugin = getFontPlugin(options);
 	const integrator = FontFormatPlugin.createFinalHintIntegrator();
 
+	console.log("Instruction integration");
+	for (const [font, input, output] of jobs) {
+		console.log(` * Job: ${font} | ${input} -> ${output}`);
+	}
+
 	for (const [instr, input, output] of jobs) {
+		console.log(` - Integrating ${instr} | ${input} -> ${output}`);
 		const instrStream = fs.createReadStream(instr);
 		const inputStream = fs.createReadStream(input);
 		const outStream = fs.createWriteStream(output);

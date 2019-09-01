@@ -64,15 +64,20 @@ export class HlttSession implements IFinalHintSession {
 	private preProgram: ProgramRecord | null = null;
 
 	public createGlyphProgramSink(gid: string, ck?: null | undefined | string) {
-		return new HlttProgramSink(gen => {
-			const program = this.edsl.program(gen);
-			if (ck) {
-				this.cacheKeyMaps.set(gid, ck);
-				if (!this.shared.programs.has(ck)) this.shared.programs.set(ck, program);
+		if (ck) {
+			this.cacheKeyMaps.set(gid, ck);
+			if (!this.shared.programs.has(ck)) {
+				return new HlttProgramSink(gen => {
+					this.shared.programs.set(ck, this.edsl.program(gen));
+				});
 			} else {
-				this.glyphPrograms.set(gid, program);
+				return new HlttProgramSink(gen => {});
 			}
-		});
+		} else {
+			return new HlttProgramSink(gen => {
+				this.glyphPrograms.set(gid, this.edsl.program(gen));
+			});
+		}
 	}
 	private preProgramSegments: ProgramGenerator[] = [];
 	public createSharedProgramSink(type: string) {
