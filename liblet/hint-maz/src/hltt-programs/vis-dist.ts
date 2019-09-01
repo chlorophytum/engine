@@ -1,8 +1,10 @@
-import { Expression, LibFunc, ProgramDsl, Variable } from "@chlorophytum/hltt";
+import { Expression, ProgramDsl, Variable } from "@chlorophytum/hltt";
+
+import { Lib } from "./commons";
 
 const ConsideredDark = 3 / 5;
 
-export const VisFloor = LibFunc("IdeographProgram::visFloor", function*($) {
+export const VisFloor = Lib.Func(function*($) {
 	const [x, fillRate] = $.args(2);
 	yield $.if(
 		$.gteq($.sub(x, $.floor(x)), $.coerce.toF26D6(ConsideredDark)),
@@ -14,7 +16,7 @@ export const VisFloor = LibFunc("IdeographProgram::visFloor", function*($) {
 		}
 	);
 });
-export const VisCeil = LibFunc("IdeographProgram::visCeil", function*($) {
+export const VisCeil = Lib.Func(function*($) {
 	const [x, fillRate] = $.args(2);
 	yield $.if(
 		$.gteq($.sub($.ceiling(x), x), $.coerce.toF26D6(ConsideredDark)),
@@ -27,14 +29,14 @@ export const VisCeil = LibFunc("IdeographProgram::visCeil", function*($) {
 	);
 });
 
-export const VisDist = LibFunc("IdeographProgram::visDist", function*(e) {
+export const VisDist = Lib.Func(function*(e) {
 	const [zBot, zTop, frBot, frTop] = e.args(4);
 	yield e.return(
 		e.sub(e.call(VisFloor, e.gc.cur(zTop), frTop), e.call(VisCeil, e.gc.cur(zBot), frBot))
 	);
 });
 
-export const OctDistOrig = LibFunc("IdeographProgram::octDistOrig", function*(e) {
+export const OctDistOrig = Lib.Func(function*(e) {
 	const [zBot, zTop] = e.args(2);
 	yield e.return(e.sub(e.gc.orig(zTop), e.gc.orig(zBot)));
 });
@@ -45,7 +47,7 @@ function midBot(e: ProgramDsl, zMids: Variable, index: Expression) {
 function midTop(e: ProgramDsl, zMids: Variable, index: Expression) {
 	return e.part(zMids, e.add(1, e.mul(e.coerce.toF26D6(2), index)));
 }
-export const GetFillRate = LibFunc("IdeographProgram::GetFillRate", function*($) {
+export const GetFillRate = Lib.Func(function*($) {
 	const [N, zBot, zTop, vpZMids] = $.args(4);
 	const ink = $.local();
 	const gap = $.local();

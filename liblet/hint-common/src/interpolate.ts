@@ -9,7 +9,7 @@ export namespace Interpolate {
 			private readonly rp2: number,
 			private readonly pts: number[]
 		) {}
-		toJSON() {
+		public toJSON() {
 			return {
 				type: TAG,
 				rp1: this.rp1,
@@ -17,7 +17,7 @@ export namespace Interpolate {
 				pts: this.pts
 			};
 		}
-		createCompiler(sink: IFinalHintProgramSink): IHintCompiler | null {
+		public createCompiler(sink: IFinalHintProgramSink): IHintCompiler | null {
 			if (sink instanceof HlttProgramSink) {
 				return new HlttCompiler(sink, this.rp1, this.rp2, this.pts);
 			}
@@ -26,8 +26,8 @@ export namespace Interpolate {
 	}
 
 	export class HintFactory implements IHintFactory {
-		readonly type = TAG;
-		readJson(json: any) {
+		public readonly type = TAG;
+		public readJson(json: any) {
 			if (json && json.type === TAG) {
 				return new Hint(json.rp1, json.rp2, json.pts);
 			}
@@ -42,7 +42,7 @@ export namespace Interpolate {
 			private readonly rp2: number,
 			private readonly pts: number[]
 		) {}
-		doCompile() {
+		public doCompile() {
 			const hc = this;
 			this.sink.addSegment($ => [$.ip(hc.rp1, hc.rp2, ...hc.pts)]);
 		}

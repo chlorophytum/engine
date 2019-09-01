@@ -1,4 +1,4 @@
-import { LibFunc } from "@chlorophytum/hltt";
+import { Lib } from "./commons";
 
 enum GapOcc {
 	OnePx,
@@ -17,106 +17,98 @@ enum InkOcc {
 	Both
 }
 
-export const InitBalanceMultiStrokeHints = LibFunc(
-	"IdeographProgram::initBalanceMultiStrokeHints",
-	function*(e) {
-		const [N, vpGapOcc, vpInkOcc, vpGaps] = e.args(4);
-		const pGapOcc = e.coerce.fromIndex.variable(vpGapOcc);
-		const pInkOcc = e.coerce.fromIndex.variable(vpInkOcc);
-		const pGaps = e.coerce.fromIndex.variable(vpGaps);
-		const j = e.local();
-		const gap = e.local();
-		yield e.set(j, 0);
-		yield e.while(e.lt(j, N), function*() {
-			yield e.set(e.part(pInkOcc, j), InkOcc.Clear);
-			yield e.set(j, e.add(j, 1));
-		});
-		yield e.set(j, 0);
-		yield e.while(e.lteq(j, N), function*() {
-			yield e.set(gap, e.part(pGaps, j));
-			yield e.if(
-				e.lt(gap, e.coerce.toF26D6(1 + 1 / 8)),
-				function*() {
-					yield e.set(e.part(pGapOcc, j), GapOcc.OnePx);
-				},
-				function*() {
-					yield e.if(
-						e.lt(gap, e.coerce.toF26D6(2 + 1 / 8)),
-						function*() {
-							yield e.set(e.part(pGapOcc, j), GapOcc.TwoClear);
-						},
-						function*() {
-							yield e.set(e.part(pGapOcc, j), GapOcc.MoreClear);
-						}
-					);
-				}
-			);
-			yield e.set(j, e.add(j, 1));
-		});
-	}
-);
-
-export const BalanceOneStrokeExtDown = LibFunc(
-	"IdeographProgram::balanceOneStrokeExtDown",
-	function*(e) {
-		const [j, vpGapOcc, vpInkOcc, vpGaps, vpInks, vpaInk] = e.args(6);
-
-		const pGapOcc = e.coerce.fromIndex.variable(vpGapOcc);
-		const pInkOcc = e.coerce.fromIndex.variable(vpInkOcc);
-		const pGaps = e.coerce.fromIndex.variable(vpGaps);
-		const pInks = e.coerce.fromIndex.variable(vpInks);
-		const pAInk = e.coerce.fromIndex.variable(vpaInk);
-
-		const aInk = e.local(),
-			cInk = e.local();
-		const occBelow = e.part(pGapOcc, j),
-			occInk = e.part(pInkOcc, j);
-		const delta = e.local();
-
-		yield e.set(aInk, e.part(pAInk, j));
-		yield e.set(cInk, e.part(pInks, j));
-
+export const InitBalanceMultiStrokeHints = Lib.Func(function*(e) {
+	const [N, vpGapOcc, vpInkOcc, vpGaps] = e.args(4);
+	const pGapOcc = e.coerce.fromIndex.variable(vpGapOcc);
+	const pInkOcc = e.coerce.fromIndex.variable(vpInkOcc);
+	const pGaps = e.coerce.fromIndex.variable(vpGaps);
+	const j = e.local();
+	const gap = e.local();
+	yield e.set(j, 0);
+	yield e.while(e.lt(j, N), function*() {
+		yield e.set(e.part(pInkOcc, j), InkOcc.Clear);
+		yield e.set(j, e.add(j, 1));
+	});
+	yield e.set(j, 0);
+	yield e.while(e.lteq(j, N), function*() {
+		yield e.set(gap, e.part(pGaps, j));
 		yield e.if(
-			e.not(
-				e.and(
-					e.or(e.eq(InkOcc.Clear, occInk), e.eq(InkOcc.Up, occInk)),
-					e.or(
-						e.eq(GapOcc.TwoClear, occBelow),
-						e.or(e.eq(GapOcc.MoreClear, occBelow), e.eq(GapOcc.MoreDown, occBelow))
-					)
-				)
-			),
+			e.lt(gap, e.coerce.toF26D6(1 + 1 / 8)),
 			function*() {
-				yield e.return(0);
+				yield e.set(e.part(pGapOcc, j), GapOcc.OnePx);
+			},
+			function*() {
+				yield e.if(
+					e.lt(gap, e.coerce.toF26D6(2 + 1 / 8)),
+					function*() {
+						yield e.set(e.part(pGapOcc, j), GapOcc.TwoClear);
+					},
+					function*() {
+						yield e.set(e.part(pGapOcc, j), GapOcc.MoreClear);
+					}
+				);
 			}
 		);
+		yield e.set(j, e.add(j, 1));
+	});
+});
 
-		yield e.set(delta, e.min(e.coerce.toF26D6(4 / 5), e.sub(aInk, cInk)));
-		yield e.set(e.part(pInks, j), e.add(e.part(pInks, j), delta));
-		yield e.set(e.part(pGaps, j), e.sub(e.part(pGaps, j), delta));
-		yield e.if(e.eq(InkOcc.Clear, occInk), function*() {
-			yield e.set(occInk, InkOcc.Down);
-		});
-		yield e.if(e.eq(InkOcc.Up, occInk), function*() {
-			yield e.set(occInk, InkOcc.Both);
-		});
-		yield e.if(e.eq(GapOcc.TwoClear, occBelow), function*() {
-			yield e.set(occBelow, GapOcc.TwoUp);
-		});
-		yield e.if(e.eq(GapOcc.MoreClear, occBelow), function*() {
-			yield e.set(occBelow, GapOcc.MoreUp);
-		});
-		yield e.if(e.eq(GapOcc.MoreDown, occBelow), function*() {
-			yield e.set(occBelow, GapOcc.MoreBoth);
-		});
+export const BalanceOneStrokeExtDown = Lib.Func(function*(e) {
+	const [j, vpGapOcc, vpInkOcc, vpGaps, vpInks, vpaInk] = e.args(6);
 
-		yield e.return(1);
-	}
-);
+	const pGapOcc = e.coerce.fromIndex.variable(vpGapOcc);
+	const pInkOcc = e.coerce.fromIndex.variable(vpInkOcc);
+	const pGaps = e.coerce.fromIndex.variable(vpGaps);
+	const pInks = e.coerce.fromIndex.variable(vpInks);
+	const pAInk = e.coerce.fromIndex.variable(vpaInk);
 
-export const BalanceOneStrokeExtUp = LibFunc("IdeographProgram::balanceOneStrokeExtUp", function*(
-	e
-) {
+	const aInk = e.local(),
+		cInk = e.local();
+	const occBelow = e.part(pGapOcc, j),
+		occInk = e.part(pInkOcc, j);
+	const delta = e.local();
+
+	yield e.set(aInk, e.part(pAInk, j));
+	yield e.set(cInk, e.part(pInks, j));
+
+	yield e.if(
+		e.not(
+			e.and(
+				e.or(e.eq(InkOcc.Clear, occInk), e.eq(InkOcc.Up, occInk)),
+				e.or(
+					e.eq(GapOcc.TwoClear, occBelow),
+					e.or(e.eq(GapOcc.MoreClear, occBelow), e.eq(GapOcc.MoreDown, occBelow))
+				)
+			)
+		),
+		function*() {
+			yield e.return(0);
+		}
+	);
+
+	yield e.set(delta, e.min(e.coerce.toF26D6(4 / 5), e.sub(aInk, cInk)));
+	yield e.set(e.part(pInks, j), e.add(e.part(pInks, j), delta));
+	yield e.set(e.part(pGaps, j), e.sub(e.part(pGaps, j), delta));
+	yield e.if(e.eq(InkOcc.Clear, occInk), function*() {
+		yield e.set(occInk, InkOcc.Down);
+	});
+	yield e.if(e.eq(InkOcc.Up, occInk), function*() {
+		yield e.set(occInk, InkOcc.Both);
+	});
+	yield e.if(e.eq(GapOcc.TwoClear, occBelow), function*() {
+		yield e.set(occBelow, GapOcc.TwoUp);
+	});
+	yield e.if(e.eq(GapOcc.MoreClear, occBelow), function*() {
+		yield e.set(occBelow, GapOcc.MoreUp);
+	});
+	yield e.if(e.eq(GapOcc.MoreDown, occBelow), function*() {
+		yield e.set(occBelow, GapOcc.MoreBoth);
+	});
+
+	yield e.return(1);
+});
+
+export const BalanceOneStrokeExtUp = Lib.Func(function*(e) {
 	const [j, vpGapOcc, vpInkOcc, vpGaps, vpInks, vpaInk] = e.args(6);
 
 	const pGapOcc = e.coerce.fromIndex.variable(vpGapOcc);
@@ -171,38 +163,33 @@ export const BalanceOneStrokeExtUp = LibFunc("IdeographProgram::balanceOneStroke
 	yield e.return(1);
 });
 
-export const ShrinkDelta = LibFunc(`IdeographProgram::shrinkDelta`, function*(e) {
+export const ShrinkDelta = Lib.Func(function*(e) {
 	const [aInk, cInk] = e.args(2);
 
 	yield e.return(e.neg(e.sub(cInk, e.max(e.coerce.toF26D6(3 / 5), aInk))));
 });
 
-export const BalanceShrinkOneStrokeDown = LibFunc(
-	`IdeographProgram::BalanceShrinkOneStrokeDown`,
-	function*(e) {
-		const [j, aInk, cInk, vpInks, vpGaps] = e.args(5);
-		const pGaps = e.coerce.fromIndex.variable(vpGaps);
-		const pInks = e.coerce.fromIndex.variable(vpInks);
-		const delta = e.local();
-		yield e.set(delta, e.call(ShrinkDelta, aInk, cInk));
-		yield e.set(e.part(pInks, j), e.add(e.part(pInks, j), delta));
-		yield e.set(e.part(pGaps, j), e.sub(e.part(pGaps, j), delta));
-	}
-);
-export const BalanceShrinkOneStrokeUp = LibFunc(
-	`IdeographProgram::BalanceShrinkOneStrokeUp`,
-	function*(e) {
-		const [j, aInk, cInk, vpInks, vpGaps] = e.args(5);
-		const pGaps = e.coerce.fromIndex.variable(vpGaps);
-		const pInks = e.coerce.fromIndex.variable(vpInks);
-		const delta = e.local();
-		yield e.set(delta, e.call(ShrinkDelta, aInk, cInk));
-		yield e.set(e.part(pInks, j), e.add(e.part(pInks, j), delta));
-		yield e.set(e.part(pGaps, e.add(1, j)), e.sub(e.part(pGaps, e.add(1, j)), delta));
-	}
-);
+export const BalanceShrinkOneStrokeDown = Lib.Func(function*(e) {
+	const [j, aInk, cInk, vpInks, vpGaps] = e.args(5);
+	const pGaps = e.coerce.fromIndex.variable(vpGaps);
+	const pInks = e.coerce.fromIndex.variable(vpInks);
+	const delta = e.local();
+	yield e.set(delta, e.call(ShrinkDelta, aInk, cInk));
+	yield e.set(e.part(pInks, j), e.add(e.part(pInks, j), delta));
+	yield e.set(e.part(pGaps, j), e.sub(e.part(pGaps, j), delta));
+});
 
-export const BalanceOneStroke = LibFunc("IdeographProgram::balanceOneStroke", function*(e) {
+export const BalanceShrinkOneStrokeUp = Lib.Func(function*(e) {
+	const [j, aInk, cInk, vpInks, vpGaps] = e.args(5);
+	const pGaps = e.coerce.fromIndex.variable(vpGaps);
+	const pInks = e.coerce.fromIndex.variable(vpInks);
+	const delta = e.local();
+	yield e.set(delta, e.call(ShrinkDelta, aInk, cInk));
+	yield e.set(e.part(pInks, j), e.add(e.part(pInks, j), delta));
+	yield e.set(e.part(pGaps, e.add(1, j)), e.sub(e.part(pGaps, e.add(1, j)), delta));
+});
+
+export const BalanceOneStroke = Lib.Func(function*(e) {
 	const [j, scalar, vpGapOcc, vpInkOcc, vpGaps, vpInks, vpaGap, vpaInk] = e.args(8);
 	const pGaps = e.coerce.fromIndex.variable(vpGaps);
 	const pInks = e.coerce.fromIndex.variable(vpInks);
@@ -308,7 +295,7 @@ export const BalanceOneStroke = LibFunc("IdeographProgram::balanceOneStroke", fu
 	});
 });
 
-export const BalanceStrokes = LibFunc("IdeographProgram::balanceStrokes", function*(e) {
+export const BalanceStrokes = Lib.Func(function*(e) {
 	const [N, scalar, vpGapOcc, vpInkOcc, vpGaps, vpInks, vpaGap, vpaInk] = e.args(8);
 	const jj = e.local();
 

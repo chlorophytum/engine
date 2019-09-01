@@ -414,32 +414,41 @@ export class EdslProgram {
 export type EdslFunctionTemplate<A extends any[]> = (...args: A) => (dsl: EdslGlobal) => Variable;
 export type EdslFunctionTemplateInst = (dsl: EdslGlobal) => Variable;
 
-export function EdslDefineFunctionTemplate<A extends any[]>(
-	name: string,
-	G: (e: EdslProgram, ...args: A) => Iterable<Statement>
-): EdslFunctionTemplate<A> {
-	return (...args: A) => (dsl: EdslGlobal) =>
-		dsl.defineFunction(dsl.mangleTemplateName(name, ...args), (e: EdslProgram) =>
-			G(e, ...args)
-		);
-}
-export function EdslDefineFunctionTemplateEx<A extends any[]>(
-	name: string,
-	Identity: (...from: A) => any,
-	G: (e: EdslProgram, ...args: A) => Iterable<Statement>
-): EdslFunctionTemplate<A> {
-	return (...args: A) => {
-		const mangleArgs = Identity(...args);
+export class EdslLibrary {
+	private fid = 0;
+	constructor(private readonly namePrefix: string) {}
+
+	private generateFunctionName() {
+		return this.namePrefix + `::` + this.fid++;
+	}
+
+	public Func(G: (e: EdslProgram) => Iterable<Statement>): EdslFunctionTemplateInst {
+		const name = this.generateFunctionName();
 		return (dsl: EdslGlobal) =>
-			dsl.defineFunction(dsl.mangleTemplateName(name, ...mangleArgs), (e: EdslProgram) =>
+			dsl.defineFunction(dsl.mangleTemplateName(name), (e: EdslProgram) => G(e));
+	}
+
+	public Template<A extends any[]>(
+		G: (e: EdslProgram, ...args: A) => Iterable<Statement>
+	): EdslFunctionTemplate<A> {
+		const fName = this.generateFunctionName();
+		return (...args: A) => (dsl: EdslGlobal) =>
+			dsl.defineFunction(dsl.mangleTemplateName(fName, ...args), (e: EdslProgram) =>
 				G(e, ...args)
 			);
-	};
-}
-export function EdslDefineLibraryFunction(
-	name: string,
-	G: (e: EdslProgram) => Iterable<Statement>
-): EdslFunctionTemplateInst {
-	return (dsl: EdslGlobal) =>
-		dsl.defineFunction(dsl.mangleTemplateName(name), (e: EdslProgram) => G(e));
+	}
+
+	public TemplateEx<A extends any[]>(
+		Identity: (...from: A) => any,
+		G: (e: EdslProgram, ...args: A) => Iterable<Statement>
+	): EdslFunctionTemplate<A> {
+		const name = this.generateFunctionName();
+		return (...args: A) => {
+			const mangleArgs = Identity(...args);
+			return (dsl: EdslGlobal) =>
+				dsl.defineFunction(dsl.mangleTemplateName(name, ...mangleArgs), (e: EdslProgram) =>
+					G(e, ...args)
+				);
+		};
+	}
 }

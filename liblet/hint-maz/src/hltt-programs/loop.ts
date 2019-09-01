@@ -1,5 +1,6 @@
-import { Expression, LibFunc, ProgramDsl, Variable } from "@chlorophytum/hltt";
+import { Expression, ProgramDsl, Variable } from "@chlorophytum/hltt";
 
+import { Lib } from "./commons";
 import { OctDistOrig } from "./vis-dist";
 
 const DIV_STEP = 2;
@@ -11,7 +12,7 @@ function midTop(e: ProgramDsl, zMids: Variable, index: Expression) {
 	return e.part(zMids, e.add(1, e.mul(e.coerce.toF26D6(2), index)));
 }
 
-export const InitMSDGapEntries = LibFunc("IdeographProgram::initMSDGapEntries", function*($) {
+export const InitMSDGapEntries = Lib.Func(function*($) {
 	const [N, vpTotalDist, vpA, vpB, vpC, vpDiv, vpAlloc, zBot, zTop, vpZMids, vpGapMD] = $.args(
 		11
 	);
@@ -69,7 +70,7 @@ export const InitMSDGapEntries = LibFunc("IdeographProgram::initMSDGapEntries", 
 	});
 });
 
-const AdjustStrokeDist = LibFunc("IdeographProgram::AdjustStrokeDist", function*($) {
+const AdjustStrokeDist = Lib.Func(function*($) {
 	const [d] = $.args(1);
 	const One = $.coerce.toF26D6(1);
 	yield $.return(
@@ -83,7 +84,7 @@ const AdjustStrokeDist = LibFunc("IdeographProgram::AdjustStrokeDist", function*
 	);
 });
 
-export const InitMSDInkEntries = LibFunc("IdeographProgram::initMSDInkEntries", function*($) {
+export const InitMSDInkEntries = Lib.Func(function*($) {
 	const [N, vpTotalDist, vpA, vpB, vpC, vpDiv, vpAlloc, vpZMids, vpStrokeMD] = $.args(9);
 
 	const pZMids = $.coerce.fromIndex.variable(vpZMids);
@@ -113,7 +114,7 @@ export const InitMSDInkEntries = LibFunc("IdeographProgram::initMSDInkEntries", 
 	});
 });
 
-const InitMSDistEntry = LibFunc("IdeographProgram::initMSDistEntry", function*($) {
+const InitMSDistEntry = Lib.Func(function*($) {
 	const [N, j, vpTotalDist, vpA, vpB, vpC, vpDiv, vpAlloc, x, r, p] = $.args(11);
 	const pTotalDist = $.coerce.fromIndex.variable(vpTotalDist);
 	const pA = $.coerce.fromIndex.variable(vpA);
@@ -130,7 +131,7 @@ const InitMSDistEntry = LibFunc("IdeographProgram::initMSDistEntry", function*($
 	yield $.set($.part(pAlloc, j), p);
 });
 
-export const MaxAverageLoop = LibFunc("IdeographProgram::maxAverageLoop", function*($) {
+export const MaxAverageLoop = Lib.Func(function*($) {
 	const [N, vpA, vpB, vpC, vpDiv, vpAlloc, scalar, rest] = $.args(8);
 	const pA = $.coerce.fromIndex.variable(vpA);
 	const pB = $.coerce.fromIndex.variable(vpB);
@@ -178,7 +179,7 @@ export const MaxAverageLoop = LibFunc("IdeographProgram::maxAverageLoop", functi
 	});
 });
 
-const PlaceStrokeDist2 = LibFunc("IdeographProgram::placeStrokeDist2", function*($) {
+const PlaceStrokeDist2 = Lib.Func(function*($) {
 	const [vpY, zBot, zTop, gap, ink] = $.args(5);
 	const pY = $.coerce.fromIndex.variable(vpY);
 	yield $.set(pY, $.add(pY, gap));
@@ -188,35 +189,32 @@ const PlaceStrokeDist2 = LibFunc("IdeographProgram::placeStrokeDist2", function*
 	yield $.scfs(zTop, pY);
 });
 
-export const MovePointsForMiddleHint = LibFunc(
-	"IdeographProgram::movePointsForMiddleHint",
-	function*($) {
-		const [N, zBot, zTop, y0, vpGaps, vpInks, vpZMids] = $.args(7);
-		const pGaps = $.coerce.fromIndex.variable(vpGaps);
-		const pInks = $.coerce.fromIndex.variable(vpInks);
-		const pZMids = $.coerce.fromIndex.variable(vpZMids);
+export const MovePointsForMiddleHint = Lib.Func(function*($) {
+	const [N, zBot, zTop, y0, vpGaps, vpInks, vpZMids] = $.args(7);
+	const pGaps = $.coerce.fromIndex.variable(vpGaps);
+	const pInks = $.coerce.fromIndex.variable(vpInks);
+	const pZMids = $.coerce.fromIndex.variable(vpZMids);
 
-		const j = $.local();
-		const y = $.local();
-		const yBot = $.local();
-		const yTop = $.local();
+	const j = $.local();
+	const y = $.local();
+	const yBot = $.local();
+	const yTop = $.local();
 
-		yield $.set(j, 0);
-		yield $.set(y, y0);
-		yield $.set(yBot, $.gc.cur(zBot));
-		yield $.set(yTop, $.gc.cur(zTop));
-		yield $.while($.lt(j, N), function*() {
-			yield $.call(
-				PlaceStrokeDist2,
-				y.ptr,
-				midBot($, pZMids, j),
-				midTop($, pZMids, j),
-				$.part(pGaps, j),
-				$.part(pInks, j)
-			);
-			yield $.set(j, $.add(1, j));
-		});
-		yield $.scfs(zBot, yBot);
-		yield $.scfs(zTop, yTop);
-	}
-);
+	yield $.set(j, 0);
+	yield $.set(y, y0);
+	yield $.set(yBot, $.gc.cur(zBot));
+	yield $.set(yTop, $.gc.cur(zTop));
+	yield $.while($.lt(j, N), function*() {
+		yield $.call(
+			PlaceStrokeDist2,
+			y.ptr,
+			midBot($, pZMids, j),
+			midTop($, pZMids, j),
+			$.part(pGaps, j),
+			$.part(pInks, j)
+		);
+		yield $.set(j, $.add(1, j));
+	});
+	yield $.scfs(zBot, yBot);
+	yield $.scfs(zTop, yTop);
+});
