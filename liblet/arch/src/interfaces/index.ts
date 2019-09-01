@@ -37,18 +37,21 @@ export interface IFontFormatPlugin {
 		input: stream.Readable,
 		identifier: string
 	): Promise<IFontSource<any, any, any>>;
+	createPreStatAnalyzer(pss: IFinalHintPreStatSink): null | IFinalHintPreStatAnalyzer;
 	createHintStore(input: stream.Readable, plugins: IHintingModelPlugin[]): Promise<IHintStore>;
-	createFinalHintSaver(): IFontFinalHintSaver;
+	createFinalHintSaver(collector: IFinalHintCollector): null | IFontFinalHintSaver;
+	createFinalHintIntegrator(): IFontFinalHintIntegrator;
+}
+export interface IFinalHintPreStatAnalyzer {
+	analyzeFontPreStat(font: stream.Readable): Promise<void>;
+}
+export interface IFontFinalHintSaver {
+	saveFinalHint(fhs: IFinalHintSession, output: stream.Writable): Promise<void>;
+}
+export interface IFontFinalHintIntegrator {
 	integrateFinalHintsToFont(
 		hints: stream.Readable,
 		font: stream.Readable,
-		output: stream.Writable
-	): Promise<void>;
-}
-export interface IFontFinalHintSaver {
-	saveFinalHint(
-		col: IFinalHintCollector,
-		fhs: IFinalHintSession,
 		output: stream.Writable
 	): Promise<void>;
 }
@@ -137,12 +140,18 @@ export interface HintingPass {
 }
 
 // Hint compilation (instructing)
+
 export interface IFinalHintPlugin {
-	createFinalHintCollector(): IFinalHintCollector;
+	createFinalHintCollector(preStat: IFinalHintPreStatSink): IFinalHintCollector;
+	createPreStatSink(): IFinalHintPreStatSink;
 }
-export interface IFinalHintProgramSink {
+export interface IFinalHintPreStatSink {
+	settleDown(): void;
+}
+export interface IFinalHintCollector {
 	readonly format: string;
-	save(): void;
+	createSession(): IFinalHintSession;
+	consolidate(): void;
 }
 export interface IFinalHintSession {
 	readonly format: string;
@@ -153,10 +162,9 @@ export interface IFinalHintSession {
 	createSharedProgramSink(type: string): IFinalHintProgramSink;
 	consolidate(): void;
 }
-export interface IFinalHintCollector {
+export interface IFinalHintProgramSink {
 	readonly format: string;
-	createSession(): IFinalHintSession;
-	consolidate(): void;
+	save(): void;
 }
 
 // Logging

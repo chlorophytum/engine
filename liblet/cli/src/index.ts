@@ -22,13 +22,13 @@ program
 	});
 
 program
-	.command("instruct <hints> <instr> [others...]")
+	.command("instruct <font> <hints> <instr> [others...]")
 	.option("-c, --config <json>", "Configuration file")
-	.action(async (hints, instr, rest, options) => {
+	.action(async (font, hints, instr, rest, options) => {
 		if (!options.config) throw new TypeError("Configuration file is mandatory");
 		const ho = JSON.parse(fs.readFileSync(options.config, "utf-8"));
-		const jobFiles = [hints, instr, ...(rest || [])];
-		await doInstruct(ho, _.chunk(jobFiles, 2) as [string, string][]);
+		const jobFiles = [font, hints, instr, ...(rest || [])];
+		await doInstruct(ho, _.chunk(jobFiles, 3) as [string, string, string][]);
 	});
 
 program

@@ -5,11 +5,12 @@ import { getFontPlugin, HintOptions } from "./env";
 export type IntegrateJob = [string, string, string];
 export async function doIntegrate(options: HintOptions, jobs: [string, string, string][]) {
 	const FontFormatPlugin = getFontPlugin(options);
+	const integrator = FontFormatPlugin.createFinalHintIntegrator();
 
 	for (const [instr, input, output] of jobs) {
 		const instrStream = fs.createReadStream(instr);
 		const inputStream = fs.createReadStream(input);
 		const outStream = fs.createWriteStream(output);
-		await FontFormatPlugin.integrateFinalHintsToFont(instrStream, inputStream, outStream);
+		await integrator.integrateFinalHintsToFont(instrStream, inputStream, outStream);
 	}
 }

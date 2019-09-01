@@ -47,8 +47,8 @@ function createFuncScopeSolver(store: EdslProgramStore): TtFunctionScopeSolver<V
 }
 
 export class EdslGlobal {
-	readonly scope: GlobalScope<Variable>;
-	constructor(private readonly stat?: TtStat) {
+	public readonly scope: GlobalScope<Variable>;
+	constructor(private readonly stat: TtStat = {}) {
 		this.scope = new GlobalScope(VariableFactory);
 		this.scope.funcScopeSolver = createFuncScopeSolver(this.store);
 		if (stat) {
@@ -58,15 +58,15 @@ export class EdslGlobal {
 		}
 	}
 
-	store: EdslProgramStore = {
+	public store: EdslProgramStore = {
 		fpgm: new Map()
 	};
 
-	declareFunction(name: string) {
+	public declareFunction(name: string) {
 		return this.scope.fpgm.declare(name);
 	}
 
-	defineFunction(name: string | Variable, G: (f: EdslProgram) => Iterable<Statement>) {
+	public defineFunction(name: string | Variable, G: (f: EdslProgram) => Iterable<Statement>) {
 		const vFunc: Variable = typeof name === "string" ? this.declareFunction(name) : name;
 		const existing = this.store.fpgm.get(vFunc);
 		if (existing) return vFunc;
@@ -79,7 +79,7 @@ export class EdslGlobal {
 		return vFunc;
 	}
 
-	defineAssemblyFunction(
+	public defineAssemblyFunction(
 		name: string | Variable,
 		argsArity: number,
 		returnArity: number,
@@ -97,7 +97,7 @@ export class EdslGlobal {
 		return vFunc;
 	}
 
-	program(G: (f: EdslProgram) => Iterable<Statement>): EdslProgramRecord {
+	public program(G: (f: EdslProgram) => Iterable<Statement>): EdslProgramRecord {
 		const ls = this.scope.createProgramScope();
 		const edsl = new EdslProgram(this, ls);
 		const block = new SequenceStatement([new ProgramBeginStatement(ls), ...G(edsl)]);
@@ -140,7 +140,7 @@ export class EdslGlobal {
 		return asm.codeGen(insSink);
 	}
 
-	compileFunctions<R>(format: InstrFormat<R>): Map<Variable, R> {
+	public compileFunctions<R>(format: InstrFormat<R>): Map<Variable, R> {
 		this.beginCompilation();
 		let m = new Map<Variable, R>();
 		for (let loop = 0; loop < 16; loop++) {
@@ -151,7 +151,7 @@ export class EdslGlobal {
 		return m;
 	}
 
-	compileProgram<R>(p: EdslProgramRecord, format: InstrFormat<R>): R {
+	public compileProgram<R>(p: EdslProgramRecord, format: InstrFormat<R>): R {
 		p.scope.assignID();
 		const asm = new Assembler();
 		p.program.refer(asm);
@@ -162,7 +162,6 @@ export class EdslGlobal {
 	}
 
 	private updateStat<V extends TtSymbol>(ls: ProgramScope<V>) {
-		if (!this.stat) return;
 		this.stat.maxFunctionDefs = Math.max(
 			this.stat.maxFunctionDefs || 0,
 			this.scope.fpgm.base + this.scope.fpgm.size
@@ -175,11 +174,18 @@ export class EdslGlobal {
 			this.stat.maxTwilightPoints || 0,
 			ls.twilights.base + ls.twilights.size
 		);
-		this.stat.maxStorage = Math.max(this.stat.maxStorage || 0, ls.locals.base + ls.locals.size);
+		this.stat.maxStorage = Math.max(
+			this.stat.maxStorage || 0,
+			ls.locals.base + ls.locals.size * (this.stat.maxStorageMultiplier || 1)
+		);
 	}
 
-	mangleTemplateName(base: string, ...parts: any[]) {
+	public mangleTemplateName(base: string, ...parts: any[]) {
 		return `${base}!${stringify(parts)}`;
+	}
+
+	public getStats() {
+		return this.stat;
 	}
 }
 
@@ -194,43 +200,43 @@ export interface EdslProgramRecord {
 
 export class EdslProgram {
 	constructor(private readonly globalDsl: EdslGlobal, readonly scope: ProgramScope<Variable>) {}
-	args(n: number) {
+	public args(n: number) {
 		if (!this.scope.isFunction) throw new TypeError("Cannot declare arguments for programs");
 		let a: Variable[] = [];
 		for (let j = 0; j < n; j++) a[j] = this.scope.arguments.declare();
 		this.scope.arguments.lock();
 		return a;
 	}
-	local(size = 1) {
+	public local(size = 1) {
 		return this.scope.locals.declare(size);
 	}
-	globalVariable(name: string, size = 1) {
+	public globalVariable(name: string, size = 1) {
 		return this.globalDsl.scope.storages.declare(name, size);
 	}
-	controlValue(name: string, size = 1) {
+	public controlValue(name: string, size = 1) {
 		return this.globalDsl.scope.cvt.declare(name, size);
 	}
-	twilight() {
+	public twilight() {
 		if (this.scope.isFunction) throw new TypeError("Cannot declare twilights for functions");
 		return this.scope.twilights.declare();
 	}
-	globalTwilight(name: string) {
+	public globalTwilight(name: string) {
 		return this.globalDsl.scope.twilights.declare(name);
 	}
 
-	part(a: Variable, b: number | Expression) {
+	public part(a: Variable, b: number | Expression) {
 		return new ArrayIndex(a, b);
 	}
 
 	// Flow control
-	return(...expr: (number | Expression)[]) {
+	public return(...expr: (number | Expression)[]) {
 		const ret = new ReturnStatement(this.scope, expr);
 		if (this.scope.returnArity === undefined) {
 			this.scope.returnArity = ret.getArgsArity();
 		}
 		return ret;
 	}
-	if(
+	public if(
 		condition: number | Expression,
 		consequent: () => Iterable<Statement>,
 		alternate?: () => Iterable<Statement>
@@ -245,10 +251,10 @@ export class EdslProgram {
 			return new IfStatement(condition, new AlternativeStatement(consequent()));
 		}
 	}
-	while(condition: number | Expression, consequent: () => Iterable<Statement>) {
+	public while(condition: number | Expression, consequent: () => Iterable<Statement>) {
 		return new WhileStatement(condition, new AlternativeStatement(consequent()));
 	}
-	do(consequent: () => Iterable<Statement>) {
+	public do(consequent: () => Iterable<Statement>) {
 		return {
 			while(condition: number | Expression) {
 				return new DoWhileStatement(new AlternativeStatement(consequent()), condition);
@@ -257,16 +263,18 @@ export class EdslProgram {
 	}
 
 	// Assignments
-	set = (a: Variable, x: number | Expression) => new VariableSet(a, x);
-	setArr = (a: Variable, x: Iterable<number | Expression>) => new ArrayInit(a.ptr, x);
+	public set = (a: Variable, x: number | Expression) => new VariableSet(a, x);
+	public setArr = (a: Variable, x: Iterable<number | Expression>) => new ArrayInit(a.ptr, x);
 
 	// Graphics
-	mdap = mxapFunctionSys((r: boolean, x: number | Expression) => new LMdap(this.scope, r, x));
-	miap = mxapFunctionSys(
+	public mdap = mxapFunctionSys(
+		(r: boolean, x: number | Expression) => new LMdap(this.scope, r, x)
+	);
+	public miap = mxapFunctionSys(
 		(r: boolean, x: number | Expression, cv: number | PointerExpression) =>
 			new LMiap(this.scope, r, x, cv)
 	);
-	mdrp = mxrpFunctionSys(
+	public mdrp = mxrpFunctionSys(
 		(
 			rp0: boolean,
 			minDist: boolean,
@@ -276,7 +284,7 @@ export class EdslProgram {
 			p1: number | Expression
 		) => new LMdrp(this.scope, rp0, minDist, round, distanceMode, p0, p1)
 	);
-	mirp = mxrpFunctionSys(
+	public mirp = mxrpFunctionSys(
 		(
 			rp0: boolean,
 			minDist: boolean,
@@ -287,61 +295,62 @@ export class EdslProgram {
 			cv: number | PointerExpression
 		) => new LMirp(this.scope, rp0, minDist, round, distanceMode, p0, p1, cv)
 	);
-	ip = (p1: number | Expression, p2: number | Expression, ...p: (number | Expression)[]) =>
+	public ip = (p1: number | Expression, p2: number | Expression, ...p: (number | Expression)[]) =>
 		new LIp(this.scope, p1, p2, p);
 
 	// Binary
-	add = (a: number | Expression, b: number | Expression) => BinaryExpression.Add(a, b);
-	sub = (a: number | Expression, b: number | Expression) => BinaryExpression.Sub(a, b);
-	mul = (a: number | Expression, b: number | Expression) => BinaryExpression.Mul(a, b);
-	div = (a: number | Expression, b: number | Expression) => BinaryExpression.Div(a, b);
-	max = (a: number | Expression, b: number | Expression) => BinaryExpression.Max(a, b);
-	min = (a: number | Expression, b: number | Expression) => BinaryExpression.Min(a, b);
-	lt = (a: number | Expression, b: number | Expression) => BinaryExpression.Lt(a, b);
-	lteq = (a: number | Expression, b: number | Expression) => BinaryExpression.Lteq(a, b);
-	gt = (a: number | Expression, b: number | Expression) => BinaryExpression.Gt(a, b);
-	gteq = (a: number | Expression, b: number | Expression) => BinaryExpression.Gteq(a, b);
-	eq = (a: number | Expression, b: number | Expression) => BinaryExpression.Eq(a, b);
-	neq = (a: number | Expression, b: number | Expression) => BinaryExpression.Neq(a, b);
-	and = (a: number | Expression, b: number | Expression) => BinaryExpression.And(a, b);
-	or = (a: number | Expression, b: number | Expression) => BinaryExpression.Or(a, b);
+	public add = (a: number | Expression, b: number | Expression) => BinaryExpression.Add(a, b);
+	public sub = (a: number | Expression, b: number | Expression) => BinaryExpression.Sub(a, b);
+	public mul = (a: number | Expression, b: number | Expression) => BinaryExpression.Mul(a, b);
+	public div = (a: number | Expression, b: number | Expression) => BinaryExpression.Div(a, b);
+	public max = (a: number | Expression, b: number | Expression) => BinaryExpression.Max(a, b);
+	public min = (a: number | Expression, b: number | Expression) => BinaryExpression.Min(a, b);
+	public lt = (a: number | Expression, b: number | Expression) => BinaryExpression.Lt(a, b);
+	public lteq = (a: number | Expression, b: number | Expression) => BinaryExpression.Lteq(a, b);
+	public gt = (a: number | Expression, b: number | Expression) => BinaryExpression.Gt(a, b);
+	public gteq = (a: number | Expression, b: number | Expression) => BinaryExpression.Gteq(a, b);
+	public eq = (a: number | Expression, b: number | Expression) => BinaryExpression.Eq(a, b);
+	public neq = (a: number | Expression, b: number | Expression) => BinaryExpression.Neq(a, b);
+	public and = (a: number | Expression, b: number | Expression) => BinaryExpression.And(a, b);
+	public or = (a: number | Expression, b: number | Expression) => BinaryExpression.Or(a, b);
 
 	// Unary
-	abs = (a: number | Expression) => new UnaryExpression(TTI.ABS, a, a => Math.abs(a));
-	neg = (a: number | Expression) => new UnaryExpression(TTI.NEG, a, a => -a);
-	floor = (a: number | Expression) =>
+	public abs = (a: number | Expression) => new UnaryExpression(TTI.ABS, a, a => Math.abs(a));
+	public neg = (a: number | Expression) => new UnaryExpression(TTI.NEG, a, a => -a);
+	public floor = (a: number | Expression) =>
 		new UnaryExpression(TTI.FLOOR, a, a => Math.floor(a / 64) * 64);
-	ceiling = (a: number | Expression) =>
+	public ceiling = (a: number | Expression) =>
 		new UnaryExpression(TTI.CEILING, a, a => Math.ceil(a / 64) * 64);
-	even = (a: number | Expression) => new UnaryExpression(TTI.EVEN, a);
-	odd = (a: number | Expression) => new UnaryExpression(TTI.ODD, a);
-	not = (a: number | Expression) => new UnaryExpression(TTI.NOT, a, a => (a ? 0 : 1));
-	round = {
+	public even = (a: number | Expression) => new UnaryExpression(TTI.EVEN, a);
+	public odd = (a: number | Expression) => new UnaryExpression(TTI.ODD, a);
+	public not = (a: number | Expression) => new UnaryExpression(TTI.NOT, a, a => (a ? 0 : 1));
+	public round = {
 		gray: (a: number | Expression) => new UnaryExpression(TTI.ROUND_Grey, a),
 		black: (a: number | Expression) => new UnaryExpression(TTI.ROUND_Black, a),
 		white: (a: number | Expression) => new UnaryExpression(TTI.ROUND_White, a),
 		mode3: (a: number | Expression) => new UnaryExpression(TTI.ROUND_Undef4, a)
 	};
-	nRound = {
+	public nRound = {
 		gray: (a: number | Expression) => new UnaryExpression(TTI.NROUND_Grey, a),
 		black: (a: number | Expression) => new UnaryExpression(TTI.NROUND_Black, a),
 		white: (a: number | Expression) => new UnaryExpression(TTI.NROUND_White, a),
 		mode3: (a: number | Expression) => new UnaryExpression(TTI.NROUND_Undef4, a)
 	};
-	getInfo = (a: number | Expression) => new UnaryExpression(TTI.GETINFO, a);
-	gc = {
+	public getInfo = (a: number | Expression) => new UnaryExpression(TTI.GETINFO, a);
+	public gc = {
 		cur: (a: number | Expression) => new GCExpression(a, TTI.GC_cur, this.scope),
 		orig: (a: number | Expression) => new GCExpression(a, TTI.GC_orig, this.scope)
 	};
 
 	//
-	scfs = (a: number | Expression, b: number | Expression) => new SCFSStatement(a, b, this.scope);
+	public scfs = (a: number | Expression, b: number | Expression) =>
+		new SCFSStatement(a, b, this.scope);
 
 	// Calls
-	apply(fn: Variable, parts: Iterable<number | Expression>) {
+	public apply(fn: Variable, parts: Iterable<number | Expression>) {
 		return new InvokeExpression(this.scope, fn, parts);
 	}
-	call(T: Variable | EdslFunctionTemplateInst, ...parts: (number | Expression)[]) {
+	public call(T: Variable | EdslFunctionTemplateInst, ...parts: (number | Expression)[]) {
 		if (T instanceof Function) {
 			return new InvokeExpression(this.scope, T(this.globalDsl), parts);
 		} else {
@@ -349,14 +358,14 @@ export class EdslProgram {
 		}
 	}
 
-	rawState = {
+	public rawState = {
 		szp0: (a: number | Expression) => new GraphStateStatement1(TTI.SZP0, a),
 		szp1: (a: number | Expression) => new GraphStateStatement1(TTI.SZP1, a),
 		szp2: (a: number | Expression) => new GraphStateStatement1(TTI.SZP2, a)
 	};
 
 	// Deltas
-	delta = {
+	public delta = {
 		p1: (...a: ([number | Expression, number | Expression])[]) =>
 			new DeltaStatement(this.scope, TTI.DELTAP1, true, a.map(x => x[0]), a.map(x => x[1])),
 		p2: (...a: ([number | Expression, number | Expression])[]) =>
@@ -372,25 +381,25 @@ export class EdslProgram {
 	};
 
 	// Measure
-	mppem = () => new NullaryExpression(TTI.MPPEM);
-	mps = () => new NullaryExpression(TTI.MPS);
+	public mppem = () => new NullaryExpression(TTI.MPPEM);
+	public mps = () => new NullaryExpression(TTI.MPS);
 
-	toFloat = (a: number | Expression) => BinaryExpression.Mul(64 * 64, a);
+	public toFloat = (a: number | Expression) => BinaryExpression.Mul(64 * 64, a);
 
 	// GS
-	svtca = {
+	public svtca = {
 		x: () => new GraphStateStatement(TTI.SVTCA_x),
 		y: () => new GraphStateStatement(TTI.SVTCA_y)
 	};
-	iup = {
+	public iup = {
 		x: () => new IupStatement(TTI.IUP_x),
 		y: () => new IupStatement(TTI.IUP_y)
 	};
 
-	emptyBlock = () => function*(): Iterable<Statement> {};
+	public emptyBlock = () => function*(): Iterable<Statement> {};
 
 	// Coercions
-	coerce = {
+	public coerce = {
 		fromIndex: {
 			cvt: (e: number | Expression) => new CoercedVariable(cExpr(e), ControlValueAccessor),
 			variable: (e: number | Expression, size = 1) =>

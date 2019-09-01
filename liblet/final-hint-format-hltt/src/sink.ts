@@ -1,11 +1,17 @@
-import { IFinalHintCollector, IFinalHintProgramSink, IFinalHintSession } from "@chlorophytum/arch";
+import {
+	IFinalHintCollector,
+	IFinalHintPreStatSink,
+	IFinalHintProgramSink,
+	IFinalHintSession
+} from "@chlorophytum/arch";
 import HLTT, {
 	GlobalDsl,
 	initStdLib,
 	InstrFormat,
 	ProgramDsl,
 	ProgramRecord,
-	Statement
+	Statement,
+	TtStat
 } from "@chlorophytum/hltt";
 
 export type ProgramGenerator = ($: ProgramDsl) => Iterable<Statement>;
@@ -16,10 +22,17 @@ class SharedGlyphPrograms {
 
 export class HlttCollector implements IFinalHintCollector {
 	public readonly format = "hltt";
-	public readonly edsl: GlobalDsl;
-	public sharedGlyphPrograms = new SharedGlyphPrograms();
-	constructor() {
-		this.edsl = HLTT();
+	private readonly edsl: GlobalDsl;
+	private sharedGlyphPrograms = new SharedGlyphPrograms();
+	constructor(pss: HlttPreStatSink) {
+		this.edsl = HLTT({
+			maxFunctionDefs: pss.maxFunctionDefs,
+			maxStorage: pss.maxStorage,
+			maxTwilightPoints: pss.maxTwilightPoints,
+			stackHeight: pss.maxStack,
+			stackHeightMultiplier: 8,
+			maxStorageMultiplier: 8
+		});
 		initStdLib(this.edsl);
 	}
 	public createSession() {
@@ -30,11 +43,21 @@ export class HlttCollector implements IFinalHintCollector {
 		return this.edsl.compileFunctions(format);
 	}
 	public consolidate() {}
+	public getStats() {
+		return this.edsl.getStats();
+	}
+}
+
+export interface HlttFinalHintStoreRep<F> {
+	stats: TtStat;
+	fpgm: F[];
+	prep: F[];
+	glyf: { [key: string]: string };
 }
 
 export class HlttSession implements IFinalHintSession {
 	public readonly format = "hltt";
-	constructor(readonly edsl: GlobalDsl, private readonly shared: SharedGlyphPrograms) {}
+	constructor(private readonly edsl: GlobalDsl, private readonly shared: SharedGlyphPrograms) {}
 
 	private readonly cacheKeyMaps: Map<string, string> = new Map();
 	private glyphPrograms: Map<string, ProgramRecord> = new Map();
@@ -126,4 +149,12 @@ export class TtFinalHintStore<F> {
 	public glyphHints = new Map<string, F>();
 	public fpgm?: F;
 	public prep?: F;
+}
+
+export class HlttPreStatSink implements IFinalHintPreStatSink {
+	public maxFunctionDefs: number = 0;
+	public maxTwilightPoints: number = 0;
+	public maxStorage: number = 0;
+	public maxStack: number = 0;
+	public settleDown() {}
 }
