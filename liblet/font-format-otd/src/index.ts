@@ -115,17 +115,30 @@ class OtdTtInstrIntegrator implements IFontFinalHintIntegrator {
 		const store: HlttFinalHintStoreRep<string> = await parseJsonGz(hints);
 		const otd = await StreamJson.parse(font);
 
-		this.updateInstructions(otd, store);
+		this.updateSharedInstructions(otd, store);
+		this.updateGlyphInstructions(otd, store);
 		this.updateGasp(otd);
 		this.updateMaxp(otd, store);
 		this.updateVtt(otd);
 
 		await StreamJson.stringify(otd, output);
 	}
+	public async integrateGlyphFinalHintsToFont(
+		hints: stream.Readable,
+		fontGlyphs: stream.Readable,
+		outputGlyphs: stream.Writable
+	): Promise<void> {
+		const store: HlttFinalHintStoreRep<string> = await parseJsonGz(hints);
+		const otdGlyphs = await StreamJson.parse(fontGlyphs);
+		this.updateGlyphInstructions(otdGlyphs, store);
+		await StreamJson.stringify(otdGlyphs, outputGlyphs);
+	}
 
-	private updateInstructions(otd: any, store: HlttFinalHintStoreRep<string>) {
+	private updateSharedInstructions(otd: any, store: HlttFinalHintStoreRep<string>) {
 		otd.fpgm = [...(otd.fpgm || []), ...(store.fpgm || [])];
 		otd.prep = [...(otd.prep || []), ...(store.prep || [])];
+	}
+	private updateGlyphInstructions(otd: any, store: HlttFinalHintStoreRep<string>) {
 		for (const gid in otd.glyf) {
 			const hint = store.glyf[gid];
 			if (hint !== undefined) otd.glyf[gid].instructions = [hint];

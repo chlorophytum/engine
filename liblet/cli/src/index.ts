@@ -34,11 +34,12 @@ program
 program
 	.command("integrate <instr> <input> <output> [others...]")
 	.option("-c, --config <json>", "Configuration file")
+	.option("-g, --glyph-only", "Glyph only mode")
 	.action(async (instr, input, output, rest, options) => {
 		if (!options.config) throw new TypeError("Configuration file is mandatory");
 		const ho = JSON.parse(fs.readFileSync(options.config, "utf-8"));
 		const jobFiles = [instr, input, output, ...(rest || [])];
-		await doIntegrate(ho, _.chunk(jobFiles, 3) as IntegrateJob[]);
+		await doIntegrate(ho, !!options.glyphOnly, _.chunk(jobFiles, 3) as IntegrateJob[]);
 	});
 
 program.parse(process.argv);

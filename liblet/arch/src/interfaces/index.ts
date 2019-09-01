@@ -54,6 +54,11 @@ export interface IFontFinalHintIntegrator {
 		font: stream.Readable,
 		output: stream.Writable
 	): Promise<void>;
+	integrateGlyphFinalHintsToFont(
+		hints: stream.Readable,
+		font: stream.Readable,
+		output: stream.Writable
+	): Promise<void>;
 }
 export interface IFontSourceMetadata {
 	readonly identifier: string;
