@@ -4,7 +4,8 @@ import {
 	IFontSource,
 	IFontSourceMetadata,
 	IHintingModel,
-	IParallelHintingModel
+	IParallelHintingModel,
+	WellKnownGlyphRelation
 } from "@chlorophytum/arch";
 
 import { createSharedHints } from "../hint-gen/shared-hints";
@@ -40,7 +41,14 @@ export class IdeographHintingModel1<GID> implements IHintingModel<GID> {
 		for (const unicode of charSet) {
 			if (!isIdeographCodePoint(unicode)) continue;
 			const gid = await this.font.getEncodedGlyph(unicode);
-			if (gid) gidSet.add(gid);
+			if (!gid) continue;
+			gidSet.add(gid);
+			const related = await this.font.getRelatedGlyphs(gid, unicode);
+			if (!related) continue;
+			for (const { target, relationTag } of related) {
+				const selector = WellKnownGlyphRelation.UnicodeVariant.unApply(relationTag);
+				if (selector) gidSet.add(target);
+			}
 		}
 		return gidSet;
 	}

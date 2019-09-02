@@ -4,7 +4,7 @@ import CGlyph from "../../types/glyph";
 import Stem from "../../types/stem";
 import { GlyphAnalysis } from "../analysis";
 
-import { computeACSMatrices, computePQMatrices } from "./collide-matrix";
+import { computeACSMatrices, computePQMatrices } from "./annex-matrix";
 import { analyzeDirectOverlaps } from "./direct-overlap";
 import { analyzeEntireContourAboveBelow, analyzeStemSpatialRelationships } from "./rel";
 import { analyzeStemKeyPoints } from "./stem-keypoint";

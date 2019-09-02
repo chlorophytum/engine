@@ -1,3 +1,5 @@
+import { Support } from "@chlorophytum/arch";
+
 import { isSideTouch } from "../../si-common/overlap";
 import { segmentsProximity, slopeOf } from "../../si-common/seg";
 import {
@@ -122,6 +124,7 @@ class ACSComputer {
 				: 1;
 
 		let proximityCoefficient = 1 + (this.Q[j][k] > 2 ? 5 : 1) * this.Q[j][k];
+
 		// Annexation coefficients
 		const coefficientA = this.computeCoefficientA(
 			nothingInBetween,
@@ -154,6 +157,11 @@ class ACSComputer {
 		skRadTop: boolean
 	) {
 		let coefficientA = 1;
+		const offCenter =
+			sk.xMax <= Support.mix(sj.xMin, sj.xMax, 3 / 5) ||
+			sk.xMin >= Support.mix(sj.xMin, sj.xMax, 2 / 5) ||
+			sj.xMax <= Support.mix(sk.xMin, sk.xMax, 3 / 5) ||
+			sj.xMin >= Support.mix(sk.xMin, sk.xMax, 2 / 5);
 		if (!nothingInBetween || tb) {
 			coefficientA *= this.strategy.COEFF_A_SHAPE_LOST_XX;
 		}
@@ -178,11 +186,15 @@ class ACSComputer {
 					this.strategy.COEFF_A_SAME_RADICAL * this.strategy.COEFF_A_SHAPE_LOST;
 			}
 		} else if (sjRadBot && skRadTop) {
-			coefficientA *= this.strategy.COEFF_A_RADICAL_MERGE;
+			if (offCenter) {
+				coefficientA *= this.strategy.COEFF_A_SHAPE_LOST_XR;
+			} else {
+				coefficientA *= this.strategy.COEFF_A_RADICAL_MERGE;
+			}
 		} else if (skRadTop) {
-			coefficientA *= this.strategy.COEFF_A_SHAPE_LOST_XR;
+			if (offCenter) coefficientA *= this.strategy.COEFF_A_SHAPE_LOST_XR;
 		} else if (sjRadBot) {
-			//coefficientA *= strategy.COEFF_A_FEATURE_LOSS_XR;
+			if (offCenter) coefficientA *= this.strategy.COEFF_A_SHAPE_LOST_XR;
 		}
 		return coefficientA;
 	}

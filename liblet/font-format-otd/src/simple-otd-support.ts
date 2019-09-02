@@ -21,12 +21,20 @@ import { StreamJson } from "@chlorophytum/util-json";
 import * as stream from "stream";
 import * as zlib from "zlib";
 
+function parseOtdCmapUnicode(s: string) {
+	if (s[0] === "U" || s[0] === "u") {
+		return parseInt(s.slice(2), 16);
+	} else {
+		return parseInt(s, 10);
+	}
+}
+
 export class Cmap implements ISimpleGetMap<number, string> {
 	private m_map = new Map<number, string>();
 
 	constructor(obj: { [id: string]: string }) {
 		for (const key in obj) {
-			const unicode = parseInt(key);
+			const unicode = parseOtdCmapUnicode(key);
 			if (unicode) this.m_map.set(unicode, obj[key]);
 		}
 	}
@@ -69,13 +77,41 @@ export class Glyf implements ISimpleGetBimap<string, string> {
 	}
 }
 
+class CmapUvsMap<T> {
+	private readonly store: Map<number, Map<number, T>> = new Map();
+	public getBlob(u: number) {
+		return this.store.get(u);
+	}
+	public get(u: number, s: number) {
+		const b = this.store.get(u);
+		if (!b) return undefined;
+		else return b.get(s);
+	}
+	public set(u: number, s: number, g: T) {
+		let b = this.store.get(u);
+		if (!b) {
+			b = new Map();
+			this.store.set(u, b);
+		}
+		b.set(s, g);
+	}
+}
+
 export class OtdSupport implements IOpenTypeFileSupport<string> {
 	public readonly glyphSet: ISimpleGetBimap<string, string>;
 	public readonly cmap: ISimpleGetMap<number, string>;
+	private readonly cmapUvs = new CmapUvsMap<string>();
 
 	constructor(private readonly otd: any) {
 		this.cmap = new Cmap(otd.cmap);
 		this.glyphSet = new Glyf(otd.glyf);
+		if (this.otd.cmap_uvs) {
+			for (const key in this.otd.cmap_uvs) {
+				const g = this.otd.cmap_uvs[key];
+				const [unicode, selector] = key.split(" ").map(parseOtdCmapUnicode);
+				this.cmapUvs.set(unicode, selector, g);
+			}
+		}
 	}
 
 	private getGlyphContours(gid: string, instance: null | Variation.Instance): Glyph.Geom {
@@ -95,10 +131,17 @@ export class OtdSupport implements IOpenTypeFileSupport<string> {
 	}
 
 	public async getGeometry(gid: string, instance: null | Variation.Instance) {
+		// TODO: support reading references
 		return { eigen: this.getGlyphContours(gid, instance) };
 	}
 	public async getGsubRelatedGlyphs(source: string) {
+		// TODO: support reading GSUB relationships
 		return [];
+	}
+	public async getCmapRelatedGlyphs(source: string, codePoint: number) {
+		const blob = this.cmapUvs.getBlob(codePoint);
+		if (!blob) return [];
+		else return Array.from(blob).map(([selector, target]) => ({ selector, target }));
 	}
 	public async getGlyphMasters(glyph: string) {
 		return [];

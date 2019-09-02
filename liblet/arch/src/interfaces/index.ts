@@ -49,7 +49,10 @@ export interface IFontSource<GID> {
 	// Get a glyph ID from a font
 	getEncodedGlyph(codePoint: number): Promise<GID | null | undefined>;
 	// Get related glyphs
-	getRelatedGlyphs(from: GID): Promise<Glyph.Relation<GID>[] | null | undefined>;
+	getRelatedGlyphs(
+		from: GID,
+		codePoint?: number
+	): Promise<Glyph.Relation<GID>[] | null | undefined>;
 	// Get master list
 	getGlyphMasters(glyph: GID): Promise<ReadonlyArray<Variation.MasterRep>>;
 	// Get geometry

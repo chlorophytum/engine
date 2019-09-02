@@ -12,22 +12,27 @@ export interface ISimpleGetMap<K, V> {
 export interface ISimpleGetBimap<K, V> extends ISimpleGetMap<K, V> {
 	coGet(value: V): K | undefined;
 }
-export interface GsubRelation<GID> extends Glyph.Relation<GID> {
+export interface CmapRelation<GID> {
+	readonly target: GID;
+	readonly selector: number;
+}
+export interface GsubRelation<GID> {
+	readonly target: GID;
 	readonly script: string;
 	readonly language: string;
 	readonly feature: string;
-	readonly lookupID: string;
+	readonly lookupKind: string;
 }
 export interface IOpenTypeFileSupport<GID> {
 	readonly glyphSet: ISimpleGetBimap<string, GID>;
 	readonly cmap: ISimpleGetMap<number, GID>;
 	getGeometry(glyph: GID, instance: null | Variation.Instance): Promise<Glyph.Shape>;
+	getCmapRelatedGlyphs(source: GID, codePoint: number): Promise<CmapRelation<GID>[]>;
 	getGsubRelatedGlyphs(source: GID): Promise<GsubRelation<GID>[]>;
 	getGlyphMasters(glyph: GID): Promise<Variation.MasterRep[]>;
 
 	readonly hsSupport: IOpenTypeHsSupport;
 }
-
 export interface IOpenTypeHsSupport {
 	saveHintStore(hs: OpenTypeHintStore, output: stream.Writable): Promise<void>;
 	populateHintStore(

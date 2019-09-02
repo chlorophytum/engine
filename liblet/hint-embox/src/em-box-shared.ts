@@ -1,6 +1,7 @@
 import { IFinalHintProgramSink, IHint, IHintCompiler, IHintFactory } from "@chlorophytum/arch";
 import { HlttProgramSink } from "@chlorophytum/final-hint-format-hltt";
 
+import { TInitEmBoxTwilightPoints } from "./programs/program";
 import { ControlValues, Twilights } from "./programs/twilight";
 
 export namespace EmBoxShared {
@@ -44,45 +45,42 @@ export namespace EmBoxShared {
 		constructor(private readonly sink: HlttProgramSink, private readonly props: EmBoxProps) {}
 		public doCompile() {
 			const props = this.props;
-			this.sink.setDefaultControlValue(
-				ControlValues.SpurBottom(props.name),
-				props.spurBottom
-			);
-			this.sink.setDefaultControlValue(ControlValues.SpurTop(props.name), props.spurTop);
-			this.sink.setDefaultControlValue(
-				ControlValues.StrokeBottom(props.name),
-				props.strokeBottom
-			);
-			this.sink.setDefaultControlValue(ControlValues.StrokeTop(props.name), props.strokeTop);
-			this.sink.setDefaultControlValue(
-				ControlValues.ArchBottom(props.name),
-				props.archBottom
-			);
-			this.sink.setDefaultControlValue(ControlValues.ArchTop(props.name), props.archTop);
+			const cvSpurBottom = ControlValues.SpurBottom(props.name);
+			const cvSpurTop = ControlValues.SpurTop(props.name);
+			const cvStrokeBottom = ControlValues.StrokeBottom(props.name);
+			const cvStrokeTop = ControlValues.StrokeTop(props.name);
+			const cvArchBottom = ControlValues.ArchBottom(props.name);
+			const cvArchTop = ControlValues.ArchTop(props.name);
+
+			this.sink.setDefaultControlValue(cvSpurBottom, props.spurBottom);
+			this.sink.setDefaultControlValue(cvSpurTop, props.spurTop);
+			this.sink.setDefaultControlValue(cvStrokeBottom, props.strokeBottom);
+			this.sink.setDefaultControlValue(cvStrokeTop, props.strokeTop);
+			this.sink.setDefaultControlValue(cvArchBottom, props.archBottom);
+			this.sink.setDefaultControlValue(cvArchTop, props.archTop);
 			this.sink.addSegment(function*($) {
-				yield $.miap(
-					$.symbol(Twilights.StrokeBottom(props.name)),
-					$.symbol(ControlValues.StrokeBottom(props.name)).ptr
-				);
-				yield $.miap(
-					$.symbol(Twilights.StrokeTop(props.name)),
-					$.symbol(ControlValues.StrokeTop(props.name)).ptr
-				);
-				yield $.miap(
-					$.symbol(Twilights.ArchBottom(props.name)),
-					$.symbol(ControlValues.ArchBottom(props.name)).ptr
-				);
-				yield $.miap(
-					$.symbol(Twilights.ArchTop(props.name)),
-					$.symbol(ControlValues.ArchTop(props.name)).ptr
-				);
-				yield $.miap(
-					$.symbol(Twilights.SpurBottom(props.name)),
-					$.symbol(ControlValues.SpurBottom(props.name)).ptr
-				);
-				yield $.miap(
-					$.symbol(Twilights.SpurTop(props.name)),
-					$.symbol(ControlValues.SpurTop(props.name)).ptr
+				const spurBottom = $.symbol(Twilights.SpurBottom(props.name));
+				const spurTop = $.symbol(Twilights.SpurTop(props.name));
+				const strokeBottom = $.symbol(Twilights.StrokeBottom(props.name));
+				const strokeTop = $.symbol(Twilights.StrokeTop(props.name));
+				const archBottom = $.symbol(Twilights.ArchBottom(props.name));
+				const archTop = $.symbol(Twilights.ArchTop(props.name));
+
+				yield $.miap($.symbol(strokeBottom), $.symbol(cvStrokeBottom).ptr);
+				yield $.miap($.symbol(strokeTop), $.symbol(cvStrokeTop).ptr);
+				yield $.miap($.symbol(archBottom), $.symbol(cvArchBottom).ptr);
+				yield $.miap($.symbol(archTop), $.symbol(cvArchTop).ptr);
+				yield $.miap($.symbol(spurBottom), $.symbol(cvSpurBottom).ptr);
+				yield $.miap($.symbol(spurTop), $.symbol(cvSpurTop).ptr);
+
+				yield $.call(
+					TInitEmBoxTwilightPoints,
+					$.symbol(strokeBottom),
+					$.symbol(strokeTop),
+					$.symbol(archBottom),
+					$.symbol(archTop),
+					$.symbol(spurBottom),
+					$.symbol(spurTop)
 				);
 			});
 		}
