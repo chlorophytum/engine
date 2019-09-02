@@ -19,10 +19,10 @@ export class GCExpression extends Expression {
 	get arity() {
 		return 1;
 	}
-	refer(asm: Assembler) {
+	public refer(asm: Assembler) {
 		this.z.refer(asm);
 	}
-	compile(asm: Assembler) {
+	public compile(asm: Assembler) {
 		addLongPointNumber(this.ls, asm, this.z, "zp2");
 		asm.prim(this.op, 1, 1);
 	}
@@ -40,11 +40,11 @@ export class SCFSStatement extends Statement {
 		this.z = cExpr1(_z);
 		this.d = cExpr1(_d);
 	}
-	refer(asm: Assembler) {
+	public refer(asm: Assembler) {
 		this.z.refer(asm);
 		this.d.refer(asm);
 	}
-	compile(asm: Assembler) {
+	public compile(asm: Assembler) {
 		this.d.compile(asm);
 		addLongPointNumber(this.ls, asm, this.z, "zp2");
 		asm.prim(TTI.SWAP, 2, 2);

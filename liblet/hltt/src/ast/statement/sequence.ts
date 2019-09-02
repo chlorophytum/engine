@@ -11,17 +11,17 @@ export class SequenceStatement extends Statement {
 		super();
 		this.parts = [..._parts];
 	}
-	refer(asm: Assembler) {
+	public refer(asm: Assembler) {
 		for (const part of this.parts) part.refer(asm);
 	}
-	compile(asm: Assembler) {
+	public compile(asm: Assembler) {
 		for (const st of this.parts) st.compile(asm);
 	}
-	willReturnAfter() {
+	public willReturnAfter() {
 		const last = this.parts[this.parts.length - 1];
 		return last && last.willReturnAfter();
 	}
-	addLastReturn(scope: ProgramScope<Variable>) {
+	public addLastReturn(scope: ProgramScope<Variable>) {
 		const last = this.parts[this.parts.length - 1];
 		if (last && last instanceof LastReturnStatement) {
 			this.parts[this.parts.length - 1] = new LastReturnStatement(scope, last.parts);

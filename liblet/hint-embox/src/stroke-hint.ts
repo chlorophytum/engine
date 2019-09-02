@@ -1,14 +1,14 @@
 import { IFinalHintProgramSink, IHint, IHintCompiler, IHintFactory } from "@chlorophytum/arch";
 import { HlttProgramSink } from "@chlorophytum/final-hint-format-hltt";
 
-import { getEmBoxPoints } from "./constants";
 import {
 	DefaultStretch,
 	StretchProps,
 	THintBottomStroke,
 	THintStrokeFreeAuto,
 	THintTopStroke
-} from "./programs";
+} from "./programs/program";
+import { Twilights } from "./programs/twilight";
 
 export namespace EmBoxStroke {
 	const TAG = "Chlorophytum::EmBox::Stroke";
@@ -79,14 +79,12 @@ export namespace EmBoxStroke {
 		public doCompile() {
 			const { boxName, top, spur, zsBot, zsTop, stretch } = this;
 			this.sink.addSegment(function*($) {
-				const {
-					strokeBottom,
-					strokeTop,
-					archBottom,
-					archTop,
-					spurBottom,
-					spurTop
-				} = getEmBoxPoints($, boxName);
+				const spurBottom = $.symbol(Twilights.SpurBottom(boxName));
+				const spurTop = $.symbol(Twilights.SpurTop(boxName));
+				const strokeBottom = $.symbol(Twilights.StrokeBottom(boxName));
+				const strokeTop = $.symbol(Twilights.StrokeTop(boxName));
+				const archBottom = $.symbol(Twilights.ArchBottom(boxName));
+				const archTop = $.symbol(Twilights.ArchTop(boxName));
 
 				if (spur) {
 					if (top) {

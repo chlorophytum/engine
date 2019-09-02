@@ -9,8 +9,8 @@ export class GraphStateStatement extends Statement {
 	constructor(private readonly op: TTI) {
 		super();
 	}
-	refer() {}
-	compile(asm: Assembler) {
+	public refer() {}
+	public compile(asm: Assembler) {
 		asm.prim(this.op, 0, 0);
 	}
 }
@@ -18,8 +18,8 @@ export class IupStatement extends Statement {
 	constructor(private readonly op: TTI) {
 		super();
 	}
-	refer() {}
-	compile(asm: Assembler) {
+	public refer() {}
+	public compile(asm: Assembler) {
 		setZone(asm, "zp2", false);
 		asm.prim(this.op, 0, 0);
 	}
@@ -30,10 +30,10 @@ export class GraphStateStatement1 extends Statement {
 		super();
 		this.e = cExpr1(_e);
 	}
-	refer(asm: Assembler) {
+	public refer(asm: Assembler) {
 		this.e.refer(asm);
 	}
-	compile(asm: Assembler) {
+	public compile(asm: Assembler) {
 		this.e.compile(asm);
 		asm.prim(this.op, 1, 0);
 	}

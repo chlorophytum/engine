@@ -314,12 +314,3 @@ export const TInitEmBoxTwilightPoints = Lib.Func(function*($) {
 	yield $.call(RLinkLim, strokeBottom, archBottom, spurBottom);
 	yield $.call(RLinkLim, strokeTop, archTop, spurTop);
 });
-
-const InitEmBoxPointPrepImpl = Lib.Func(function*($) {
-	const [z, d] = $.args(2);
-	yield $.scfs(z, $.div($.mul(d, $.toFloat($.mppem())), $.coerce.toF26D6(64)));
-});
-
-export function TInitEmBoxPointPrep($: ProgramDsl, z: Expression, pos: number) {
-	return $.call(InitEmBoxPointPrepImpl, z, $.coerce.toF26D6(pos * 64));
-}

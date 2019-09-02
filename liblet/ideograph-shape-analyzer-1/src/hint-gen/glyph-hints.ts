@@ -1,8 +1,7 @@
 import { EmptyImpl, IHint } from "@chlorophytum/arch";
 import { Interpolate, LinkChain, Smooth, WithDirection } from "@chlorophytum/hint-common";
-import { EmBoxEdge, EmBoxInit, EmBoxStroke, getEmBoxPoints } from "@chlorophytum/hint-embox";
+import { EmBoxEdge, EmBoxInit, EmBoxStroke } from "@chlorophytum/hint-embox";
 import { MultipleAlignZone } from "@chlorophytum/hint-maz";
-import * as _ from "lodash";
 
 import HierarchySink, { DependentHintType } from "../hierarchy/sink";
 import { AdjPoint } from "../types/point";
@@ -11,12 +10,8 @@ import Stem from "../types/stem";
 export default class HintGenSink extends HierarchySink {
 	constructor(private readonly glyphKind: string) {
 		super();
-		this.preHints.push(new WithDirection.Hint(true, new EmBoxInit.Hint(this.glyphKind)));
-		this.postHints.push(new Smooth.Hint());
 	}
-	private preHints: IHint[] = [];
 	private subHints: IHint[] = [];
-	private postHints: IHint[] = [];
 
 	public addBlue(top: boolean, z: AdjPoint) {
 		this.subHints.push(new EmBoxEdge.Hint(this.glyphKind, top, z.id));
@@ -175,9 +170,10 @@ export default class HintGenSink extends HierarchySink {
 
 	public getHint() {
 		return new EmptyImpl.Sequence.Hint([
-			...this.preHints,
-			new WithDirection.Hint(true, new EmptyImpl.Sequence.Hint(this.subHints)),
-			...this.postHints
+			WithDirection.Y(
+				new EmptyImpl.Sequence.Hint([new EmBoxInit.Hint(this.glyphKind), ...this.subHints])
+			),
+			new Smooth.Hint()
 		]);
 	}
 }

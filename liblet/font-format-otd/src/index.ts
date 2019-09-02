@@ -7,7 +7,8 @@ import {
 	IFontFinalHintSaver,
 	IFontFormatPlugin,
 	IHintingModelPlugin,
-	IHintStore
+	IHintStore,
+	Variation
 } from "@chlorophytum/arch";
 import {
 	HlttCollector,
@@ -81,6 +82,7 @@ class OtdHlttPreStatAnalyzer implements IFinalHintPreStatAnalyzer {
 		);
 		this.preStat.maxStorage = Math.max(this.preStat.maxStorage, otd.maxp.maxStorage || 0);
 		this.preStat.maxStack = Math.max(this.preStat.maxStack, otd.maxp.maxStack || 0);
+		this.preStat.cvtSize = Math.max(this.preStat.cvtSize, otd.cvt_ ? otd.cvt_.length : 0);
 	}
 }
 
@@ -98,11 +100,12 @@ class OtdHlttFinalHintSaver implements IFontFinalHintSaver {
 	private createHintRep(fhs: HlttSession): HlttFinalHintStoreRep<string> {
 		const fpgm = [...this.collector.getFunctionDefs(FontForgeTextInstr).values()];
 		const prep = [fhs.getPreProgram(FontForgeTextInstr)];
+		const cvt = this.collector.getControlValueDefs();
 		const glyf: { [key: string]: string } = {};
 		for (let gid of fhs.listGlyphNames()) {
 			glyf[gid] = fhs.getGlyphProgram(gid, FontForgeTextInstr, this.instructionCache);
 		}
-		return { stats: this.collector.getStats(), fpgm, prep, glyf };
+		return { stats: this.collector.getStats(), fpgm, prep, glyf, cvt };
 	}
 }
 
@@ -116,8 +119,8 @@ class OtdTtInstrIntegrator implements IFontFinalHintIntegrator {
 		const otd = await StreamJson.parse(font);
 
 		this.updateSharedInstructions(otd, store);
+		this.updateCvt(otd, store);
 		this.updateGlyphInstructions(otd, store);
-		this.updateGasp(otd);
 		this.updateMaxp(otd, store);
 		this.updateVtt(otd);
 
@@ -144,19 +147,6 @@ class OtdTtInstrIntegrator implements IFontFinalHintIntegrator {
 			if (hint !== undefined) otd.glyf[gid].instructions = [hint];
 		}
 	}
-
-	private updateGasp(otd: any) {
-		otd.gasp = [
-			{
-				rangeMaxPPEM: 65535,
-				dogray: true,
-				gridfit: true,
-				symmetric_smoothing: true,
-				symmetric_gridfit: true
-			}
-		];
-	}
-
 	private updateMaxp(otd: any, store: HlttFinalHintStoreRep<string>) {
 		if (!otd.maxp) otd.maxp = {};
 		otd.maxp.maxZones = 2;
@@ -177,7 +167,25 @@ class OtdTtInstrIntegrator implements IFontFinalHintIntegrator {
 			Math.max(otd.maxp.maxTwilightPoints || 0, store.stats.maxTwilightPoints || 0)
 		);
 	}
-
+	private getStaticCvtValue(val: Variation.Variance<number>) {
+		let x = 0;
+		for (const [master, delta] of val) if (!master) x += delta;
+		return x;
+	}
+	private updateCvt(otd: any, store: HlttFinalHintStoreRep<string>) {
+		if (!otd.cvt_) otd.cvt_ = [];
+		const cvtMask: boolean[] = [];
+		for (let j = 0; j < store.cvt.length; j++) {
+			const item = store.cvt[j];
+			if (!item) {
+				cvtMask[j] = false;
+			} else {
+				otd.cvt_[j] = this.getStaticCvtValue(item);
+				cvtMask[j] = true;
+			}
+		}
+		otd.cvt_mask = cvtMask;
+	}
 	private updateVtt(otd: any) {
 		otd.TSI_01 = otd.TSI_23 = otd.TSI5 = null;
 	}

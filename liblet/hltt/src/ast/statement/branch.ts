@@ -9,14 +9,14 @@ export class AlternativeStatement extends Statement {
 		super();
 		this.parts = [..._parts];
 	}
-	refer(asm: Assembler) {
+	public refer(asm: Assembler) {
 		for (const part of this.parts) part.refer(asm);
 	}
-	willReturnAfter() {
+	public willReturnAfter() {
 		const last = this.parts[this.parts.length - 1];
 		return last && last.willReturnAfter();
 	}
-	compile(asm: Assembler) {
+	public compile(asm: Assembler) {
 		const hBegin = asm.blockBegin();
 		for (const part of this.parts) part.compile(asm);
 		asm.blockEnd(hBegin);
@@ -33,12 +33,12 @@ export class IfStatement extends Statement {
 		super();
 		this.condition = cExpr(_condition);
 	}
-	refer(asm: Assembler) {
+	public refer(asm: Assembler) {
 		this.condition.refer(asm);
 		this.consequent.refer(asm);
 		if (this.alternate) this.alternate.refer(asm);
 	}
-	willReturnAfter() {
+	public willReturnAfter() {
 		return !!(
 			this.consequent &&
 			this.alternate &&
@@ -46,7 +46,7 @@ export class IfStatement extends Statement {
 			this.alternate.willReturnAfter()
 		);
 	}
-	compile(asm: Assembler) {
+	public compile(asm: Assembler) {
 		const hBegin = asm.blockBegin();
 		this.condition.compile(asm);
 		asm.prim(TTI.IF).deleted(1);
@@ -69,11 +69,11 @@ export class WhileStatement extends Statement {
 		super();
 		this.condition = cExpr(_condition);
 	}
-	refer(asm: Assembler) {
+	public refer(asm: Assembler) {
 		this.condition.refer(asm);
 		this.consequent.refer(asm);
 	}
-	compile(asm: Assembler) {
+	public compile(asm: Assembler) {
 		const lBeforeLoop = asm.createLabel();
 		const lBeforeBody = asm.createLabel();
 		const lAfterBody = asm.createLabel();
@@ -107,11 +107,11 @@ export class DoWhileStatement extends Statement {
 		super();
 		this.condition = cExpr(_condition);
 	}
-	refer(asm: Assembler) {
+	public refer(asm: Assembler) {
 		this.condition.refer(asm);
 		this.consequent.refer(asm);
 	}
-	compile(asm: Assembler) {
+	public compile(asm: Assembler) {
 		const lBeforeLoop = asm.createLabel();
 		const lAfterLoop = asm.createLabel();
 

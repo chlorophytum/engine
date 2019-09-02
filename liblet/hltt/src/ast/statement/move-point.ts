@@ -24,10 +24,10 @@ export class LMdap extends Statement {
 		super();
 		this.point = cExpr1(_point);
 	}
-	refer(asm: Assembler) {
+	public refer(asm: Assembler) {
 		this.point.refer(asm);
 	}
-	compile(asm: Assembler) {
+	public compile(asm: Assembler) {
 		addLongPointNumber(this.ls, asm, this.point, "zp0");
 		asm.prim(this.round ? TTI.MDAP_rnd : TTI.MDAP_noRnd);
 		asm.deleted(1);
@@ -50,15 +50,15 @@ export class LMiap extends Statement {
 		this.point = cExpr1(_point);
 		this.pCV = cExpr1(_cv);
 	}
-	refer(asm: Assembler) {
+	public refer(asm: Assembler) {
 		this.point.refer(asm);
 		this.pCV.refer(asm);
 	}
-	compile(asm: Assembler) {
+	public compile(asm: Assembler) {
 		addLongPointNumber(this.ls, asm, this.point, "zp0");
 		this.pCV.compile(asm);
 		asm.prim(this.round ? TTI.MIAP_rnd : TTI.MIAP_noRnd);
-		asm.deleted(1);
+		asm.deleted(2);
 		asm.setRegister("rp0", longPointRegisterNumber(this.point));
 		asm.setRegister("rp1", longPointRegisterNumber(this.point));
 	}
@@ -85,11 +85,11 @@ export class LMdrp extends Statement {
 		this.point = cExpr1(_point);
 	}
 
-	refer(asm: Assembler) {
+	public refer(asm: Assembler) {
 		this.p0.refer(asm);
 		this.point.refer(asm);
 	}
-	compile(asm: Assembler) {
+	public compile(asm: Assembler) {
 		const omitRP0 = addLongPointNumber(
 			this.ls,
 			asm,
@@ -133,12 +133,12 @@ export class LMirp extends Statement {
 		this.pCV = cExpr1(_cv);
 	}
 
-	refer(asm: Assembler) {
+	public refer(asm: Assembler) {
 		this.p0.refer(asm);
 		this.point.refer(asm);
 		this.pCV.refer(asm);
 	}
-	compile(asm: Assembler) {
+	public compile(asm: Assembler) {
 		const omitRP0 = addLongPointNumber(
 			this.ls,
 			asm,
@@ -152,7 +152,7 @@ export class LMirp extends Statement {
 		this.pCV.compile(asm);
 
 		asm.prim(TTI.MIRP_grey + mrpMask(this.rp0, this.minDist, this.round, this.distanceMode));
-		asm.deleted(1);
+		asm.deleted(2);
 
 		// Copy RP0 from RP1
 		asm.setRegister("rp1", asm.getRegister("rp0"));
@@ -178,13 +178,13 @@ export class LIp extends Statement {
 		this.p2 = cExpr1(_p2);
 		this.points = [..._points].map(cExpr1);
 	}
-	refer(asm: Assembler) {
+	public refer(asm: Assembler) {
 		this.p1.refer(asm);
 		this.p2.refer(asm);
 		for (const z of this.points) z.refer(asm);
 	}
 
-	compile(asm: Assembler) {
+	public compile(asm: Assembler) {
 		const omitRP1 = addLongPointNumber(
 			this.ls,
 			asm,
@@ -215,10 +215,10 @@ class IpRun {
 		readonly op: TTI,
 		private readonly asm: Assembler
 	) {}
-	arity = 0;
-	twilight = false;
+	public arity = 0;
+	public twilight = false;
 
-	flushDecidable() {
+	public flushDecidable() {
 		if (!this.arity) return;
 		this.setArity(this.arity);
 		setZone(this.asm, "zp2", this.twilight);
@@ -226,14 +226,14 @@ class IpRun {
 		this.arity = 0;
 	}
 
-	setArity(n: number) {
+	public setArity(n: number) {
 		if (n > 1) {
 			this.asm.push(n).prim(TTI.SLOOP, 1, 0);
 			this.asm.setRegister("loop", n);
 		}
 	}
 
-	intro(target: Expression) {
+	public intro(target: Expression) {
 		const dt = decideTwilight(target);
 		if (dt === undefined) {
 			this.flushDecidable();

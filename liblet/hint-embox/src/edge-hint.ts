@@ -1,8 +1,8 @@
 import { IFinalHintProgramSink, IHint, IHintCompiler, IHintFactory } from "@chlorophytum/arch";
 import { HlttProgramSink } from "@chlorophytum/final-hint-format-hltt";
 
-import { getEmBoxPoints, PREFIX } from "./constants";
-import { THintBottomEdge, THintTopEdge } from "./programs";
+import { THintBottomEdge, THintTopEdge } from "./programs/program";
+import { Twilights } from "./programs/twilight";
 
 export namespace EmBoxEdge {
 	const TAG = "Chlorophytum::EmBox::Edge";
@@ -48,10 +48,21 @@ export namespace EmBoxEdge {
 		public doCompile() {
 			const { boxName, top, zEdge } = this;
 			this.sink.addSegment(function*($) {
-				const pts = getEmBoxPoints($, boxName);
-
-				if (top) yield $.call(THintTopEdge, pts.spurBottom, pts.spurTop, zEdge);
-				else yield $.call(THintBottomEdge, pts.spurBottom, pts.spurTop, zEdge);
+				if (top) {
+					yield $.call(
+						THintTopEdge,
+						$.symbol(Twilights.SpurBottom(boxName)),
+						$.symbol(Twilights.SpurTop(boxName)),
+						zEdge
+					);
+				} else {
+					yield $.call(
+						THintBottomEdge,
+						$.symbol(Twilights.SpurBottom(boxName)),
+						$.symbol(Twilights.SpurTop(boxName)),
+						zEdge
+					);
+				}
 			});
 		}
 	}

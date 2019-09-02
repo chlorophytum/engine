@@ -2,7 +2,7 @@ import { IFontSource, ILogger } from "@chlorophytum/arch";
 import * as Procs from "@chlorophytum/procs";
 import { GlyphHintJob } from "@chlorophytum/procs";
 
-import { JobMessage } from "./hint-shared";
+import { JobMessage } from "./shared";
 
 export class HintArbitrator<GID> {
 	private items: [string, GlyphHintJob][] = [];

@@ -1,4 +1,4 @@
-import { EdslFunctionTemplate } from "@chlorophytum/hltt";
+import { EdslSymbolTemplate } from "@chlorophytum/hltt";
 
 import { Lib } from "./commons";
 import { DecideRequiredGap, THintMultipleStrokesMidSize } from "./middle-midsize";
@@ -163,7 +163,7 @@ const THintMultipleStrokes_DoMerge_ConsequenceEdge = Lib.Func(function*($) {
 		yield $.scfs($.part(pZMids, $.call(TwoN_M1, N)), $.gc.cur(zTop));
 	});
 });
-const THintMultipleStrokes_DoMerge: EdslFunctionTemplate<[number]> = Lib.Template(function*(
+const THintMultipleStrokes_DoMerge: EdslSymbolTemplate<[number]> = Lib.Template(function*(
 	$,
 	N: number
 ) {
@@ -275,7 +275,7 @@ const THintMultipleStrokes_DoCollideMerge_ConsequenceEdge = Lib.Func(function*($
 	});
 });
 
-const THintMultipleStrokes_DoCollideMerge: EdslFunctionTemplate<[number]> = Lib.Template(function*(
+const THintMultipleStrokes_DoCollideMerge: EdslSymbolTemplate<[number]> = Lib.Template(function*(
 	$,
 	N: number
 ) {

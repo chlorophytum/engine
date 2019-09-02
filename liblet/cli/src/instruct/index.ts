@@ -1,19 +1,19 @@
 import {
+	ConsoleLogger,
 	IFinalHintCollector,
 	IFinalHintPlugin,
-	IFinalHintPreStatSink,
 	IFinalHintSession,
 	IFontFormatPlugin,
-	IHintingModelPlugin
+	IHintingModelPlugin,
+	ILogger
 } from "@chlorophytum/arch";
 import * as Procs from "@chlorophytum/procs";
 import * as fs from "fs";
-import * as stream from "stream";
 
-import { getFinalHintPlugin, getFontPlugin, getHintingPasses, HintOptions } from "./env";
+import { getFinalHintPlugin, getFontPlugin, getHintingPasses, HintOptions } from "../env";
 
 interface ExportPlan {
-	to: stream.Writable;
+	toPath: string;
 	session: IFinalHintSession;
 }
 
@@ -23,25 +23,41 @@ export async function doInstruct(options: HintOptions, jobs: [string, string, st
 	const passes = getHintingPasses(options);
 	const models = Array.from(new Set(passes.map(p => p.plugin)));
 
-	console.log("Instruction Generation");
-	for (const [font, input, output] of jobs) {
-		console.log(` * Job: ${font} | ${input} -> ${output}`);
+	const logger = new ConsoleLogger();
+	logger.log("Instruction Generation");
+
+	{
+		const briefLogger = logger.bullet(" * ");
+		for (const [font, input, output] of jobs) {
+			briefLogger.log(`Job: ${font} | ${input} -> ${output}`);
+		}
 	}
 
 	// Pre-stat
-	const preStatSink = await doPreStat(FontFormatPlugin, FinalHintPlugin, jobs);
+	const preStatSink = await doPreStat(
+		logger.bullet(" + "),
+		FontFormatPlugin,
+		FinalHintPlugin,
+		jobs
+	);
 
 	// Instruct
 	const ttCol = FinalHintPlugin.createFinalHintCollector(preStatSink);
-	const exportPlans = await doInstructImpl(FontFormatPlugin, ttCol, models, jobs);
+	const exportPlans = await doInstructImpl(
+		logger.bullet(" + "),
+		FontFormatPlugin,
+		ttCol,
+		models,
+		jobs
+	);
 
 	// Save
-	console.log(" - Saving instructions");
 	ttCol.consolidate();
-	await saveInstructions(FontFormatPlugin, ttCol, exportPlans);
+	await saveInstructions(logger.bullet(" + "), FontFormatPlugin, ttCol, exportPlans);
 }
 
 async function doPreStat(
+	logger: ILogger,
 	FontFormatPlugin: IFontFormatPlugin,
 	FinalHintPlugin: IFinalHintPlugin,
 	jobs: [string, string, string][]
@@ -50,12 +66,13 @@ async function doPreStat(
 	const preStatAnalyzer = FontFormatPlugin.createPreStatAnalyzer(preStatSink);
 	if (!preStatAnalyzer) throw new TypeError(`Final hint format not supported by font.`);
 	for (const [font, input, output] of jobs) {
-		console.log(` - Pre-stating ${font}`);
+		logger.log(`Pre-stating ${font}`);
 		await preStatAnalyzer.analyzeFontPreStat(fs.createReadStream(font));
 	}
 	return preStatSink;
 }
 async function doInstructImpl(
+	logger: ILogger,
 	FontFormatPlugin: IFontFormatPlugin,
 	ttCol: IFinalHintCollector,
 	models: IHintingModelPlugin[],
@@ -63,12 +80,11 @@ async function doInstructImpl(
 ) {
 	const exportPlans: ExportPlan[] = [];
 	for (const [font, input, output] of jobs) {
-		console.log(` - Instructing ${input} -> ${output}`);
+		logger.log(`Instructing ${input}`);
 		const gzHsStream = fs.createReadStream(input);
-		const gzFhStream = fs.createWriteStream(output);
 		const ttSession = ttCol.createSession();
 		await readHintsToSession(FontFormatPlugin, ttSession, gzHsStream, models);
-		exportPlans.push({ to: gzFhStream, session: ttSession });
+		exportPlans.push({ toPath: output, session: ttSession });
 	}
 	return exportPlans;
 }
@@ -85,6 +101,7 @@ async function readHintsToSession(
 }
 
 async function saveInstructions(
+	logger: ILogger,
 	FontFormatPlugin: IFontFormatPlugin,
 	ttCol: IFinalHintCollector,
 	exportPlans: ExportPlan[]
@@ -92,6 +109,7 @@ async function saveInstructions(
 	const saver = FontFormatPlugin.createFinalHintSaver(ttCol);
 	if (!saver) throw new TypeError(`Final hint format not supported by font.`);
 	for (const plan of exportPlans) {
-		await saver.saveFinalHint(plan.session, plan.to);
+		logger.log(`Saving instructions -> ${plan.toPath}`);
+		await saver.saveFinalHint(plan.session, fs.createWriteStream(plan.toPath));
 	}
 }

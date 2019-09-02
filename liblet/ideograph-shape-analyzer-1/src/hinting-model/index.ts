@@ -7,11 +7,11 @@ import {
 	IParallelHintingModel
 } from "@chlorophytum/arch";
 
-import { createGlyph } from "../create-glyph";
-import { createSharedHints } from "../shared-hints";
+import { createSharedHints } from "../hint-gen/shared-hints";
 import { createHintingStrategy, HintingStrategy } from "../strategy";
 import { combineHash, hashGlyphContours } from "../types/hash";
 
+import { createGlyph } from "./create-glyph";
 import { hintGlyphGeometry } from "./glyph-hint-main";
 
 function isIdeographCodePoint(code: number) {
@@ -29,7 +29,7 @@ function isIdeographCodePoint(code: number) {
 export class IdeographHintingModel1<GID> implements IHintingModel<GID> {
 	private readonly params: HintingStrategy;
 	constructor(private readonly font: IFontSource<GID>, ptParams: Partial<HintingStrategy>) {
-		this.params = createHintingStrategy(ptParams);
+		this.params = createHintingStrategy(font.metadata.upm, ptParams);
 	}
 	public readonly type = "Chlorophytum::IdeographHintingModel1";
 	public readonly allowParallel = true;
@@ -63,7 +63,7 @@ export class IdeographHintingModel1<GID> implements IHintingModel<GID> {
 export class IdeographParallelHintingModel1 implements IParallelHintingModel {
 	public readonly type = "Chlorophytum::IdeographHintingModel1";
 	constructor(private readonly fmd: IFontSourceMetadata, ptParams: Partial<HintingStrategy>) {
-		this.params = createHintingStrategy(ptParams);
+		this.params = createHintingStrategy(fmd.upm, ptParams);
 	}
 	private readonly params: HintingStrategy;
 	public async analyzeGlyph(rep: Glyph.Rep) {

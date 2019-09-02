@@ -5,4 +5,5 @@ export interface TtStat {
 	maxStorageMultiplier?: number;
 	maxFunctionDefs?: number;
 	maxTwilightPoints?: number;
+	cvtSize?: number;
 }

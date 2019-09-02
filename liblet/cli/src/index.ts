@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as _ from "lodash";
 
 import { HintOptions } from "./env";
-import { doHint } from "./hint-main";
+import { doHint } from "./hint";
 import { doInstruct } from "./instruct";
 import { doIntegrate, IntegrateJob } from "./integrate";
 

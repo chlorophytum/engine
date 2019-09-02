@@ -5,16 +5,18 @@ import {
 	IFontSource,
 	IHint,
 	IHintFactory,
-	IHintingModelPlugin
+	IHintingModelPlugin,
+	ILogger
 } from "@chlorophytum/arch";
 import * as Procs from "@chlorophytum/procs";
 import { IHintCacheManager } from "@chlorophytum/procs";
 import * as fs from "fs";
 import { Worker } from "worker_threads";
 
-import { getFontPlugin, getHintingPasses, HintOptions } from "./env";
-import { HintArbitrator } from "./hint-arbitrator";
-import { HintResults, HintWorkData } from "./hint-shared";
+import { getFontPlugin, getHintingPasses, HintOptions } from "../env";
+
+import { HintArbitrator } from "./arbitrator";
+import { HintResults, HintWorkData } from "./shared";
 
 function createHintFactory(models: IHintingModelPlugin[]): IHintFactory {
 	const hfs: IHintFactory[] = [];
@@ -49,45 +51,63 @@ export async function doHint(options: HintOptions, jobs: [string, string][]) {
 	const hf = createHintFactory(modelPlugins);
 	const hc = new HintCache(hf);
 
-	console.log("Auto hint");
-	for (const [input, output] of jobs) {
-		console.log(` * Job: ${input} -> ${output}`);
-	}
+	const logger = new ConsoleLogger();
+	logger.log("Auto hint");
 
-	for (const [input, output] of jobs) {
-		console.log(` - Auto hinting ${input} -> ${output}`);
-		const otdStream = fs.createReadStream(input);
-		const fontSource = await FontFormatPlugin.createFontSource(otdStream, input);
-		const hintStore = await hintFont(options, input, fontSource, hf, hc, passes);
-		const out = fs.createWriteStream(output);
-		await hintStore.save(out);
+	{
+		const briefLogger = logger.bullet(" * ");
+		for (const [input, output] of jobs) {
+			briefLogger.log(`Job: ${input} -> ${output}`);
+		}
+	}
+	{
+		const jobLogger = logger.bullet(" + ");
+		for (const [input, output] of jobs) {
+			jobLogger.log(`Auto hinting ${input} -> ${output}`);
+			const otdStream = fs.createReadStream(input);
+			const fontSource = await FontFormatPlugin.createFontSource(otdStream, input);
+			const hintStore = await hintFont(
+				{ fontSource, options, logger: jobLogger.indent("  ").bullet(" - "), hf, hc },
+				input,
+				passes
+			);
+			const out = fs.createWriteStream(output);
+			await hintStore.save(out);
+		}
 	}
 }
 
-async function hintFont<GID>(
-	options: HintOptions,
-	input: string,
-	fontSource: IFontSource<GID>,
-	hf: IHintFactory,
-	hc: HintCache,
-	passes: HintingPass[]
-) {
-	const logger = new ConsoleLogger();
-	const parallelJobs = options.jobs || 1;
-	const serial = await Procs.serialGlyphHint(fontSource, passes, hc, parallelJobs <= 1, logger);
-	const { jobs, ghsMap: parallel } = await Procs.generateParallelGlyphHintJobs(
-		fontSource,
+interface HintImplState<GID> {
+	fontSource: IFontSource<GID>;
+	options: HintOptions;
+	logger: ILogger;
+	hf: IHintFactory;
+	hc: HintCache;
+}
+
+async function hintFont<GID>(st: HintImplState<GID>, input: string, passes: HintingPass[]) {
+	const parallelJobs = st.options.jobs || 1;
+	const forceSerial = parallelJobs <= 1;
+	const serial = await Procs.serialGlyphHint(
+		st.fontSource,
 		passes,
-		hc,
-		parallelJobs <= 1
+		st.hc,
+		forceSerial,
+		st.logger
+	);
+	const { jobs, ghsMap: parallel } = await Procs.generateParallelGlyphHintJobs(
+		st.fontSource,
+		passes,
+		st.hc,
+		forceSerial
 	);
 
 	if (parallel.size) {
-		await parallelGlyphHint(fontSource, parallelJobs, input, options, jobs, hf, hc, parallel);
-		await Procs.parallelGlyphHintShared(fontSource, passes, parallel);
+		await parallelGlyphHint(st, parallelJobs, jobs, input, parallel);
+		await Procs.parallelGlyphHintShared(st.fontSource, passes, parallel);
 	}
 
-	const hintStore = fontSource.createHintStore();
+	const hintStore = st.fontSource.createHintStore();
 	for (const [passID, ghs] of [...serial, ...parallel]) {
 		for (const [g, hints] of ghs.glyphHints) {
 			await hintStore.setGlyphHints(g, hints);
@@ -101,25 +121,22 @@ async function hintFont<GID>(
 }
 
 async function parallelGlyphHint<GID>(
-	fontSource: IFontSource<GID>,
+	st: HintImplState<GID>,
 	n: number,
-	input: string,
-	options: HintOptions,
 	jc: Procs.GlyphHintJobs,
-	hf: IHintFactory,
-	hc: HintCache,
+	input: string,
 	ghsMap: Map<string, Procs.GlyphHintStore>
 ) {
 	let promises: Promise<unknown>[] = [];
 	const arbitrator = new HintArbitrator(
-		fontSource,
+		st.fontSource,
 		jc,
 		n,
 		`Parallel hinting ${input}`,
-		new ConsoleLogger()
+		st.logger
 	);
 	for (let nth = 0; nth < n; nth++) {
-		promises.push(startWorker(input, options, arbitrator, hf, hc, ghsMap));
+		promises.push(startWorker(input, st.options, arbitrator, st.hf, st.hc, ghsMap));
 	}
 	await Promise.all(promises);
 	arbitrator.updateProgress();
@@ -138,7 +155,7 @@ function startWorker<GID>(
 			input,
 			options
 		};
-		const worker = new Worker(__dirname + "/hint-worker.js", {
+		const worker = new Worker(__dirname + "/worker.js", {
 			workerData,
 			stdout: true,
 			stderr: true

@@ -1,7 +1,7 @@
 import { IFontSourceMetadata } from "@chlorophytum/arch";
 import * as Procs from "@chlorophytum/procs";
 
-import { HintOptions } from "./env";
+import { HintOptions } from "../env";
 
 export interface HintWorkData {
 	input: string;

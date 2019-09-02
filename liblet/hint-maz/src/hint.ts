@@ -1,9 +1,9 @@
 import { IFinalHintProgramSink, IHint, IHintCompiler, IHintFactory } from "@chlorophytum/arch";
 import { HlttProgramSink } from "@chlorophytum/final-hint-format-hltt";
-import { TranslateEmboxTwilightName } from "@chlorophytum/hint-embox";
+import * as EmBox from "@chlorophytum/hint-embox";
 import * as _ from "lodash";
 
-import { THintMultipleStrokesExplicit, THintMultipleStrokesStub } from "./hltt-programs";
+import { THintMultipleStrokesExplicit } from "./hltt-programs";
 import { getRecPath, MultipleAlignZoneProps } from "./props";
 
 export namespace MultipleAlignZone {
@@ -60,12 +60,8 @@ export namespace MultipleAlignZone {
 			const recPathCollide = getRecPath(props.mergePriority, collidePriority, N);
 
 			this.sink.addSegment(function*($) {
-				const spurBottom = $.globalTwilight(
-					TranslateEmboxTwilightName(props.emBoxName, "SpurBottom")
-				);
-				const spurTop = $.globalTwilight(
-					TranslateEmboxTwilightName(props.emBoxName, "SpurTop")
-				);
+				const spurBottom = $.symbol(EmBox.Twilights.SpurBottom(props.emBoxName));
+				const spurTop = $.symbol(EmBox.Twilights.SpurTop(props.emBoxName));
 
 				const bottomPoint = props.bottomPoint < 0 ? spurBottom : props.bottomPoint;
 				const topPoint = props.topPoint < 0 ? spurTop : props.topPoint;

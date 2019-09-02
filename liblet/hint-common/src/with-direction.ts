@@ -17,6 +17,12 @@ export namespace WithDirection {
 			return null;
 		}
 	}
+	export function Y(inner: IHint) {
+		return new Hint(true, inner);
+	}
+	export function X(inner: IHint) {
+		return new Hint(false, inner);
+	}
 
 	export class HintFactory implements IHintFactory {
 		public readonly type = TAG;

@@ -2,8 +2,9 @@ import { HintingPass, IFontSourceMetadata, IHint } from "@chlorophytum/arch";
 import * as Procs from "@chlorophytum/procs";
 import { MessagePort, parentPort, workerData } from "worker_threads";
 
-import { getHintingPasses } from "./env";
-import { HintResults, HintWorkData, JobMessage } from "./hint-shared";
+import { getHintingPasses } from "../env";
+
+import { HintResults, HintWorkData, JobMessage } from "./shared";
 
 async function main(data: HintWorkData, parentPort: MessagePort) {
 	const passes = getHintingPasses(data.options);

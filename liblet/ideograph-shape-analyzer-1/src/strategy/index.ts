@@ -2,7 +2,6 @@ const DEADLY = 1e12;
 
 const DefaultStrategy = {
 	groupName: "Ideographs",
-	UPM: 1000,
 	CANONICAL_STEM_WIDTH: 67 / 1000,
 	CANONICAL_STEM_WIDTH_LIMIT_X: 1.5,
 	ABSORPTION_LIMIT: 120 / 1000,
@@ -59,9 +58,9 @@ const DefaultStrategy = {
 	DEADLY_MERGE: 1e10
 };
 
-export type HintingStrategy = Readonly<typeof DefaultStrategy>;
+export type HintingStrategy = Readonly<typeof DefaultStrategy> & { UPM: number };
 
-export function createHintingStrategy(partialStrategy?: Partial<HintingStrategy>) {
-	if (!partialStrategy) return DefaultStrategy;
-	return { ...DefaultStrategy, ...partialStrategy };
+export function createHintingStrategy(upm: number, partialStrategy?: Partial<HintingStrategy>) {
+	if (!partialStrategy) return { ...DefaultStrategy, UPM: upm };
+	return { ...DefaultStrategy, ...partialStrategy, UPM: upm };
 }

@@ -12,26 +12,26 @@ export class CoercedVariable extends Variable {
 	) {
 		super();
 	}
-	refer(asm: Assembler) {
+	public refer(asm: Assembler) {
 		this.behind.refer(asm);
 	}
-	constantPtr() {
+	public constantPtr() {
 		return this.behind.constant();
 	}
-	compilePtr(asm: Assembler) {
+	public compilePtr(asm: Assembler) {
 		this.behind.compile(asm);
 	}
 }
 
 export class ArrayIndex extends Variable {
 	private readonly subscript: Expression;
-	readonly accessor: Accessor;
+	public readonly accessor: Accessor;
 	constructor(readonly arr: Variable, _subscript: number | Expression) {
 		super();
 		this.subscript = cExpr1(_subscript);
 		this.accessor = arr.accessor;
 	}
-	compilePtr(asm: Assembler) {
+	public compilePtr(asm: Assembler) {
 		const cSub = this.subscript.constant();
 		const cPtr = this.arr.constantPtr();
 		if (cPtr !== undefined && cSub !== undefined) {
@@ -53,7 +53,7 @@ export class ArrayIndex extends Variable {
 }
 export class TupleExpression extends Expression {
 	private readonly parts: Expression[];
-	readonly arity: number;
+	public readonly arity: number;
 	constructor(_parts: Iterable<number | Expression>) {
 		super();
 		this.parts = [..._parts].map(cExpr);
@@ -61,10 +61,10 @@ export class TupleExpression extends Expression {
 		for (const part of this.parts) arity += part.arity;
 		this.arity = arity;
 	}
-	compile(asm: Assembler) {
+	public compile(asm: Assembler) {
 		for (const part of this.parts) part.compile(asm);
 	}
-	refer(asm: Assembler) {
+	public refer(asm: Assembler) {
 		for (const part of this.parts) part.refer(asm);
 	}
 }
@@ -118,7 +118,7 @@ export class ArrayInit extends Statement {
 		}
 		asm.prim(TTI.POP).deleted(1);
 	}
-	compile(asm: Assembler) {
+	public compile(asm: Assembler) {
 		if (!this.complex && this.parts.length === this.arr.dereference.size) {
 			const cPtr = this.arr.dereference.constantPtr();
 			if (cPtr !== undefined) {
@@ -130,7 +130,7 @@ export class ArrayInit extends Statement {
 			this.compileComplex(asm);
 		}
 	}
-	refer(asm: Assembler) {
+	public refer(asm: Assembler) {
 		this.arr.refer(asm);
 		for (const part of this.parts) part.refer(asm);
 	}

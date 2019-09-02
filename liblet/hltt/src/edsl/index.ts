@@ -48,19 +48,16 @@ function createFuncScopeSolver(store: EdslProgramStore): TtFunctionScopeSolver<V
 
 export class EdslGlobal {
 	public readonly scope: GlobalScope<Variable>;
-	constructor(private readonly stat: TtStat = {}) {
+	constructor(private readonly store: EdslProgramStore, private readonly stat: TtStat = {}) {
 		this.scope = new GlobalScope(VariableFactory);
 		this.scope.funcScopeSolver = createFuncScopeSolver(this.store);
 		if (stat) {
 			this.scope.fpgm.base = stat.maxFunctionDefs || 0;
 			this.scope.twilights.base = stat.maxTwilightPoints || 0;
 			this.scope.storages.base = stat.maxStorage || 0;
+			this.scope.cvt.base = stat.cvtSize || 0;
 		}
 	}
-
-	public store: EdslProgramStore = {
-		fpgm: new Map()
-	};
 
 	public declareFunction(name: string) {
 		return this.scope.fpgm.declare(name);
@@ -186,6 +183,14 @@ export class EdslGlobal {
 
 	public getStats() {
 		return this.stat;
+	}
+
+	public convertSymbol(T: Variable | EdslSymbol) {
+		if (T instanceof Function) {
+			return T(this);
+		} else {
+			return T;
+		}
 	}
 }
 
@@ -350,7 +355,14 @@ export class EdslProgram {
 	public apply(fn: Variable, parts: Iterable<number | Expression>) {
 		return new InvokeExpression(this.scope, fn, parts);
 	}
-	public call(T: Variable | EdslFunctionTemplateInst, ...parts: (number | Expression)[]) {
+	public symbol(T: Variable | EdslSymbol) {
+		if (T instanceof Function) {
+			return T(this.globalDsl);
+		} else {
+			return T;
+		}
+	}
+	public call(T: Variable | EdslSymbol, ...parts: (number | Expression)[]) {
 		if (T instanceof Function) {
 			return new InvokeExpression(this.scope, T(this.globalDsl), parts);
 		} else {
@@ -411,8 +423,8 @@ export class EdslProgram {
 	};
 }
 
-export type EdslFunctionTemplate<A extends any[]> = (...args: A) => (dsl: EdslGlobal) => Variable;
-export type EdslFunctionTemplateInst = (dsl: EdslGlobal) => Variable;
+export type EdslSymbolTemplate<A extends any[]> = (...args: A) => (dsl: EdslGlobal) => Variable;
+export type EdslSymbol = (dsl: EdslGlobal) => Variable;
 
 export class EdslLibrary {
 	private fid = 0;
@@ -422,7 +434,7 @@ export class EdslLibrary {
 		return this.namePrefix + `::` + this.fid++;
 	}
 
-	public Func(G: (e: EdslProgram) => Iterable<Statement>): EdslFunctionTemplateInst {
+	public Func(G: (e: EdslProgram) => Iterable<Statement>): EdslSymbol {
 		const name = this.generateFunctionName();
 		return (dsl: EdslGlobal) =>
 			dsl.defineFunction(dsl.mangleTemplateName(name), (e: EdslProgram) => G(e));
@@ -430,7 +442,7 @@ export class EdslLibrary {
 
 	public Template<A extends any[]>(
 		G: (e: EdslProgram, ...args: A) => Iterable<Statement>
-	): EdslFunctionTemplate<A> {
+	): EdslSymbolTemplate<A> {
 		const fName = this.generateFunctionName();
 		return (...args: A) => (dsl: EdslGlobal) =>
 			dsl.defineFunction(dsl.mangleTemplateName(fName, ...args), (e: EdslProgram) =>
@@ -441,7 +453,7 @@ export class EdslLibrary {
 	public TemplateEx<A extends any[]>(
 		Identity: (...from: A) => any,
 		G: (e: EdslProgram, ...args: A) => Iterable<Statement>
-	): EdslFunctionTemplate<A> {
+	): EdslSymbolTemplate<A> {
 		const name = this.generateFunctionName();
 		return (...args: A) => {
 			const mangleArgs = Identity(...args);
@@ -450,5 +462,25 @@ export class EdslLibrary {
 					G(e, ...args)
 				);
 		};
+	}
+
+	public Twilight(size: number = 1): EdslSymbol {
+		const name = this.generateFunctionName();
+		return (dsl: EdslGlobal) => dsl.scope.twilights.declare(name, size);
+	}
+	public TwilightTemplate<A extends any[]>(size: number = 1): EdslSymbolTemplate<A> {
+		const name = this.generateFunctionName();
+		return (...args: A) => (dsl: EdslGlobal) =>
+			dsl.scope.twilights.declare(dsl.mangleTemplateName(name, ...args), size);
+	}
+
+	public ControlValue(size: number = 1): EdslSymbol {
+		const name = this.generateFunctionName();
+		return (dsl: EdslGlobal) => dsl.scope.cvt.declare(name, size);
+	}
+	public ControlValueTemplate<A extends any[]>(size: number = 1): EdslSymbolTemplate<A> {
+		const name = this.generateFunctionName();
+		return (...args: A) => (dsl: EdslGlobal) =>
+			dsl.scope.cvt.declare(dsl.mangleTemplateName(name, ...args), size);
 	}
 }

@@ -147,5 +147,7 @@ export interface IFinalHintProgramSink {
 
 // Logging
 export interface ILogger {
+	bullet(prefix: string): ILogger;
+	indent(prefix: string): ILogger;
 	log(what: string): void;
 }

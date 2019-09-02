@@ -6,13 +6,13 @@ export class ConstantExpression extends Expression {
 	constructor(private x: PushValue) {
 		super();
 	}
-	readonly arity = 1;
-	compile(asm: Assembler) {
+	public readonly arity = 1;
+	public compile(asm: Assembler) {
 		if (typeof this.x !== "number") asm.refValue(this.x);
 		asm.intro(this.x);
 	}
-	refer() {}
-	constant() {
+	public refer() {}
+	public constant() {
 		if (typeof this.x === "number") return this.x;
 		else return this.x.resolve();
 	}
@@ -25,10 +25,10 @@ export class VolatileExpression extends Expression {
 	get arity() {
 		return this.x.arity;
 	}
-	refer(asm: Assembler) {
+	public refer(asm: Assembler) {
 		this.x.refer(asm);
 	}
-	compile(asm: Assembler) {
+	public compile(asm: Assembler) {
 		this.x.compile(asm);
 	}
 }
