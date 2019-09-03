@@ -158,10 +158,10 @@ class ACSComputer {
 	) {
 		let coefficientA = 1;
 		const offCenter =
-			sk.xMax <= Support.mix(sj.xMin, sj.xMax, 3 / 5) ||
-			sk.xMin >= Support.mix(sj.xMin, sj.xMax, 2 / 5) ||
-			sj.xMax <= Support.mix(sk.xMin, sk.xMax, 3 / 5) ||
-			sj.xMin >= Support.mix(sk.xMin, sk.xMax, 2 / 5);
+			sk.xMax <= Support.mix(sj.xMin, sj.xMax, 1 / 2) ||
+			sk.xMin >= Support.mix(sj.xMin, sj.xMax, 1 / 2) ||
+			sj.xMax <= Support.mix(sk.xMin, sk.xMax, 1 / 2) ||
+			sj.xMin >= Support.mix(sk.xMin, sk.xMax, 1 / 2);
 		if (!nothingInBetween || tb) {
 			coefficientA *= this.strategy.COEFF_A_SHAPE_LOST_XX;
 		}
@@ -186,11 +186,7 @@ class ACSComputer {
 					this.strategy.COEFF_A_SAME_RADICAL * this.strategy.COEFF_A_SHAPE_LOST;
 			}
 		} else if (sjRadBot && skRadTop) {
-			if (offCenter) {
-				coefficientA *= this.strategy.COEFF_A_SHAPE_LOST_XR;
-			} else {
-				coefficientA *= this.strategy.COEFF_A_RADICAL_MERGE;
-			}
+			coefficientA *= this.strategy.COEFF_A_RADICAL_MERGE;
 		} else if (skRadTop) {
 			if (offCenter) coefficientA *= this.strategy.COEFF_A_SHAPE_LOST_XR;
 		} else if (sjRadBot) {

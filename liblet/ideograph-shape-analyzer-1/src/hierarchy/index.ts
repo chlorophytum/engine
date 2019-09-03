@@ -11,7 +11,13 @@ interface LpRec {
 	weight: number;
 	next: number;
 }
-function LP(g: boolean[][], w: number[][], j: number, cache: (LpRec | null)[]): LpRec {
+function LP(
+	g: boolean[][],
+	w1: number[][],
+	w2: number[][],
+	j: number,
+	cache: (LpRec | null)[]
+): LpRec {
 	if (cache[j]) return cache[j]!;
 	let c: LpRec = {
 		weight: 0,
@@ -19,10 +25,10 @@ function LP(g: boolean[][], w: number[][], j: number, cache: (LpRec | null)[]): 
 	};
 	for (let k = j; k-- > 0; ) {
 		if (!g[j][k]) continue;
-		const ck = LP(g, w, k, cache);
-		const w1 = ck.weight + w[j][k];
-		if (w1 > c.weight) {
-			c.weight = w1;
+		const ck = LP(g, w1, w2, k, cache);
+		const newWeight = ck.weight + w1[j][k];
+		if (newWeight > c.weight) {
+			c.weight = newWeight;
 			c.next = k;
 		}
 	}
@@ -51,6 +57,13 @@ interface MergeDecideGap {
 	merged: boolean;
 }
 
+interface StemPileSpatial {
+	botAtGlyphBottom: boolean;
+	topAtGlyphTop: boolean;
+	botIsBoundary: boolean;
+	topIsBoundary: boolean;
+}
+
 export default class HierarchyAnalyzer {
 	private stemMask: number[];
 	public lastPathWeight = 0;
@@ -71,15 +84,254 @@ export default class HierarchyAnalyzer {
 	public fetch(sink: HierarchySink) {
 		this.loops++;
 
-		let path = this.getKeyPath();
-		let dependents = this.getDependents(path);
-		const top = path[0];
-		const bot = path[path.length - 1];
-		if (!this.analysis.stems[bot] || !this.analysis.stems[top]) return;
+		const sidPath = this.getKeyPath();
+		const dependents = this.getDependents(sidPath);
 
-		const sidPile = path.filter(j => this.analysis.stems[j] && !this.stemMask[j]).reverse();
+		const top = sidPath[0];
+		const bot = sidPath[sidPath.length - 1];
+		if (!this.stemIsValid(bot) || !this.stemIsValid(top)) return;
+
+		const sidPile = sidPath.filter(j => this.stemIsNotAnalyzed(j)).reverse();
 		if (!sidPile.length) return;
 
+		const sp = this.analyzePileSpatial(bot, sink, top);
+
+		const { sidPileMiddle, repeatPatternDependents } = this.getMiddleStems(
+			sidPile,
+			sp,
+			bot,
+			top
+		);
+
+		if (sidPileMiddle.length) {
+			sink.addStemPileHint(
+				this.analysis.stems[bot],
+				sidPileMiddle.map(j => this.analysis.stems[j]),
+				this.analysis.stems[top],
+				sp.botIsBoundary,
+				sp.topIsBoundary,
+				this.getMergePriority(
+					this.analysis.collisionMatrices.annexation,
+					top,
+					bot,
+					sidPileMiddle
+				),
+				this.getMinGap(this.analysis.collisionMatrices.flips, top, bot, sidPileMiddle)
+			);
+		} else if (sp.botIsBoundary && !sp.topIsBoundary && !sp.botAtGlyphBottom) {
+			sink.addBottomSemiBoundaryStem(this.analysis.stems[bot], this.analysis.stems[top]);
+		} else if (sp.topIsBoundary && !sp.topAtGlyphTop && !sp.botIsBoundary) {
+			sink.addTopSemiBoundaryStem(this.analysis.stems[top], this.analysis.stems[bot]);
+		}
+
+		for (const rpd of repeatPatternDependents) {
+			const bot = rpd[0],
+				top = rpd[rpd.length - 1],
+				middle = rpd.slice(1, -1);
+			sink.addStemPileHint(
+				this.analysis.stems[bot],
+				middle.map(j => this.analysis.stems[j]),
+				this.analysis.stems[top],
+				false,
+				false,
+				this.repeatStemMergePri(middle.length),
+				this.getMinGap(this.analysis.collisionMatrices.flips, top, bot, middle)
+			);
+		}
+		for (const dependent of dependents) {
+			sink.addDependentHint(
+				dependent.type,
+				this.getStemBelow(bot, sidPile, top, dependent.fromStem),
+				this.analysis.stems[dependent.fromStem],
+				this.getStemAbove(bot, sidPile, top, dependent.fromStem),
+				this.analysis.stems[dependent.toStem]
+			);
+		}
+
+		for (const j of sidPath) this.stemMask[j] = MaskState.Hinted;
+	}
+
+	private stemIsValid(j: number) {
+		return this.analysis.stems[j];
+	}
+	private stemIsNotAnalyzed(j: number) {
+		return this.analysis.stems[j] && !this.stemMask[j];
+	}
+
+	private getKeyPath() {
+		this.lastPathWeight = 0;
+		let pathStart = -1;
+		let lpCache: (LpRec | null)[] = [];
+		for (let j = 0; j < this.analysis.stems.length; j++) {
+			LP(
+				this.analysis.directOverlaps,
+				this.analysis.stemOverlapLengths,
+				this.analysis.collisionMatrices.flips,
+				j,
+				lpCache
+			);
+		}
+		for (let j = 0; j < this.analysis.stems.length; j++) {
+			if (lpCache[j]!.weight > this.lastPathWeight) {
+				this.lastPathWeight = lpCache[j]!.weight;
+				pathStart = j;
+			}
+		}
+		let path: number[] = [];
+		while (pathStart >= 0) {
+			path.push(pathStart);
+			const next = lpCache[pathStart]!.next;
+			if (pathStart >= 0 && next >= 0) this.analysis.directOverlaps[pathStart][next] = false;
+			pathStart = next;
+		}
+		for (let m = 0; m < path.length; m++) {
+			const sm = this.analysis.stems[path[m]];
+			if (!sm || !sm.rid) continue;
+			if ((!sm.hasGlyphStemBelow && sm.diagHigh) || (!sm.hasGlyphStemAbove && sm.diagLow)) {
+				// Our key path is on a strange track
+				// We selected a diagonal stroke half, but it is not a good half
+				// Try to swap. 2 parts of a diagonal never occur in a path, so swapping is ok.
+				let opposite = -1;
+				for (let j = 0; j < this.analysis.stems.length; j++) {
+					if (j !== path[m] && this.analysis.stems[j].rid === sm.rid) opposite = j;
+				}
+				if (opposite >= 0 && !this.stemMask[opposite]) path[m] = opposite;
+			}
+		}
+		return _.uniq(path);
+	}
+
+	private getMiddleStems(sidPile: number[], sp: StemPileSpatial, bot: number, top: number) {
+		const sidPileMiddle: number[] = [];
+		for (const item of sidPile) {
+			if (!sp.botAtGlyphBottom && item === bot) continue;
+			if (!sp.topAtGlyphTop && item === top) continue;
+			sidPileMiddle.push(item);
+		}
+		const repeatPatterns = this.findRepeatPatterns(sidPileMiddle);
+		return this.filterRepeatPatternStemIDs(sidPileMiddle, repeatPatterns);
+	}
+
+	private findRepeatPatterns(sidPileMiddle: number[]) {
+		let repeatPatterns: [number, number][] = [];
+		let patternStart = 0,
+			patternEnd = 0;
+		for (let sid = 1; sid < sidPileMiddle.length - 1; sid++) {
+			if (!patternStart) {
+				patternStart = patternEnd = sid;
+			} else {
+				const lastStem = this.analysis.stems[sidPileMiddle[patternEnd]];
+				const currentStem = this.analysis.stems[sidPileMiddle[sid]];
+				if (this.stemsAreSimilar(currentStem, lastStem)) {
+					patternEnd = sid;
+				} else {
+					this.flushRepeatPattern(repeatPatterns, patternStart, patternEnd);
+					patternStart = patternEnd = sid;
+				}
+			}
+		}
+		this.flushRepeatPattern(repeatPatterns, patternStart, patternEnd);
+		return repeatPatterns;
+	}
+
+	private stemsAreSimilar(currentStem: Stem, lastStem: Stem) {
+		return (
+			((lastStem.hasSameRadicalStemBelow && currentStem.hasSameRadicalStemAbove) ||
+				(!lastStem.hasSameRadicalStemBelow &&
+					!lastStem.hasSameRadicalStemAbove &&
+					!currentStem.hasSameRadicalStemBelow &&
+					!currentStem.hasSameRadicalStemAbove)) &&
+			Math.abs(currentStem.xMin - lastStem.xMin) < this.strategy.UPM * this.strategy.X_FUZZ &&
+			Math.abs(currentStem.xMax - lastStem.xMax) < this.strategy.UPM * this.strategy.X_FUZZ &&
+			Math.abs(currentStem.width - lastStem.width) < this.strategy.UPM * this.strategy.Y_FUZZ
+		);
+	}
+
+	private flushRepeatPattern(
+		repeatPatterns: [number, number][],
+		patternStart: number,
+		patternEnd: number
+	) {
+		if (patternEnd <= patternStart) return;
+		if (
+			repeatPatterns.length &&
+			repeatPatterns[repeatPatterns.length - 1][0] + 1 === patternStart
+		) {
+			repeatPatterns[repeatPatterns.length - 1][1] = patternEnd;
+		} else {
+			repeatPatterns.push([patternStart, patternEnd]);
+		}
+	}
+
+	private filterRepeatPatternStemIDs(
+		pile: readonly number[],
+		repeatPatterns: readonly [number, number][]
+	) {
+		let mask: boolean[] = [];
+		for (const [s, e] of repeatPatterns) for (let j = s; j <= e; j++) mask[j] = true;
+		let sidPileMiddle: number[] = [];
+		for (let j = 0; j < pile.length; j++) if (!mask[j]) sidPileMiddle.push(pile[j]);
+
+		const repeatPatternDependents: number[][] = [];
+		for (const [s, e] of repeatPatterns) {
+			const sBelow = pile[s - 1];
+			const sAbove = pile[e + 1];
+			let a: number[] = [];
+			for (let j = s; j <= e; j++) a.push(pile[j]);
+			repeatPatternDependents.push([sBelow, ...a, sAbove]);
+		}
+		return { sidPileMiddle, repeatPatternDependents };
+	}
+
+	private repeatStemMergePri(n: number) {
+		const a: number[] = [];
+		for (let j = 0; j <= n; j++) {
+			a.push(j === n ? 0 : j);
+		}
+		return a;
+	}
+
+	private getDependents(path: number[]) {
+		let dependents: DependentHint[] = [];
+
+		for (const j of path) {
+			if (this.stemMask[j]) continue;
+			for (let k = 0; k < this.analysis.stems.length; k++) {
+				if (this.stemMask[k] || k === j) continue;
+				if (
+					this.analysis.stems[j].rid &&
+					this.analysis.stems[j].rid === this.analysis.stems[k].rid
+				) {
+					if (this.analysis.stems[j].diagLow && this.analysis.stems[k].diagHigh) {
+						this.stemMask[k] = MaskState.Dependent;
+						dependents.push({
+							type: DependentHintType.DiagLowToHigh,
+							fromStem: j,
+							toStem: k
+						});
+						continue;
+					}
+					if (this.analysis.stems[j].diagHigh && this.analysis.stems[k].diagLow) {
+						this.stemMask[k] = MaskState.Dependent;
+						dependents.push({
+							type: DependentHintType.DiagHighToLow,
+							fromStem: j,
+							toStem: k
+						});
+						continue;
+					}
+				}
+				if (this.analysis.symmetry[j][k] || this.analysis.symmetry[k][j]) {
+					this.stemMask[k] = MaskState.Dependent;
+					dependents.push({ type: DependentHintType.Symmetry, fromStem: j, toStem: k });
+					continue;
+				}
+			}
+		}
+		return dependents;
+	}
+
+	private analyzePileSpatial(bot: number, sink: HierarchySink, top: number) {
 		let botIsBoundary = false,
 			botAtGlyphBottom = false,
 			topIsBoundary = false,
@@ -106,45 +358,7 @@ export default class HierarchyAnalyzer {
 			);
 			topIsBoundary = true;
 		}
-
-		const sidPileMiddle = sidPile.filter(j => {
-			if (!botAtGlyphBottom && j === bot) return false;
-			if (!topAtGlyphTop && j === top) return false;
-			return true;
-		});
-
-		if (sidPileMiddle.length) {
-			sink.addStemPileHint(
-				this.analysis.stems[bot],
-				sidPileMiddle.map(j => this.analysis.stems[j]),
-				this.analysis.stems[top],
-				botIsBoundary,
-				topIsBoundary,
-				this.getMergePriority(
-					this.analysis.collisionMatrices.annexation,
-					top,
-					bot,
-					sidPileMiddle
-				),
-				this.getMinGap(this.analysis.collisionMatrices.flips, top, bot, sidPileMiddle)
-			);
-		} else if (botIsBoundary && !topIsBoundary && !botAtGlyphBottom) {
-			sink.addBottomSemiBoundaryStem(this.analysis.stems[bot], this.analysis.stems[top]);
-		} else if (topIsBoundary && !topAtGlyphTop && !botIsBoundary) {
-			sink.addTopSemiBoundaryStem(this.analysis.stems[top], this.analysis.stems[bot]);
-		}
-
-		for (const dependent of dependents) {
-			sink.addDependentHint(
-				dependent.type,
-				this.getStemBelow(bot, sidPile, top, dependent.fromStem),
-				this.analysis.stems[dependent.fromStem],
-				this.getStemAbove(bot, sidPile, top, dependent.fromStem),
-				this.analysis.stems[dependent.toStem]
-			);
-		}
-
-		for (const j of path) this.stemMask[j] = MaskState.Hinted;
+		return { botAtGlyphBottom, topAtGlyphTop, botIsBoundary, topIsBoundary };
 	}
 
 	private getStemBelow(bot: number, middle: number[], top: number, j: number): Stem | null {
@@ -273,82 +487,5 @@ export default class HierarchyAnalyzer {
 		}
 		this.getMinGapData(f, top, middle[middle.length - 1], gaps);
 		return gaps;
-	}
-
-	private getKeyPath() {
-		this.lastPathWeight = 0;
-		let pathStart = -1;
-		let lpCache: (LpRec | null)[] = [];
-		for (let j = 0; j < this.analysis.stems.length; j++) {
-			LP(this.analysis.directOverlaps, this.analysis.stemOverlapLengths, j, lpCache);
-		}
-		for (let j = 0; j < this.analysis.stems.length; j++) {
-			if (lpCache[j]!.weight > this.lastPathWeight) {
-				this.lastPathWeight = lpCache[j]!.weight;
-				pathStart = j;
-			}
-		}
-		let path: number[] = [];
-		while (pathStart >= 0) {
-			path.push(pathStart);
-			const next = lpCache[pathStart]!.next;
-			if (pathStart >= 0 && next >= 0) this.analysis.directOverlaps[pathStart][next] = false;
-			pathStart = next;
-		}
-		for (let m = 0; m < path.length; m++) {
-			const sm = this.analysis.stems[path[m]];
-			if (!sm || !sm.rid) continue;
-			if ((!sm.hasGlyphStemBelow && sm.diagHigh) || (!sm.hasGlyphStemAbove && sm.diagLow)) {
-				// Our key path is on a strange track
-				// We selected a diagonal stroke half, but it is not a good half
-				// Try to swap. 2 parts of a diagonal never occur in a path, so swapping is ok.
-				let opposite = -1;
-				for (let j = 0; j < this.analysis.stems.length; j++) {
-					if (j !== path[m] && this.analysis.stems[j].rid === sm.rid) opposite = j;
-				}
-				if (opposite >= 0 && !this.stemMask[opposite]) path[m] = opposite;
-			}
-		}
-		return _.uniq(path);
-	}
-
-	private getDependents(path: number[]) {
-		let dependents: DependentHint[] = [];
-
-		for (const j of path) {
-			if (this.stemMask[j]) continue;
-			for (let k = 0; k < this.analysis.stems.length; k++) {
-				if (this.stemMask[k] || k === j) continue;
-				if (
-					this.analysis.stems[j].rid &&
-					this.analysis.stems[j].rid === this.analysis.stems[k].rid
-				) {
-					if (this.analysis.stems[j].diagLow && this.analysis.stems[k].diagHigh) {
-						this.stemMask[k] = MaskState.Dependent;
-						dependents.push({
-							type: DependentHintType.DiagLowToHigh,
-							fromStem: j,
-							toStem: k
-						});
-						continue;
-					}
-					if (this.analysis.stems[j].diagHigh && this.analysis.stems[k].diagLow) {
-						this.stemMask[k] = MaskState.Dependent;
-						dependents.push({
-							type: DependentHintType.DiagHighToLow,
-							fromStem: j,
-							toStem: k
-						});
-						continue;
-					}
-				}
-				if (this.analysis.symmetry[j][k] || this.analysis.symmetry[k][j]) {
-					this.stemMask[k] = MaskState.Dependent;
-					dependents.push({ type: DependentHintType.Symmetry, fromStem: j, toStem: k });
-					continue;
-				}
-			}
-		}
-		return dependents;
 	}
 }

@@ -40,7 +40,7 @@ export default class HintGenSink extends HierarchySink {
 		this.subHints.push(
 			new MultipleAlignZone.Hint({
 				emBoxName: this.glyphKind,
-				gapMinDist: [1, 1],
+				gapMinDist: [1, stem.turnsAbove > 1 ? 2 : 1],
 				inkMinDist: [1],
 				bottomFree: false,
 				topFree: false,
@@ -56,7 +56,7 @@ export default class HintGenSink extends HierarchySink {
 		this.subHints.push(
 			new MultipleAlignZone.Hint({
 				emBoxName: this.glyphKind,
-				gapMinDist: [1, 1],
+				gapMinDist: [stem.turnsBelow > 1 ? 2 : 1, 1],
 				inkMinDist: [1],
 				bottomFree: false,
 				topFree: false,

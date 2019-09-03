@@ -100,7 +100,7 @@ export default function analyzeTurns(g: CGlyph, strategy: HintingStrategy, stems
 		let yTop = bitmap.transform(0, s.y).y + 1;
 		if (!bitmap.array[x1] || !bitmap.array[x2]) continue;
 		if (yBot > 0) {
-			const fa = new FlipAnalyzer(HLimit, VLimit);
+			const fa = new FlipAnalyzer(HLimit / 4, VLimit / 4);
 			for (let x = x1; x <= x2; x++) {
 				if (!bitmap.array[x]) continue;
 				fa.enter(0, bitmap.array[x].slice(0, yBot), 1);
@@ -108,7 +108,7 @@ export default function analyzeTurns(g: CGlyph, strategy: HintingStrategy, stems
 			s.turnsBelow = fa.computeFlips();
 		}
 		if (yTop > 0) {
-			const fa = new FlipAnalyzer(HLimit, VLimit);
+			const fa = new FlipAnalyzer(HLimit / 4, VLimit / 4);
 			for (let x = x1; x <= x2; x++) {
 				if (!bitmap.array[x]) continue;
 				fa.enter(1, bitmap.array[x].slice(yTop), 0);
