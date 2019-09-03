@@ -236,7 +236,9 @@ export default class HierarchyAnalyzer {
 
 	private stemsAreSimilar(currentStem: Stem, lastStem: Stem) {
 		return (
-			((lastStem.hasSameRadicalStemBelow && currentStem.hasSameRadicalStemAbove) ||
+			((lastStem.belongRadical === currentStem.belongRadical &&
+				lastStem.hasSameRadicalStemBelow &&
+				currentStem.hasSameRadicalStemAbove) ||
 				(!lastStem.hasSameRadicalStemBelow &&
 					!lastStem.hasSameRadicalStemAbove &&
 					!currentStem.hasSameRadicalStemBelow &&
