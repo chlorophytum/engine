@@ -4,8 +4,9 @@ import * as stream from "stream";
 import { IOpenTypeHsSupport } from "./otf-support";
 
 export class OpenTypeHintStore implements IHintStore {
-	private glyphHints = new Map<string, IHint>();
-	private sharedHintTypes = new Map<string, IHint>();
+	public glyphHints = new Map<string, IHint>();
+	public glyphHintCacheKeys = new Map<string, string>();
+	public sharedHintTypes = new Map<string, IHint>();
 
 	constructor(protected readonly support: IOpenTypeHsSupport) {}
 	public async listGlyphs() {
@@ -17,6 +18,12 @@ export class OpenTypeHintStore implements IHintStore {
 	public async setGlyphHints(glyph: string, hint: IHint) {
 		this.glyphHints.set(glyph, hint);
 	}
+	public async getGlyphHintsCacheKey(glyph: string) {
+		return this.glyphHintCacheKeys.get(glyph);
+	}
+	public async setGlyphHintsCacheKey(glyph: string, ck: string) {
+		this.glyphHintCacheKeys.set(glyph, ck);
+	}
 	public async listSharedTypes() {
 		return this.sharedHintTypes.keys();
 	}
@@ -26,8 +33,7 @@ export class OpenTypeHintStore implements IHintStore {
 	public async setSharedHints(type: string, hint: IHint) {
 		this.sharedHintTypes.set(type, hint);
 	}
-
 	public save(stream: stream.Writable) {
-		return this.support.saveHintStore(this.glyphHints, this.sharedHintTypes, stream);
+		return this.support.saveHintStore(this, stream);
 	}
 }

@@ -1,4 +1,4 @@
-import { GlyphPoint } from "@chlorophytum/arch";
+import { Geometry } from "@chlorophytum/arch";
 
 import { HintingStrategy } from "../../strategy";
 import Contour from "../../types/contour";
@@ -6,26 +6,30 @@ import { CPoint } from "../../types/point";
 import Radical from "../../types/radical";
 import { SegSpan } from "../../types/seg";
 
-type SlopeOperator = (z1: GlyphPoint, z2: GlyphPoint, strategy: HintingStrategy) => boolean;
+type SlopeOperator = (
+	z1: Geometry.GlyphPoint,
+	z2: Geometry.GlyphPoint,
+	strategy: HintingStrategy
+) => boolean;
 
-function approSlope(z1: GlyphPoint, z2: GlyphPoint, strategy: HintingStrategy) {
+function approSlope(z1: Geometry.GlyphPoint, z2: Geometry.GlyphPoint, strategy: HintingStrategy) {
 	const slope = (z1.y - z2.y) / (z1.x - z2.x);
 	return slope >= 0 ? slope <= strategy.SLOPE_FUZZ_POS : slope >= -strategy.SLOPE_FUZZ_NEG;
 }
 
-function eqSlopeA(z1: GlyphPoint, z2: GlyphPoint, _strategy: HintingStrategy) {
+function eqSlopeA(z1: Geometry.GlyphPoint, z2: Geometry.GlyphPoint, _strategy: HintingStrategy) {
 	return z1.y === z2.y && ((z1.on && z2.on) || (!z1.on && !z2.on));
 }
 
-function approSlopeA(z1: GlyphPoint, z2: GlyphPoint, strategy: HintingStrategy) {
+function approSlopeA(z1: Geometry.GlyphPoint, z2: Geometry.GlyphPoint, strategy: HintingStrategy) {
 	const slope = (z1.y - z2.y) / (z1.x - z2.x);
 	return (
-		Math.abs(z2.x - z1.x) >= (strategy.Y_FUZZ * strategy.UPM) * 2 &&
+		Math.abs(z2.x - z1.x) >= strategy.Y_FUZZ * strategy.UPM * 2 &&
 		(slope >= 0 ? slope <= strategy.SLOPE_FUZZ : slope >= -strategy.SLOPE_FUZZ_NEG)
 	);
 }
 
-function approSlopeT(z1: GlyphPoint, z2: GlyphPoint, strategy: HintingStrategy) {
+function approSlopeT(z1: Geometry.GlyphPoint, z2: Geometry.GlyphPoint, strategy: HintingStrategy) {
 	const slope = (z1.y - z2.y) / (z1.x - z2.x);
 	return slope >= 0 ? slope <= strategy.SLOPE_FUZZ_POST : slope >= -strategy.SLOPE_FUZZ_NEG;
 }

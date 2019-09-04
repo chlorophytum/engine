@@ -8,7 +8,8 @@ import { TtStat } from "./stat";
 
 test("EDSL flags test", t => {
 	const asm = compileProgram(function*(gs, ls) {
-		const edsl = new EdslProgram(new EdslGlobal(), ls);
+		const ps = { fpgm: new Map() };
+		const edsl = new EdslProgram(new EdslGlobal(ps), ls);
 		const t0 = edsl.twilight();
 		const t1 = edsl.twilight();
 		yield edsl.mdap.round(t1); // Bitwise negating a point means referring a twilight
@@ -34,7 +35,8 @@ test("EDSL flags test", t => {
 });
 test("EDSL coercion test", t => {
 	const asm = compileProgram(function*(gs, ls) {
-		const edsl = new EdslProgram(new EdslGlobal(), ls);
+		const ps = { fpgm: new Map() };
+		const edsl = new EdslProgram(new EdslGlobal(ps), ls);
 		yield edsl.miap(0, edsl.coerce.fromIndex.cvt(edsl.add(2, 3)).index);
 	});
 	t.deepEqual(
@@ -47,8 +49,9 @@ test("EDSL coercion test", t => {
 });
 
 test("EDSL function linking", t => {
+	const ps = { fpgm: new Map() };
 	const stat: TtStat = {};
-	const eg = new EdslGlobal(stat);
+	const eg = new EdslGlobal(ps, stat);
 	// Functions
 	const inc = eg.defineFunction("increase", function*(e) {
 		const [x] = e.args(1);
@@ -124,8 +127,9 @@ test("EDSL function linking", t => {
 });
 
 test("EDSL stat -- recursive", t => {
+	const ps = { fpgm: new Map() };
 	const stat: TtStat = {};
-	const eg = new EdslGlobal(stat);
+	const eg = new EdslGlobal(ps, stat);
 	const add = eg.declareFunction("add");
 
 	eg.defineFunction(add, function*(e) {

@@ -5,10 +5,10 @@ export namespace Smooth {
 	const TAG = "Chlorophytum::CommonHints::Smooth";
 	export class Hint implements IHint {
 		constructor() {}
-		toJSON() {
+		public toJSON() {
 			return { type: TAG };
 		}
-		createCompiler(sink: IFinalHintProgramSink): IHintCompiler | null {
+		public createCompiler(sink: IFinalHintProgramSink): IHintCompiler | null {
 			if (sink instanceof HlttProgramSink) {
 				return new HlttCompiler(sink);
 			}
@@ -17,8 +17,8 @@ export namespace Smooth {
 	}
 
 	export class HintFactory implements IHintFactory {
-		readonly type = TAG;
-		readJson(json: any) {
+		public readonly type = TAG;
+		public readJson(json: any) {
 			if (json && json.type === TAG) {
 				return new Hint();
 			}
@@ -28,7 +28,7 @@ export namespace Smooth {
 
 	export class HlttCompiler implements IHintCompiler {
 		constructor(private readonly sink: HlttProgramSink) {}
-		doCompile() {
+		public doCompile() {
 			this.sink.addSegment(function*($) {
 				yield $.iup.x();
 				yield $.iup.y();

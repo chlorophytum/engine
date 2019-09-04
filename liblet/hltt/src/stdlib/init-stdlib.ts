@@ -21,12 +21,12 @@ export class Inliner {
 		private Asm: <V extends Variable>(a: Assembler, gs: GlobalScope<V>) => void
 	) {}
 
-	register(edsl: EdslGlobal) {
+	public register(edsl: EdslGlobal) {
 		edsl.defineAssemblyFunction(this.name, this.argsArity, this.returnArity, a =>
 			this.Asm(a, edsl.scope)
 		);
 	}
-	inline<V extends Variable>(gs: GlobalScope<V>, asm: Assembler) {
+	public inline<V extends Variable>(gs: GlobalScope<V>, asm: Assembler) {
 		if (gs.useStdLib) {
 			gs.fpgm.declare(this.name).compilePtr(asm);
 			asm.prim(TTI.CALL, 1 + this.argsArity, this.returnArity);

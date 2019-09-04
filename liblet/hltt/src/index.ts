@@ -1,33 +1,20 @@
 import { Expression, PointerExpression } from "./ast/interface";
-import {
-	EdslDefineFunctionTemplate,
-	EdslDefineFunctionTemplateEx,
-	EdslDefineLibraryFunction,
-	EdslFunctionTemplate,
-	EdslGlobal,
-	EdslProgram,
-	EdslProgramRecord,
-	EdslProgramStore
-} from "./edsl";
+import { EdslGlobal, EdslProgram, EdslProgramRecord, EdslProgramStore } from "./edsl";
 import { TtStat } from "./edsl/stat";
 
-export default function createDSL(stat?: TtStat) {
-	return new EdslGlobal(stat);
+export function CreateDSL(store: EdslProgramStore, stat?: TtStat) {
+	return new EdslGlobal(store, stat);
 }
 
 export * from "./ast/index";
-export { EdslFunctionTemplate, EdslFunctionTemplateInst } from "./edsl/index";
+export { EdslSymbolTemplate, EdslSymbol, EdslLibrary as TtLibrary } from "./edsl/index";
 export { TtStat } from "./edsl/stat";
-export { TTI, InstrFormat, InstrSink, TextInstr } from "./instr";
+export { InstrFormat, InstrSink, TextInstr, TTI } from "./instr";
+export { initStdLib } from "./stdlib/init-stdlib";
 export type ProgramDsl = EdslProgram;
 export type GlobalDsl = EdslGlobal;
 export type ProgramRecord = EdslProgramRecord;
 export type ProgramStore = EdslProgramStore;
-export type FunctionTemplate<A extends any[]> = EdslFunctionTemplate<A>;
-export const Template = EdslDefineFunctionTemplate;
-export const TemplateEx = EdslDefineFunctionTemplateEx;
-export const LibFunc = EdslDefineLibraryFunction;
-export { initStdLib } from "./stdlib/init-stdlib";
 
 export type NE = number | Expression;
 export type NPE = number | PointerExpression;

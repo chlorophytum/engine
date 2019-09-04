@@ -1,10 +1,10 @@
 import { stemOverlapLength, stemOverlapRatio } from "../../si-common/overlap";
 import { HintingStrategy } from "../../strategy";
-import Glyph from "../../types/glyph";
+import CGlyph from "../../types/glyph";
 import Stem from "../../types/stem";
 import { GlyphAnalysis } from "../analysis";
 
-import { computeACSMatrices, computePQMatrices } from "./collide-matrix";
+import { computeACSMatrices, computePQMatrices } from "./annex-matrix";
 import { analyzeDirectOverlaps } from "./direct-overlap";
 import { analyzeEntireContourAboveBelow, analyzeStemSpatialRelationships } from "./rel";
 import { analyzeStemKeyPoints } from "./stem-keypoint";
@@ -36,7 +36,7 @@ function updateProximity(stems: Stem[], dov: boolean[][], P: number[][], F: numb
 }
 
 export default function analyzeStems(
-	glyph: Glyph,
+	glyph: CGlyph,
 	strategy: HintingStrategy,
 	analysis: GlyphAnalysis
 ) {

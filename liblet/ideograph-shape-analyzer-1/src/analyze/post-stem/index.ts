@@ -1,5 +1,5 @@
 import { HintingStrategy } from "../../strategy";
-import Glyph from "../../types/glyph";
+import CGlyph from "../../types/glyph";
 import { GlyphAnalysis } from "../analysis";
 
 import analyzeBlueZonePoints from "./bluezone-points";
@@ -7,7 +7,7 @@ import AnalyzeIpSa from "./ipsa";
 import analyzeSymmetry from "./symmetry";
 
 export default function analyzePostStemHints(
-	glyph: Glyph,
+	glyph: CGlyph,
 	strategy: HintingStrategy,
 	analysis: GlyphAnalysis
 ) {

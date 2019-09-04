@@ -1,9 +1,6 @@
 import { IFinalHintProgramSink, IHint, IHintCompiler, IHintFactory } from "@chlorophytum/arch";
 import { HlttProgramSink } from "@chlorophytum/final-hint-format-hltt";
 
-import { getEmBoxPoints } from "./constants";
-import { TInitEmBoxTwilightPoints } from "./programs";
-
 export namespace EmBoxInit {
 	const TAG = "Chlorophytum::EmBox::Init";
 	export class Hint implements IHint {
@@ -30,27 +27,22 @@ export namespace EmBoxInit {
 	export class HlttCompiler implements IHintCompiler {
 		constructor(private readonly sink: HlttProgramSink, private readonly name: string) {}
 		public doCompile() {
+			// Currently don't initialize em-box within glyph -- maybe do that later
+			/* 
 			const { name } = this;
 			this.sink.addSegment(function*($) {
-				const {
-					strokeBottom,
-					strokeTop,
-					archBottom,
-					archTop,
-					spurBottom,
-					spurTop
-				} = getEmBoxPoints($, name);
-
 				yield $.call(
 					TInitEmBoxTwilightPoints,
-					strokeBottom,
-					strokeTop,
-					archBottom,
-					archTop,
-					spurBottom,
-					spurTop
+					$.symbol(Twilights.StrokeBottom(name)),
+					$.symbol(Twilights.StrokeTop(name)),
+					$.symbol(Twilights.ArchBottom(name)),
+					$.symbol(Twilights.ArchTop(name)),
+					$.symbol(Twilights.SpurBottom(name)),
+					$.symbol(Twilights.SpurTop(name))
 				);
 			});
+
+			*/
 		}
 	}
 }

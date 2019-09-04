@@ -26,7 +26,7 @@ export default class Assembler {
 	private stackHeight = 0;
 
 	private irs: TtIR[] = [];
-	maxStackHeight = 0;
+	public maxStackHeight = 0;
 	private registers: Registers = {};
 
 	constructor() {
@@ -36,7 +36,7 @@ export default class Assembler {
 	private updateMaxStackHeight() {
 		if (this.stackHeight > this.maxStackHeight) this.maxStackHeight = this.stackHeight;
 	}
-	ir(ir: TtIR) {
+	public ir(ir: TtIR) {
 		this.irs.push(ir);
 		return this;
 	}
@@ -49,12 +49,12 @@ export default class Assembler {
 		this.updateMaxStackHeight();
 		return this;
 	}
-	push(...xs: PushValue[]) {
+	public push(...xs: PushValue[]) {
 		this.added(xs.length);
 		this.rawPush(...xs);
 		return this;
 	}
-	intro(...xs: PushValue[]) {
+	public intro(...xs: PushValue[]) {
 		let pSeg = this.rises[0];
 		if (!pSeg.pushes) {
 			// We are behind a non-push rise
@@ -76,13 +76,13 @@ export default class Assembler {
 		this.updateMaxStackHeight();
 		return this;
 	}
-	prim(x: TTI, deleted: number = 0, added: number = 0) {
+	public prim(x: TTI, deleted: number = 0, added: number = 0) {
 		this.ir(new PrimIR(x));
 		this.deleted(deleted);
 		this.added(added);
 		return this;
 	}
-	pseudoPrim(deleted: number = 0, added: number = 0, maxRise: number = 0) {
+	public pseudoPrim(deleted: number = 0, added: number = 0, maxRise: number = 0) {
 		const pp = new PseudoPrimIR();
 		this.ir(pp);
 		this.deleted(deleted);
@@ -97,14 +97,14 @@ export default class Assembler {
 		else return rise.startHeight >= this.stackHeight;
 	}
 
-	deleted(n: number) {
+	public deleted(n: number) {
 		if (!n) return this;
 		if (this.stackHeight < n) throw new RangeError("Insufficient Stack");
 		this.stackHeight -= n;
 		while (this.canRemoveRise(this.rises[0])) this.rises.shift();
 		return this;
 	}
-	added(n: number) {
+	public added(n: number) {
 		if (!n) return this;
 		this.stackHeight += n;
 		// Create a non-push rise
@@ -114,7 +114,7 @@ export default class Assembler {
 	}
 
 	// Utility stack manipulators
-	balanceStack(h: number) {
+	public balanceStack(h: number) {
 		this.needAccurateStackHeight();
 		while (this.stackHeight < h) {
 			this.intro(0);
@@ -124,7 +124,7 @@ export default class Assembler {
 		}
 		return h;
 	}
-	funcReturnKeepDelete(returnArity: number) {
+	public funcReturnKeepDelete(returnArity: number) {
 		this.needAccurateStackHeight();
 		while (this.stackHeight > returnArity) {
 			if (returnArity) {
@@ -140,7 +140,7 @@ export default class Assembler {
 			this.prim(TTI.POP).deleted(1);
 		}
 	}
-	nthFromBottom(index: number) {
+	public nthFromBottom(index: number) {
 		this.needAccurateStackHeight();
 		const offset = this.stackHeight - index; // pseudoPrim() changes SH, so compute offset first
 		if (offset === 1) {
@@ -153,54 +153,54 @@ export default class Assembler {
 	}
 
 	// Drop all rises
-	needAccurateStackHeight(h = this.stackHeight) {
+	public needAccurateStackHeight(h = this.stackHeight) {
 		const h0 = this.stackHeight;
 		this.stackHeight = h;
 		this.rises = [{ startHeight: -0xffff }];
 		return h0;
 	}
-	blockBegin(ref?: TtLabel) {
+	public blockBegin(ref?: TtLabel) {
 		this.forgetRegisters();
 		const h0 = this.needAccurateStackHeight(this.stackHeight);
 		if (ref) this.ir(ref);
 		return h0;
 	}
-	label(ref?: TtLabel) {
+	public label(ref?: TtLabel) {
 		return this.blockBegin(ref);
 	}
-	blockEnd(h: number, ref?: TtLabel) {
+	public blockEnd(h: number, ref?: TtLabel) {
 		this.forgetRegisters();
 		if (ref) this.ir(ref);
 		return this.balanceStack(h);
 	}
 
 	// Register management
-	getRegister<K extends keyof Registers>(r: K): number | undefined {
+	public getRegister<K extends keyof Registers>(r: K): number | undefined {
 		return this.registers[r];
 	}
-	setRegister<K extends keyof Registers>(r: K, x: number | undefined): void {
+	public setRegister<K extends keyof Registers>(r: K, x: number | undefined): void {
 		this.registers[r] = x;
 	}
-	forgetRegister<K extends keyof Registers>(r: K) {
+	public forgetRegister<K extends keyof Registers>(r: K) {
 		this.registers[r] = undefined;
 	}
-	forgetRegisters() {
+	public forgetRegisters() {
 		this.registers = {};
 	}
 
-	createLabel() {
+	public createLabel() {
 		return new TtLabel();
 	}
-	createLabelDifference(a: TtLabel, b: TtLabel) {
+	public createLabelDifference(a: TtLabel, b: TtLabel) {
 		return new TtLabelDifference(a, b);
 	}
-	refValue(cpv: CPushValue) {
+	public refValue(cpv: CPushValue) {
 		this.ir(new TtCPushValueRef(cpv));
 		return this;
 	}
 
 	// Compile!
-	codeGen<R>(xs: InstrSink<R>): R {
+	public codeGen<R>(xs: InstrSink<R>): R {
 		let offsetChanged = false,
 			rounds = 0;
 		do {

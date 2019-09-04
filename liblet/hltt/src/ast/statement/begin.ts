@@ -7,8 +7,8 @@ export class BeginStatement extends Statement {
 	constructor(protected readonly scope: ProgramScope<Variable>) {
 		super();
 	}
-	refer(asm: Assembler) {}
-	compile(asm: Assembler) {
+	public refer(asm: Assembler) {}
+	public compile(asm: Assembler) {
 		asm.added(this.scope.arguments.size);
 		if (this.scope.locals.size) {
 			asm.intro(this.scope.globals.sp);
@@ -29,8 +29,8 @@ export class ProgramBeginStatement extends Statement {
 	constructor(protected readonly scope: ProgramScope<Variable>) {
 		super();
 	}
-	refer(asm: Assembler) {}
-	compile(asm: Assembler) {
+	public refer(asm: Assembler) {}
+	public compile(asm: Assembler) {
 		asm.push(this.scope.globals.sp, this.scope.locals.base + this.scope.locals.size).prim(
 			TTI.WS,
 			2,

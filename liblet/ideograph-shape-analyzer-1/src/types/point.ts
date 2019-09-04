@@ -1,6 +1,6 @@
-import { GlyphPoint } from "@chlorophytum/arch";
+import { Geometry } from "@chlorophytum/arch";
 
-export interface AdjPoint extends GlyphPoint {
+export interface AdjPoint extends Geometry.GlyphPoint {
 	prev?: AdjPoint;
 	next?: AdjPoint;
 	prevZ?: AdjPoint;

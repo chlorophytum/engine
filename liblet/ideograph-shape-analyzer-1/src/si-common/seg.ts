@@ -1,4 +1,4 @@
-import { Point } from "@chlorophytum/arch";
+import { Geometry } from "@chlorophytum/arch";
 
 import { CPoint } from "../types/point";
 import Radical from "../types/radical";
@@ -51,7 +51,13 @@ export function rightmostZ_SS(s: Seg) {
 	return m;
 }
 
-export function expandZ(radical: Radical, z: Point, dx: number, dy: number, maxTicks: number) {
+export function expandZ(
+	radical: Radical,
+	z: Geometry.Point,
+	dx: number,
+	dy: number,
+	maxTicks: number
+) {
 	let z1 = { x: z.x + dx, y: z.y + dy, on: true, id: -1 },
 		steps = 0;
 	while (radical.includesEdge(z1, 0, 2) && steps < maxTicks) {
@@ -63,7 +69,13 @@ export function expandZ(radical: Radical, z: Point, dx: number, dy: number, maxT
 	z1.y -= dy;
 	return z1;
 }
-export function expandZ0(radical: Radical, z: Point, dx: number, dy: number, maxTicks: number) {
+export function expandZ0(
+	radical: Radical,
+	z: Geometry.Point,
+	dx: number,
+	dy: number,
+	maxTicks: number
+) {
 	let z1 = { x: z.x + dx, y: z.y + dy, on: true, id: -1 },
 		steps = 0;
 	while (radical.includes(z1) && steps < maxTicks) {

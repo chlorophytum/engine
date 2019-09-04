@@ -1,9 +1,9 @@
-import { Point } from "../interfaces";
+import { Geometry } from "../interfaces";
 
 export function mix(x: number, y: number, a: number) {
 	return x + (y - x) * a;
 }
-export function mixZ(p: Point, q: Point, x: number) {
+export function mixZ(p: Geometry.Point, q: Geometry.Point, x: number) {
 	return { x: p.x + (q.x - p.x) * x, y: p.y + (q.y - p.y) * x };
 }
 export function lerp(x: number, x1: number, x2: number, y1: number, y2: number) {

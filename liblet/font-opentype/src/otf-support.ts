@@ -1,14 +1,7 @@
-import {
-	GlyphRelation,
-	GlyphShape,
-	IHint,
-	IHintingModelPlugin,
-	IHintStore
-} from "@chlorophytum/arch";
+import { Glyph, IHintingModelPlugin, IHintStore, Variation } from "@chlorophytum/arch";
 import * as stream from "stream";
 
-export type OpenTypeVariation = { [axis: string]: number };
-export type OpenTypeMaster = { [axis: string]: { min: number; peak: number; max: number } };
+import { OpenTypeHintStore } from "./hint-store";
 
 export interface ISimpleGetMap<K, V> {
 	get(key: K): V | undefined;
@@ -19,28 +12,29 @@ export interface ISimpleGetMap<K, V> {
 export interface ISimpleGetBimap<K, V> extends ISimpleGetMap<K, V> {
 	coGet(value: V): K | undefined;
 }
-export interface GsubRelation<Glyph> extends GlyphRelation<Glyph> {
+export interface CmapRelation<GID> {
+	readonly target: GID;
+	readonly selector: number;
+}
+export interface GsubRelation<GID> {
+	readonly target: GID;
 	readonly script: string;
 	readonly language: string;
 	readonly feature: string;
-	readonly lookupID: string;
+	readonly lookupKind: string;
 }
-export interface IOpenTypeFileSupport<Glyph> {
-	readonly glyphSet: ISimpleGetBimap<string, Glyph>;
-	readonly cmap: ISimpleGetMap<number, Glyph>;
-	getGeometry(glyph: Glyph, instance: null | OpenTypeVariation): Promise<GlyphShape>;
-	getGsubRelatedGlyphs(source: Glyph): Promise<GsubRelation<Glyph>[]>;
-	getGlyphMasters(glyph: Glyph): Promise<{ peak: OpenTypeVariation; master: OpenTypeMaster }[]>;
+export interface IOpenTypeFileSupport<GID> {
+	readonly glyphSet: ISimpleGetBimap<string, GID>;
+	readonly cmap: ISimpleGetMap<number, GID>;
+	getGeometry(glyph: GID, instance: null | Variation.Instance): Promise<Glyph.Shape>;
+	getCmapRelatedGlyphs(source: GID, codePoint: number): Promise<CmapRelation<GID>[]>;
+	getGsubRelatedGlyphs(source: GID): Promise<GsubRelation<GID>[]>;
+	getGlyphMasters(glyph: GID): Promise<Variation.MasterRep[]>;
 
 	readonly hsSupport: IOpenTypeHsSupport;
 }
-
 export interface IOpenTypeHsSupport {
-	saveHintStore(
-		glyphHints: Map<string, IHint>,
-		sharedHints: Map<string, IHint>,
-		output: stream.Writable
-	): Promise<void>;
+	saveHintStore(hs: OpenTypeHintStore, output: stream.Writable): Promise<void>;
 	populateHintStore(
 		input: stream.Readable,
 		models: IHintingModelPlugin[],

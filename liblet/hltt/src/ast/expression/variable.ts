@@ -11,13 +11,13 @@ export class StaticStorage extends Variable {
 		super();
 		if (size <= 0) throw new RangeError("Array must have size > 0");
 	}
-	constantPtr() {
+	public constantPtr() {
 		return this.variableIndex;
 	}
-	compilePtr(asm: Assembler) {
+	public compilePtr(asm: Assembler) {
 		asm.intro(this);
 	}
-	readonly accessor = VariableAccessor;
+	public readonly accessor = VariableAccessor;
 }
 
 export class LocalVariable extends Variable {
@@ -25,8 +25,8 @@ export class LocalVariable extends Variable {
 		super();
 		if (size <= 0) throw new RangeError("Array must have size > 0");
 	}
-	readonly accessor = VariableAccessor;
-	compilePtr(asm: Assembler) {
+	public readonly accessor = VariableAccessor;
+	public compilePtr(asm: Assembler) {
 		const idx = (this.variableIndex || 0) + this.size - 1;
 		if (idx) {
 			asm.intro(idx);
@@ -52,11 +52,11 @@ export const VariableAccessor = {
 };
 
 export class LocalArgument extends Variable {
-	compilePtr(asm: Assembler) {
+	public compilePtr(asm: Assembler) {
 		throw new Error("Cannot reference pointer of local argument");
 	}
-	readonly accessor = LocalArgumentAccessor;
-	compile(asm: Assembler) {
+	public readonly accessor = LocalArgumentAccessor;
+	public compile(asm: Assembler) {
 		asm.nthFromBottom(this.variableIndex || 0);
 	}
 }
@@ -69,13 +69,13 @@ export const LocalArgumentAccessor = {
 };
 
 export class FunctionVariable extends Variable {
-	constantPtr() {
+	public constantPtr() {
 		return this.variableIndex;
 	}
-	compilePtr(asm: Assembler) {
+	public compilePtr(asm: Assembler) {
 		asm.intro(this);
 	}
-	readonly accessor = FunctionVariableAccessor;
+	public readonly accessor = FunctionVariableAccessor;
 }
 
 export const FunctionVariableAccessor = {
@@ -86,14 +86,14 @@ export const FunctionVariableAccessor = {
 };
 
 export class TwilightVariable extends Variable {
-	readonly accessor = TwilightVariableAccessor;
-	compilePtr(asm: Assembler) {
+	public readonly accessor = TwilightVariableAccessor;
+	public compilePtr(asm: Assembler) {
 		throw new Error("Cannot reference pointer of twilight point index");
 	}
-	compile(asm: Assembler) {
+	public compile(asm: Assembler) {
 		asm.intro(~this.resolve());
 	}
-	constant() {
+	public constant() {
 		return this.variableIndex !== undefined ? ~this.variableIndex : undefined;
 	}
 }
@@ -110,13 +110,13 @@ export class ControlValue extends Variable {
 		super();
 		if (size <= 0) throw new RangeError("Array must have size > 0");
 	}
-	constantPtr() {
+	public constantPtr() {
 		return this.variableIndex;
 	}
-	compilePtr(asm: Assembler) {
+	public compilePtr(asm: Assembler) {
 		asm.intro(this);
 	}
-	readonly accessor = ControlValueAccessor;
+	public readonly accessor = ControlValueAccessor;
 }
 
 export const ControlValueAccessor = {
@@ -136,11 +136,11 @@ export class VariableSet extends Statement {
 		super();
 		this.b = cExpr(_b);
 	}
-	refer(asm: Assembler) {
+	public refer(asm: Assembler) {
 		this.v.refer(asm);
 		this.b.refer(asm);
 	}
-	compile(asm: Assembler) {
+	public compile(asm: Assembler) {
 		if (this.b.arity !== 1) throw new TypeError("RHS arity > 1");
 		this.v.compilePtr(asm);
 		this.b.compile(asm);

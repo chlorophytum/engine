@@ -13,10 +13,11 @@ export const EmptyHintingModelFactory: IHintingModelPlugin = {
 
 export class EmptyHintingModel<GID> implements IHintingModel<GID> {
 	public readonly type = "Chlorophytum::EmptyHinting";
+	public readonly allowParallel = false;
 
 	constructor() {}
 
-	public async analyzeSharedParameters() {
+	public async analyzeEffectiveGlyphs() {
 		return null;
 	}
 	public async getSharedHints() {
@@ -24,5 +25,8 @@ export class EmptyHintingModel<GID> implements IHintingModel<GID> {
 	}
 	public async analyzeGlyph(gid: GID) {
 		return new Empty.Hint();
+	}
+	public async getGlyphCacheKey() {
+		return null;
 	}
 }

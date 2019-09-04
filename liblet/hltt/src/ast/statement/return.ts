@@ -5,7 +5,7 @@ import { cExpr } from "../expression/constant";
 import { Expression, Statement, Variable } from "../interface";
 
 export class LastReturnStatement extends Statement {
-	readonly parts: Expression[];
+	public readonly parts: Expression[];
 	constructor(
 		protected readonly scope: ProgramScope<Variable>,
 		_parts: Iterable<number | Expression>
@@ -13,20 +13,20 @@ export class LastReturnStatement extends Statement {
 		super();
 		this.parts = [..._parts].map(cExpr);
 	}
-	getArgsArity() {
+	public getArgsArity() {
 		let argArity = 0;
 		for (const st of this.parts) {
 			argArity += st.arity;
 		}
 		return argArity;
 	}
-	refer(asm: Assembler) {
+	public refer(asm: Assembler) {
 		for (const part of this.parts) part.refer(asm);
 	}
-	willReturnAfter() {
+	public willReturnAfter() {
 		return true;
 	}
-	compile(asm: Assembler) {
+	public compile(asm: Assembler) {
 		let argArity = this.getArgsArity();
 		if (argArity !== (this.scope.returnArity || 0)) {
 			throw new TypeError("Return value arity mismatches");
@@ -50,7 +50,7 @@ export class LastReturnStatement extends Statement {
 	}
 }
 export class ReturnStatement extends LastReturnStatement {
-	compile(asm: Assembler) {
+	public compile(asm: Assembler) {
 		if (!this.scope.return) throw new TypeError("Return label not defined");
 		super.compile(asm);
 		const here = asm.createLabel();

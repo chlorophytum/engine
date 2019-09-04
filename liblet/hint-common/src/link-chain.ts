@@ -5,13 +5,13 @@ export namespace LinkChain {
 	const TAG = "Chlorophytum::CommonHints::LinkChain";
 	export class Hint implements IHint {
 		constructor(private readonly pts: number[]) {}
-		toJSON() {
+		public toJSON() {
 			return {
 				type: TAG,
 				pts: this.pts
 			};
 		}
-		createCompiler(sink: IFinalHintProgramSink): IHintCompiler | null {
+		public createCompiler(sink: IFinalHintProgramSink): IHintCompiler | null {
 			if (sink instanceof HlttProgramSink) {
 				return new HlttCompiler(sink, this.pts);
 			}
@@ -20,8 +20,8 @@ export namespace LinkChain {
 	}
 
 	export class HintFactory implements IHintFactory {
-		readonly type = TAG;
-		readJson(json: any) {
+		public readonly type = TAG;
+		public readJson(json: any) {
 			if (json && json.type === TAG) {
 				return new Hint(json.pts);
 			}
@@ -31,7 +31,7 @@ export namespace LinkChain {
 
 	export class HlttCompiler implements IHintCompiler {
 		constructor(private readonly sink: HlttProgramSink, private readonly pts: number[]) {}
-		doCompile() {
+		public doCompile() {
 			const hc = this;
 			this.sink.addSegment(function*($) {
 				for (let j = 1; j < hc.pts.length; j++) {

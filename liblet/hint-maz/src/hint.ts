@@ -1,9 +1,9 @@
 import { IFinalHintProgramSink, IHint, IHintCompiler, IHintFactory } from "@chlorophytum/arch";
-import { TranslateEmboxTwilightName } from "@chlorophytum/hint-embox";
 import { HlttProgramSink } from "@chlorophytum/final-hint-format-hltt";
+import * as EmBox from "@chlorophytum/hint-embox";
 import * as _ from "lodash";
 
-import { THintMultipleStrokesExplicit, THintMultipleStrokesStub } from "./hltt-programs";
+import { THintMultipleStrokesExplicit } from "./hltt-programs";
 import { getRecPath, MultipleAlignZoneProps } from "./props";
 
 export namespace MultipleAlignZone {
@@ -60,19 +60,34 @@ export namespace MultipleAlignZone {
 			const recPathCollide = getRecPath(props.mergePriority, collidePriority, N);
 
 			this.sink.addSegment(function*($) {
-				const spurBottom = $.globalTwilight(
-					TranslateEmboxTwilightName(props.emBoxName, "SpurBottom")
-				);
-				const spurTop = $.globalTwilight(
-					TranslateEmboxTwilightName(props.emBoxName, "SpurTop")
-				);
+				const spurBottom = $.symbol(EmBox.Twilights.SpurBottom(props.emBoxName));
+				const spurTop = $.symbol(EmBox.Twilights.SpurTop(props.emBoxName));
 
 				const bottomPoint = props.bottomPoint < 0 ? spurBottom : props.bottomPoint;
 				const topPoint = props.topPoint < 0 ? spurTop : props.topPoint;
 
+				yield $.call(
+					THintMultipleStrokesExplicit(N),
+					...props.gapMinDist,
+					...props.inkMinDist,
+					...recPath,
+					...recPathCollide,
+					props.bottomFree ? 2 : 1,
+					props.topFree ? 2 : 1,
+					bottomPoint,
+					topPoint,
+					..._.flatten(props.middleStrokes)
+				);
+
+				// Currently we turn off stubbing to reduce size of FPGM as well as loading speed
+				/*
+				let simple = true;
+				for (let md of props.gapMinDist) if (md !== 1) simple = false;
+				for (let md of props.inkMinDist) if (md !== 1) simple = false;
+				
 				// We'll generate stub functions for the cases that the stroke quantity are small
 				// to prevent producing too many functions and the consequent overflow.
-				if (N <= 3) {
+				if (simple && N <= 3) {
 					yield $.call(
 						THintMultipleStrokesStub(N, { ...props, recPath, recPathCollide }),
 						bottomPoint,
@@ -93,6 +108,8 @@ export namespace MultipleAlignZone {
 						..._.flatten(props.middleStrokes)
 					);
 				}
+
+				*/
 			});
 		}
 	}

@@ -2,17 +2,17 @@ import Assembler from "../ir";
 import { TtSymbol } from "../scope";
 
 export abstract class Statement {
-	abstract refer(asm: Assembler): void;
-	abstract compile(asm: Assembler): void;
-	willReturnAfter(): boolean {
+	public abstract refer(asm: Assembler): void;
+	public abstract compile(asm: Assembler): void;
+	public willReturnAfter(): boolean {
 		return false;
 	}
 }
 
 export abstract class Expression extends Statement {
-	abstract readonly arity: number;
+	public abstract readonly arity: number;
 	// Return the number if the value is a constant, undefined otherwise
-	constant(): number | undefined {
+	public constant(): number | undefined {
 		return undefined;
 	}
 }
@@ -24,34 +24,34 @@ export abstract class Variable extends Expression implements TtSymbol {
 	}
 
 	// TtSymbol properties
-	variableIndex: number | undefined = undefined;
-	readonly allowByte = true;
-	size = 1;
-	resolve() {
+	public variableIndex: number | undefined = undefined;
+	public readonly allowByte = true;
+	public size = 1;
+	public resolve() {
 		return this.variableIndex || 0;
 	}
 
 	// Expression properties
-	readonly arity = 1;
-	abstract readonly accessor: Accessor; // Read-write pair
+	public readonly arity = 1;
+	public abstract readonly accessor: Accessor; // Read-write pair
 
-	refer(asm: Assembler) {
+	public refer(asm: Assembler) {
 		asm.refValue(this);
 	}
 
-	abstract compilePtr(asm: Assembler): void;
-	constantPtr(): number | undefined {
+	public abstract compilePtr(asm: Assembler): void;
+	public constantPtr(): number | undefined {
 		return undefined;
 	}
 
-	compile(asm: Assembler) {
+	public compile(asm: Assembler) {
 		this.compilePtr(asm);
 		this.accessor.compileRead(asm);
 	}
 
 	// "Pointer" expression
-	readonly index: PointerExpression;
-	readonly ptr: PointerExpression;
+	public readonly index: PointerExpression;
+	public readonly ptr: PointerExpression;
 }
 
 export interface PointerExpression extends Expression {
@@ -62,11 +62,11 @@ class PointerExpressionImpl extends Expression {
 	constructor(readonly dereference: Variable) {
 		super();
 	}
-	readonly arity = 1;
-	compile(asm: Assembler) {
+	public readonly arity = 1;
+	public compile(asm: Assembler) {
 		return this.dereference.compilePtr(asm);
 	}
-	refer(asm: Assembler) {
+	public refer(asm: Assembler) {
 		this.dereference.refer(asm);
 	}
 }

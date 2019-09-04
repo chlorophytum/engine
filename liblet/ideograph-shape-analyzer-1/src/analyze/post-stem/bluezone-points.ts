@@ -1,19 +1,19 @@
-import { Point } from "@chlorophytum/arch";
+import { Geometry } from "@chlorophytum/arch";
 
 import { HintingStrategy } from "../../strategy";
-import Glyph from "../../types/glyph";
+import CGlyph from "../../types/glyph";
 import { AdjPoint, CPoint } from "../../types/point";
 import Stem from "../../types/stem";
 
-function nearTop(z1: Point, z2: Point, d: number) {
+function nearTop(z1: Geometry.Point, z2: Geometry.Point, d: number) {
 	return Math.hypot(z1.x - z2.x, z1.y - z2.y) < d;
 }
-function nearBot(z1: Point, z2: Point, d: number) {
+function nearBot(z1: Geometry.Point, z2: Geometry.Point, d: number) {
 	return Math.abs(z1.y - z2.y) <= d;
 }
 
 function considerPoint(
-	glyph: Glyph,
+	glyph: CGlyph,
 	strategy: HintingStrategy,
 	stems: Stem[],
 	point: AdjPoint,
@@ -73,7 +73,7 @@ function considerPoint(
 }
 
 export default function analyzeBlueZonePoints(
-	glyph: Glyph,
+	glyph: CGlyph,
 	stems: Stem[],
 	strategy: HintingStrategy
 ) {

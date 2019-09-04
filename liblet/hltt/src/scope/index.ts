@@ -22,12 +22,12 @@ export interface TtFunctionScopeSolver<T extends TtSymbol> {
 }
 
 export class GlobalScope<T extends TtSymbol> {
-	useStdLib: boolean = false;
-	sp: T; // #SP storage, used for recursion
-	storages: TtNamedSymbolTable<T>; // Storage
-	fpgm: TtNamedSymbolTable<T>; // FPGM
-	cvt: TtNamedSymbolTable<T>; // CVT
-	twilights: TtNamedSymbolTable<T>; // Twilight points
+	public useStdLib: boolean = false;
+	public sp: T; // #SP storage, used for recursion
+	public storages: TtNamedSymbolTable<T>; // Storage
+	public fpgm: TtNamedSymbolTable<T>; // FPGM
+	public cvt: TtNamedSymbolTable<T>; // CVT
+	public twilights: TtNamedSymbolTable<T>; // Twilight points
 
 	constructor(private readonly svf: TtScopeVariableFactory<T>) {
 		this.storages = new TtNamedSymbolTable(svf.storage);
@@ -37,19 +37,19 @@ export class GlobalScope<T extends TtSymbol> {
 		this.sp = this.storages.declare("#SP");
 	}
 
-	funcScopeSolver: TtFunctionScopeSolver<T> = {
+	public funcScopeSolver: TtFunctionScopeSolver<T> = {
 		resolve: () => undefined
 	};
-	createProgramScope() {
+	public createProgramScope() {
 		const ls = new ProgramScope<T>(this, false, this.svf.local);
 		return ls;
 	}
-	createFunctionScope(s: T) {
+	public createFunctionScope(s: T) {
 		const ls = new ProgramScope<T>(this, true, this.svf.local);
 		return ls;
 	}
 
-	assignID() {
+	public assignID() {
 		this.storages.assignID();
 		this.fpgm.assignID();
 		this.cvt.assignID();
@@ -68,13 +68,13 @@ export class ProgramScope<T extends TtSymbol> {
 		this.twilights = new TtSimpleSymbolTable(svf.localTwilight); // local twilight points
 	}
 
-	locals: TtSimpleSymbolTable<T>;
-	arguments: TtSimpleSymbolTable<T>;
-	twilights: TtSimpleSymbolTable<T>;
-	returnArity: number | undefined = undefined;
-	maxStack = 0;
-	return?: TtLabel;
-	assignID() {
+	public locals: TtSimpleSymbolTable<T>;
+	public arguments: TtSimpleSymbolTable<T>;
+	public twilights: TtSimpleSymbolTable<T>;
+	public returnArity: number | undefined = undefined;
+	public maxStack = 0;
+	public return?: TtLabel;
+	public assignID() {
 		if (!this.isFunction) {
 			// Entry point
 			this.locals.base = this.globals.storages.base + this.globals.storages.size;
@@ -89,15 +89,15 @@ export class ProgramScope<T extends TtSymbol> {
 export type TtVariableFactory<T extends TtSymbol> = (size: number, name?: string) => T;
 
 export class TtNamedSymbolTable<T extends TtSymbol> {
-	base: number = 0;
+	public base: number = 0;
 	private variableSize: number = 0;
 	private items = new Map<string, T>();
 	private locked: boolean = false;
 	constructor(private readonly factory: TtVariableFactory<T>) {}
-	lock() {
+	public lock() {
 		this.locked = true;
 	}
-	declare(name: string, size: number = 1) {
+	public declare(name: string, size: number = 1) {
 		if (this.locked) throw new Error("Symbol table locked");
 		if (name && this.items.has(name)) return this.items.get(name)!;
 		const s = this.factory(size, name);
@@ -108,7 +108,7 @@ export class TtNamedSymbolTable<T extends TtSymbol> {
 	get size() {
 		return this.variableSize;
 	}
-	assignID() {
+	public assignID() {
 		let j = 0;
 		for (const item of this.items.values()) {
 			item.variableIndex = this.base + j;
@@ -117,16 +117,16 @@ export class TtNamedSymbolTable<T extends TtSymbol> {
 	}
 }
 export class TtSimpleSymbolTable<T extends TtSymbol> {
-	base: number = 0;
+	public base: number = 0;
 	private variableSize: number = 0;
 	private items = new Set<T>();
 	private locked: boolean = false;
 	constructor(private readonly factory: TtVariableFactory<T>) {}
-	lock() {
+	public lock() {
 		this.locked = true;
 	}
 
-	declare(size: number = 1) {
+	public declare(size: number = 1) {
 		if (this.locked) throw new Error("Symbol table locked");
 		const s = this.factory(size);
 		this.items.add(s);
@@ -136,7 +136,7 @@ export class TtSimpleSymbolTable<T extends TtSymbol> {
 	get size() {
 		return this.variableSize;
 	}
-	assignID() {
+	public assignID() {
 		let j = 0;
 		for (const item of this.items) {
 			item.variableIndex = this.base + j;

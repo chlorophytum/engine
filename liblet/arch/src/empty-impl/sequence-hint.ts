@@ -22,7 +22,13 @@ export namespace Sequence {
 		public readonly type = TAG;
 		public readJson(json: any, general: IHintFactory) {
 			if (json && json.type === TAG) {
-				return new Hint(json.of.map((rep: any) => general.readJson(rep, general)));
+				let hs: IHint[] = [];
+				for (const h of json.of) {
+					let h1 = general.readJson(h, general);
+					if (h1) hs.push(h1);
+					else return null;
+				}
+				return new Hint(hs);
 			}
 			return null;
 		}

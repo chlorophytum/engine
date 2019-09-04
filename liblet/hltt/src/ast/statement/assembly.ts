@@ -9,8 +9,8 @@ export class AssemblyStatement extends Statement {
 	) {
 		super();
 	}
-	refer(asm: Assembler) {}
-	compile(asm: Assembler) {
+	public refer(asm: Assembler) {}
+	public compile(asm: Assembler) {
 		this.Asm(asm);
 	}
 }
