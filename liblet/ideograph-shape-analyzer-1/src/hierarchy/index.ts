@@ -104,6 +104,12 @@ export default class HierarchyAnalyzer {
 		);
 
 		if (sidPileMiddle.length) {
+			const spMD = this.getMinGap(
+				this.analysis.collisionMatrices.flips,
+				top,
+				bot,
+				sidPileMiddle
+			);
 			sink.addStemPileHint(
 				this.analysis.stems[bot],
 				sidPileMiddle.map(j => this.analysis.stems[j]),
@@ -114,9 +120,10 @@ export default class HierarchyAnalyzer {
 					this.analysis.collisionMatrices.annexation,
 					top,
 					bot,
-					sidPileMiddle
+					sidPileMiddle,
+					spMD
 				),
-				this.getMinGap(this.analysis.collisionMatrices.flips, top, bot, sidPileMiddle)
+				spMD
 			);
 		} else if (sp.botIsBoundary && !sp.topIsBoundary && !sp.botAtGlyphBottom) {
 			sink.addBottomSemiBoundaryStem(this.analysis.stems[bot], this.analysis.stems[top]);
@@ -202,14 +209,16 @@ export default class HierarchyAnalyzer {
 	}
 
 	private getMiddleStems(sidPile: number[], sp: StemPileSpatial, bot: number, top: number) {
+		const repeatPatternsOrig = this.findRepeatPatterns(sidPile);
+		const m = this.filterRepeatPatternStemIDs(sidPile, repeatPatternsOrig);
+
 		const sidPileMiddle: number[] = [];
-		for (const item of sidPile) {
+		for (const item of m.sidPileMiddle) {
 			if (!sp.botAtGlyphBottom && item === bot) continue;
 			if (!sp.topAtGlyphTop && item === top) continue;
 			sidPileMiddle.push(item);
 		}
-		const repeatPatterns = this.findRepeatPatterns(sidPileMiddle);
-		return this.filterRepeatPatternStemIDs(sidPileMiddle, repeatPatterns);
+		return { sidPileMiddle, repeatPatternDependents: m.repeatPatternDependents };
 	}
 
 	private findRepeatPatterns(sidPileMiddle: number[]) {
@@ -288,7 +297,7 @@ export default class HierarchyAnalyzer {
 	private repeatStemMergePri(n: number) {
 		const a: number[] = [];
 		for (let j = 0; j <= n; j++) {
-			a.push(j === n ? 0 : j);
+			a.push(j === 0 || j === n ? 0 : j * (j % 2 ? 1 : -1));
 		}
 		return a;
 	}
@@ -467,7 +476,13 @@ export default class HierarchyAnalyzer {
 		}
 	}
 
-	private getMergePriority(m: number[][], top: number, bot: number, middle: number[]) {
+	private getMergePriority(
+		m: number[][],
+		top: number,
+		bot: number,
+		middle: number[],
+		md: number[]
+	) {
 		let gaps: MergeDecideGap[] = [];
 		this.getMergePairData(m, middle[0], bot, 0, gaps);
 		for (let j = 1; j < middle.length; j++) {
@@ -475,7 +490,7 @@ export default class HierarchyAnalyzer {
 		}
 		this.getMergePairData(m, top, middle[middle.length - 1], middle.length, gaps);
 		this.optimizeMergeGaps(m, gaps);
-		return gaps.map(x => x.order * x.multiplier);
+		return gaps.map((x, j) => x.order * x.multiplier * (md[j] ? 0 : 1));
 	}
 
 	private getMinGapData(f: number[][], j: number, k: number, gaps: number[]) {

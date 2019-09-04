@@ -68,14 +68,17 @@ const UpdateNewProps = Lib.Func(function*($) {
 		collideMode,
 		mergeIndex,
 		mergeDown,
+		vpOGapMD,
 		vpGapMD,
 		vpInkMD,
 		vpZMids,
+		vpOGapMD1,
 		vpGapMD1,
 		vpInkMD1,
 		vpZMids1
-	] = $.args(10);
+	] = $.args(12);
 
+	const pOGapMD1 = $.coerce.fromIndex.variable(vpOGapMD1);
 	const pGapMD1 = $.coerce.fromIndex.variable(vpGapMD1);
 	const dropGapIndex = $.local();
 	const dropInkIndex = $.local();
@@ -109,6 +112,7 @@ const UpdateNewProps = Lib.Func(function*($) {
 		}
 	);
 
+	yield $.call(DropArrayItem, $.add(1, N), dropGapIndex, vpOGapMD, vpOGapMD1);
 	yield $.call(DropArrayItem, $.add(1, N), dropGapIndex, vpGapMD, vpGapMD1);
 	yield $.call(DropArrayItem, N, dropInkIndex, vpInkMD, vpInkMD1);
 	yield $.call(DropArrayItemX2, N, dropInkIndex, vpZMids, vpZMids1);
@@ -118,6 +122,10 @@ const UpdateNewProps = Lib.Func(function*($) {
 		yield $.set(
 			$.part(pGapMD1, dropInkIndex),
 			$.add($.coerce.toF26D6(1), $.part(pGapMD1, dropInkIndex))
+		);
+		yield $.set(
+			$.part(pOGapMD1, dropInkIndex),
+			$.add($.coerce.toF26D6(1), $.part(pOGapMD1, dropInkIndex))
 		);
 	});
 });
@@ -167,7 +175,18 @@ const THintMultipleStrokes_DoMerge: EdslSymbolTemplate<[number]> = Lib.Template(
 	$,
 	N: number
 ) {
-	const [fb, ft, zBot, zTop, vpZMids, vpGapMD, vpInkMD, vpRecPath, vpRecPathCollide] = $.args(9);
+	const [
+		fb,
+		ft,
+		zBot,
+		zTop,
+		vpOGapMD,
+		vpZMids,
+		vpGapMD,
+		vpInkMD,
+		vpRecPath,
+		vpRecPathCollide
+	] = $.args(10);
 
 	const pRecPath = $.coerce.fromIndex.variable(vpRecPath);
 	const pRecPathCollide = $.coerce.fromIndex.variable(vpRecPathCollide);
@@ -183,18 +202,21 @@ const THintMultipleStrokes_DoMerge: EdslSymbolTemplate<[number]> = Lib.Template(
 	yield $.set(mergeIndex, $.sub($.abs(pRecValue), 1));
 	yield $.set(mergeDown, $.lt(pRecValue, 0));
 
+	const oGapMD1 = $.local(N);
+	const zMids1 = $.local(2 * N - 2);
 	const gapMD1 = $.local(N);
 	const inkMD1 = $.local(N - 1);
-	const zMids1 = $.local(2 * N - 2);
 	yield $.call(
 		UpdateNewProps,
 		N,
 		0,
 		mergeIndex,
 		mergeDown,
+		vpOGapMD,
 		vpGapMD,
 		vpInkMD,
 		vpZMids,
+		oGapMD1.ptr,
 		gapMD1.ptr,
 		inkMD1.ptr,
 		zMids1.ptr
@@ -208,6 +230,7 @@ const THintMultipleStrokes_DoMerge: EdslSymbolTemplate<[number]> = Lib.Template(
 			ft,
 			zBot,
 			zTop,
+			oGapMD1.ptr,
 			zMids1.ptr,
 			gapMD1.ptr,
 			inkMD1.ptr,
@@ -279,7 +302,18 @@ const THintMultipleStrokes_DoCollideMerge: EdslSymbolTemplate<[number]> = Lib.Te
 	$,
 	N: number
 ) {
-	const [fb, ft, zBot, zTop, vpZMids, vpGapMD, vpInkMD, vpRecPath, vpRecPathCollide] = $.args(9);
+	const [
+		fb,
+		ft,
+		zBot,
+		zTop,
+		vpOGapMD,
+		vpZMids,
+		vpGapMD,
+		vpInkMD,
+		vpRecPath,
+		vpRecPathCollide
+	] = $.args(10);
 	const pRecPath = $.coerce.fromIndex.variable(vpRecPath);
 	const pRecPathCollide = $.coerce.fromIndex.variable(vpRecPathCollide);
 	const pRecValue = pRecPathCollide;
@@ -294,18 +328,21 @@ const THintMultipleStrokes_DoCollideMerge: EdslSymbolTemplate<[number]> = Lib.Te
 	yield $.set(collideIndex, $.sub($.abs(pRecValue), 1));
 	yield $.set(collideDown, $.lt(pRecValue, 0));
 
+	const oGapMD1 = $.local(N);
+	const zMids1 = $.local(2 * N - 2);
 	const gapMD1 = $.local(N);
 	const inkMD1 = $.local(N - 1);
-	const zMids1 = $.local(2 * N - 2);
 	yield $.call(
 		UpdateNewProps,
 		N,
 		1,
 		collideIndex,
 		collideDown,
+		vpOGapMD,
 		vpGapMD,
 		vpInkMD,
 		vpZMids,
+		oGapMD1.ptr,
 		gapMD1.ptr,
 		inkMD1.ptr,
 		zMids1.ptr
@@ -326,6 +363,7 @@ const THintMultipleStrokes_DoCollideMerge: EdslSymbolTemplate<[number]> = Lib.Te
 			ft,
 			zBot,
 			zTop,
+			oGapMD1.ptr,
 			zMids1.ptr,
 			gapMD1.ptr,
 			inkMD1.ptr,
@@ -356,12 +394,13 @@ export const THintMultipleStrokes_OmitImpl = Lib.Template(function*($, N: number
 		ft,
 		zBot,
 		zTop,
+		vpOGapMD,
 		vpZMids,
 		vpGapMD,
 		vpInkMD,
 		vpRecPath,
 		vpRecPathCollide
-	] = $.args(11);
+	] = $.args(12);
 
 	if (N <= 1) {
 		yield $.call(HintMultipleStrokesGiveUp, N, zBot, zTop, vpZMids);
@@ -379,6 +418,7 @@ export const THintMultipleStrokes_OmitImpl = Lib.Template(function*($, N: number
 					ft,
 					zBot,
 					zTop,
+					vpOGapMD,
 					vpZMids,
 					vpGapMD,
 					vpInkMD,
@@ -395,6 +435,7 @@ export const THintMultipleStrokes_OmitImpl = Lib.Template(function*($, N: number
 					ft,
 					zBot,
 					zTop,
+					vpOGapMD,
 					vpZMids,
 					vpGapMD,
 					vpInkMD,
@@ -407,7 +448,18 @@ export const THintMultipleStrokes_OmitImpl = Lib.Template(function*($, N: number
 });
 
 export const THintMultipleStrokesMainImpl = Lib.Template(function*($, N: number) {
-	const [fb, ft, zBot, zTop, vpZMids, vpGapMD, vpInkMD, vpRecPath, vpRecPathCollide] = $.args(9);
+	const [
+		fb,
+		ft,
+		zBot,
+		zTop,
+		vpOGapMD,
+		vpZMids,
+		vpGapMD,
+		vpInkMD,
+		vpRecPath,
+		vpRecPathCollide
+	] = $.args(10);
 
 	const dist = $.local();
 	const frBot = $.local();
@@ -417,8 +469,10 @@ export const THintMultipleStrokesMainImpl = Lib.Template(function*($, N: number)
 	yield $.set(dist, $.call(VisDist, zBot, zTop, frBot, frTop));
 
 	const pxReqGap = $.local();
+	const pxReqGapOrig = $.local();
 	const pxReqInk = $.local();
 	yield $.set(pxReqGap, $.call(DecideRequiredGap, $.add(1, N), vpGapMD));
+	yield $.set(pxReqGapOrig, $.call(DecideRequiredGap, $.add(1, N), vpOGapMD));
 	yield $.set(pxReqInk, $.call(DecideRequiredGap, N, vpInkMD));
 
 	yield $.if($.lt(dist, $.add(pxReqGap, pxReqInk)), function*() {
@@ -431,6 +485,7 @@ export const THintMultipleStrokesMainImpl = Lib.Template(function*($, N: number)
 				ft,
 				zBot,
 				zTop,
+				vpOGapMD,
 				vpZMids,
 				vpGapMD,
 				vpInkMD,
@@ -441,10 +496,13 @@ export const THintMultipleStrokesMainImpl = Lib.Template(function*($, N: number)
 	});
 
 	// If we have *many* pixels, do in a simple way
-	yield $.if($.gteq(dist, $.mul($.coerce.toF26D6(4), $.add(pxReqGap, pxReqInk))), function*() {
-		yield $.call(HintMultipleStrokesSimple, N, zBot, zTop, vpZMids);
-		yield $.return(1);
-	});
+	yield $.if(
+		$.gteq(dist, $.mul($.coerce.toF26D6(4), $.add(pxReqGapOrig, pxReqInk))),
+		function*() {
+			yield $.call(HintMultipleStrokesSimple, N, zBot, zTop, vpZMids);
+			yield $.return(1);
+		}
+	);
 
 	const allocN = 8 * Math.ceil(N / 8);
 

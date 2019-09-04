@@ -139,17 +139,20 @@ export const THintMultipleStrokesExplicit = Lib.Template(function*($, N: number)
 		zMids
 	] = splitNArgs(args, argQty);
 
+	const oGapMD = $.local(N + 1);
 	const aGapMD = $.local(N + 1);
 	const aInkMD = $.local(N);
 	const aRecPath = $.local(N);
 	const aRecPathCollide = $.local(N);
 	const aZMids = $.local(N * 2);
 
+	yield $.call(TInitArr(N + 1), oGapMD.ptr, ...ixGapMinDist);
 	yield $.call(TInitArr(N + 1), aGapMD.ptr, ...ixGapMinDist);
 	yield $.call(TInitArr(N), aInkMD.ptr, ...ixInkMinDist);
 	yield $.call(TInitArr(N), aRecPath.ptr, ...ixRecPath);
 	yield $.call(TInitArr(N), aRecPathCollide.ptr, ...ixRecPathCollide);
 	yield $.call(TInitZMids(N), aZMids.ptr, ...zMids);
+	yield $.call(MapArrIntToPx, oGapMD.ptr, N + 1);
 	yield $.call(MapArrIntToPx, aGapMD.ptr, N + 1);
 	yield $.call(MapArrIntToPx, aInkMD.ptr, N);
 
@@ -161,6 +164,7 @@ export const THintMultipleStrokesExplicit = Lib.Template(function*($, N: number)
 		$.toFloat(iTopFree),
 		zBot,
 		zTop,
+		oGapMD.ptr,
 		aZMids.ptr,
 		aGapMD.ptr,
 		aInkMD.ptr,
