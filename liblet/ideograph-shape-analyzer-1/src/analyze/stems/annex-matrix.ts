@@ -74,6 +74,7 @@ class ACSComputer {
 		private readonly overlapLengths: number[][],
 		private readonly Q: number[][],
 		private readonly F: number[][],
+		private readonly S: number[][],
 		private readonly dov?: boolean[][]
 	) {
 		this.slopes = stems.map(s => (slopeOf(s.high) + slopeOf(s.low)) / 2);
@@ -98,6 +99,39 @@ class ACSComputer {
 	}
 	private isSideTouch(sj: Stem, sk: Stem) {
 		return (sj.xMin < sk.xMin && sj.xMax < sk.xMax) || (sj.xMin > sk.xMin && sj.xMax > sk.xMax);
+	}
+
+	private offCenterTouchType(j: number, k: number) {
+		const sj = this.stems[j];
+		const sk = this.stems[k];
+		if (sk.xMaxP <= Support.mix(sj.xMinP, sj.xMaxP, 1 / 2)) return 1;
+		if (sk.xMinP >= Support.mix(sj.xMinP, sj.xMaxP, 1 / 2)) return 2;
+		if (sj.xMaxP <= Support.mix(sk.xMinP, sk.xMaxP, 1 / 2)) return 3;
+		if (sj.xMinP >= Support.mix(sk.xMinP, sk.xMaxP, 1 / 2)) return 4;
+		return 0;
+	}
+	private isOffCenterTouch(j: number, k: number) {
+		const tt = this.offCenterTouchType(j, k);
+		if (!tt) return false;
+		if (!this.dov || !this.dov[j][k]) return true;
+		if (tt === 1 || tt === 2) {
+			for (let m = 0; m < j; m++) {
+				if (this.dov[j][m]) {
+					const ttm = this.offCenterTouchType(j, m);
+					if ((tt === 1 && ttm === 2) || (tt === 2 && ttm === 1)) return false;
+				}
+			}
+			return true;
+		} else {
+			for (let m = k + 1; m < this.stems.length; m++) {
+				if (this.dov[m][k]) {
+					const ttm = this.offCenterTouchType(m, k);
+					if ((tt === 3 && ttm === 4) || (tt === 4 && ttm === 3)) return false;
+				}
+			}
+			return true;
+		}
+		return true;
 	}
 
 	public compute(j: number, k: number) {
@@ -127,12 +161,15 @@ class ACSComputer {
 
 		// Annexation coefficients
 		const coefficientA = this.computeCoefficientA(
+			j,
+			k,
 			nothingInBetween,
 			tb,
 			sj,
 			sk,
 			sjRadBot,
-			skRadTop
+			skRadTop,
+			this.isOffCenterTouch(j, k)
 		);
 
 		let a =
@@ -143,25 +180,21 @@ class ACSComputer {
 			slopesCoefficient;
 		if (!isFinite(a)) a = 0;
 
-		let d = ovr;
-
-		return { a, d };
+		return { a, d: ovr };
 	}
 
 	private computeCoefficientA(
+		j: number,
+		k: number,
 		nothingInBetween: boolean | undefined,
 		tb: boolean,
 		sj: Stem,
 		sk: Stem,
 		sjRadBot: boolean,
-		skRadTop: boolean
+		skRadTop: boolean,
+		offCenter: boolean
 	) {
-		let coefficientA = 1;
-		const offCenter =
-			sk.xMax <= Support.mix(sj.xMin, sj.xMax, 1 / 2) ||
-			sk.xMin >= Support.mix(sj.xMin, sj.xMax, 1 / 2) ||
-			sj.xMax <= Support.mix(sk.xMin, sk.xMax, 1 / 2) ||
-			sj.xMin >= Support.mix(sk.xMin, sk.xMax, 1 / 2);
+		let coefficientA = 1 + this.strategy.COEFF_S * this.S[j][k];
 		if (!nothingInBetween || tb) {
 			coefficientA *= this.strategy.COEFF_A_SHAPE_LOST_XX;
 		}
@@ -185,12 +218,14 @@ class ACSComputer {
 				coefficientA /=
 					this.strategy.COEFF_A_SAME_RADICAL * this.strategy.COEFF_A_SHAPE_LOST;
 			}
-		} else if (sjRadBot && skRadTop) {
+		} else {
 			coefficientA *= this.strategy.COEFF_A_RADICAL_MERGE;
-		} else if (skRadTop) {
-			if (offCenter) coefficientA *= this.strategy.COEFF_A_SHAPE_LOST_XR;
-		} else if (sjRadBot) {
-			if (offCenter) coefficientA *= this.strategy.COEFF_A_SHAPE_LOST_XR;
+			if (sjRadBot && skRadTop) {
+			} else if (skRadTop) {
+				if (offCenter) coefficientA *= this.strategy.COEFF_A_SHAPE_LOST_XR;
+			} else if (sjRadBot) {
+				if (offCenter) coefficientA *= this.strategy.COEFF_A_SHAPE_LOST_XR;
+			}
 		}
 		return coefficientA;
 	}
@@ -221,6 +256,7 @@ export function computeACSMatrices(
 	overlapLengths: number[][],
 	Q: number[][],
 	F: number[][],
+	S: number[][],
 	dov?: boolean[][]
 ) {
 	// A : Annexation operator
@@ -236,7 +272,7 @@ export function computeACSMatrices(
 		}
 	}
 
-	const comp = new ACSComputer(strategy, stems, overlapRatios, overlapLengths, Q, F, dov);
+	const comp = new ACSComputer(strategy, stems, overlapRatios, overlapLengths, Q, F, S, dov);
 
 	for (let j = 0; j < n; j++) {
 		for (let k = 0; k < j; k++) {
@@ -293,7 +329,7 @@ function cleanupTB(D: number[][], A: number[][], stems: Stem[], strategy: Hintin
 function closure(n: number, A: number[][]) {
 	for (let j = 0; j < n; j++) {
 		for (let k = j + 1; k < n; k++) {
-			A[j][k] = A[k][j] = Math.min(Math.max(A[j][k], A[k][j]));
+			A[j][k] = A[k][j] = Math.max(A[j][k], A[k][j]);
 		}
 	}
 }

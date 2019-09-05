@@ -47,10 +47,14 @@ export function calculateMinMax(stem: Stem, radicals: Radical[], strategy: Hinti
 		strategy.UPM
 	);
 
-	stem.xMinEx = Math.min(p.x, q.x);
-	stem.xMaxEx = Math.max(coP.x, coQ.x);
-	stem.xMin = Math.min(leftmostZ_SS(stem.high).x, leftmostZ_SS(stem.low).x);
-	stem.xMax = Math.max(rightmostZ_SS(stem.high).x, rightmostZ_SS(stem.low).x);
+	stem.xMinExP = stem.xMinEx = Math.min(p.x, q.x);
+	stem.xMaxExP = stem.xMaxEx = Math.max(coP.x, coQ.x);
+	stem.xMinTop = leftmostZ_SS(stem.high).x;
+	stem.xMaxTop = rightmostZ_SS(stem.high).x;
+	stem.xMinBot = leftmostZ_SS(stem.low).x;
+	stem.xMaxBot = rightmostZ_SS(stem.low).x;
+	stem.xMinP = stem.xMin = Math.min(stem.xMinTop, stem.xMinBot);
+	stem.xMaxP = stem.xMax = Math.max(stem.xMaxTop, stem.xMaxBot);
 }
 function _expandSeg(seg: SegSpan, radical: Radical, slope: number) {
 	let z0: Geometry.GlyphPoint = leftmostZ_S(seg),

@@ -9,10 +9,20 @@ export default class Stem {
 	public width: number;
 	public slope: number;
 	public belongRadical: number;
+
+	// X min/max of all kinds
+	public xMinTop: number = 0xffff;
+	public xMaxTop: number = -0xffff;
+	public xMinBot: number = 0xffff;
+	public xMaxBot: number = -0xffff;
 	public xMin: number = 0xffff;
 	public xMax: number = -0xffff;
+	public xMinP: number = 0xffff;
+	public xMaxP: number = -0xffff;
 	public xMinEx: number = 0xffff;
 	public xMaxEx: number = -0xffff;
+	public xMinExP: number = 0xffff;
+	public xMaxExP: number = -0xffff;
 
 	public highKey: AdjPoint = new CPoint(0, 0);
 	public lowKey: AdjPoint = new CPoint(0, 0);

@@ -1,6 +1,7 @@
 import * as _ from "lodash";
 
 import { GlyphAnalysis } from "../analyze/analysis";
+import { stemsAreSimilar } from "../analyze/stems/rel";
 import { atGlyphBottom, atGlyphTop } from "../si-common/stem-spatial";
 import { HintingStrategy } from "../strategy";
 import Stem from "../types/stem";
@@ -110,19 +111,20 @@ export default class HierarchyAnalyzer {
 				bot,
 				sidPileMiddle
 			);
+			const merging = this.getMergePriority(
+				this.analysis.collisionMatrices.annexation,
+				top,
+				bot,
+				sidPileMiddle,
+				spMD
+			);
 			sink.addStemPileHint(
 				this.analysis.stems[bot],
 				sidPileMiddle.map(j => this.analysis.stems[j]),
 				this.analysis.stems[top],
 				sp.botIsBoundary,
 				sp.topIsBoundary,
-				this.getMergePriority(
-					this.analysis.collisionMatrices.annexation,
-					top,
-					bot,
-					sidPileMiddle,
-					spMD
-				),
+				merging,
 				spMD
 			);
 		} else if (sp.botIsBoundary && !sp.topIsBoundary && !sp.botAtGlyphBottom) {
@@ -231,7 +233,15 @@ export default class HierarchyAnalyzer {
 			} else {
 				const lastStem = this.analysis.stems[sidPileMiddle[patternEnd]];
 				const currentStem = this.analysis.stems[sidPileMiddle[sid]];
-				if (this.stemsAreSimilar(currentStem, lastStem)) {
+				// console.log(
+				// 	sidPileMiddle[sid],
+				// 	sidPileMiddle[patternEnd],
+				// 	"A=",
+				// 	this.analysis.collisionMatrices.annexation[sidPileMiddle[sid]][
+				// 		sidPileMiddle[patternEnd]
+				// 	]
+				// );
+				if (stemsAreSimilar(this.strategy, currentStem, lastStem)) {
 					patternEnd = sid;
 				} else {
 					this.flushRepeatPattern(repeatPatterns, patternStart, patternEnd);
@@ -241,21 +251,6 @@ export default class HierarchyAnalyzer {
 		}
 		this.flushRepeatPattern(repeatPatterns, patternStart, patternEnd);
 		return repeatPatterns;
-	}
-
-	private stemsAreSimilar(currentStem: Stem, lastStem: Stem) {
-		return (
-			((lastStem.belongRadical === currentStem.belongRadical &&
-				lastStem.hasSameRadicalStemBelow &&
-				currentStem.hasSameRadicalStemAbove) ||
-				(!lastStem.hasSameRadicalStemBelow &&
-					!lastStem.hasSameRadicalStemAbove &&
-					!currentStem.hasSameRadicalStemBelow &&
-					!currentStem.hasSameRadicalStemAbove)) &&
-			Math.abs(currentStem.xMin - lastStem.xMin) < this.strategy.UPM * this.strategy.X_FUZZ &&
-			Math.abs(currentStem.xMax - lastStem.xMax) < this.strategy.UPM * this.strategy.X_FUZZ &&
-			Math.abs(currentStem.width - lastStem.width) < this.strategy.UPM * this.strategy.Y_FUZZ
-		);
 	}
 
 	private flushRepeatPattern(
@@ -490,6 +485,7 @@ export default class HierarchyAnalyzer {
 		}
 		this.getMergePairData(m, top, middle[middle.length - 1], middle.length, gaps);
 		this.optimizeMergeGaps(m, gaps);
+
 		return gaps.map((x, j) => x.order * x.multiplier * (md[j] ? 0 : 1));
 	}
 
