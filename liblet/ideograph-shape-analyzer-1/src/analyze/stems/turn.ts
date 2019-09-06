@@ -179,22 +179,23 @@ export function analyzeSquash(g: CGlyph, strategy: HintingStrategy, stems: Stem[
 			if (yBot <= yTop) continue;
 			if (yBot < 0 || yTop < 0) continue;
 
-			const N = 64;
+			const NU = Math.max(4, Math.ceil(Math.abs(xj2 - xj1)), Math.ceil(Math.abs(xk2 - xk1)));
+			const NV = Math.max(4, Math.ceil(Math.abs(yTop - yBot)));
 			let a = 0;
-			for (let v = 0; v <= N; v++) {
+			for (let v = 0; v <= NV; v++) {
 				let s = 0;
-				const y = mix(yBot, yTop, v / N);
-				const xLeft = mix(xj1, xk1, v / N);
-				const xRight = mix(xj2, xk2, v / N);
-				for (let u = 0; u <= N; u++) {
-					const x = mix(xLeft, xRight, u / N);
+				const y = mix(yBot, yTop, v / NV);
+				const xLeft = mix(xj1, xk1, v / NV);
+				const xRight = mix(xj2, xk2, v / NV);
+				for (let u = 0; u <= NU; u++) {
+					const x = mix(xLeft, xRight, u / NU);
 					if (bitmap.accessRaw(x, y)) s += 1;
 				}
-				a += (s / N) * Math.abs(xRight - xLeft);
+				a += (s / NV) * Math.abs(xRight - xLeft);
 			}
 
 			squashMatrix[j][k] = squashMatrix[k][j] =
-				((a / N) * Math.abs(yBot - yTop)) / (SIZE * SIZE);
+				((a / NU) * Math.abs(yBot - yTop)) / (SIZE * SIZE);
 		}
 	}
 	return squashMatrix;

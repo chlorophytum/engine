@@ -24,11 +24,11 @@ export class HintArbitrator<GID> {
 		if (this.ptr >= this.items.length) return null;
 
 		let workerJobs: Procs.GlyphHintJobs = {};
-		const step = Math.max(
-			this.parallelJobs,
-			Math.min(
-				0x100,
-				Math.round(
+		const step = Math.round(
+			Math.max(
+				this.parallelJobs,
+				Math.min(
+					this.items.length / 256,
 					Math.max(1, this.items.length - this.ptr) / Math.max(1, this.parallelJobs)
 				)
 			)
