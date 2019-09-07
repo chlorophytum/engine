@@ -7,7 +7,7 @@ import { doHint } from "./hint";
 import { doInstruct } from "./instruct";
 import { doIntegrate, IntegrateJob } from "./integrate";
 
-program.version("0.0.1");
+program.version("0.1.2-alpha");
 
 program
 	.command("hint <font> <toHint> [others...]")
