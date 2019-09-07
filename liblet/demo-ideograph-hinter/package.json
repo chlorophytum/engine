@@ -1,8 +1,9 @@
 {
 	"name": "@chlorophytum/demo-ideograph-hinter",
-	"version": "0.0.1",
+	"version": "0.1.2-alpha.0",
 	"description": "",
 	"main": "lib/index.js",
+	"private": true,
 	"typings": "lib/index.d.ts",
 	"scripts": {
 		"clean": "rimraf lib .build-cache",
@@ -12,11 +13,11 @@
 	"author": "Renzhi Li (aka. Belleve Invis)",
 	"license": "MIT",
 	"dependencies": {
-		"tslib": "^1.9.3",
-		"@chlorophytum/final-hint-format-hltt": "^0.0.1",
-		"@chlorophytum/ideograph-shape-analyzer-1": "^0.0.1",
-		"@chlorophytum/font-format-otd": "^0.0.1",
-		"@chlorophytum/cli": "^0.0.1"
+		"@chlorophytum/cli": "^0.1.2-alpha.0",
+		"@chlorophytum/final-hint-format-hltt": "^0.1.2-alpha.0",
+		"@chlorophytum/font-format-otd": "^0.1.2-alpha.0",
+		"@chlorophytum/ideograph-shape-analyzer-1": "^0.1.2-alpha.0",
+		"tslib": "^1.9.3"
 	},
 	"devDependencies": {
 		"ava": "^1.4.1"

@@ -29,8 +29,8 @@ for (const package of tsPackages.keys()) {
 		extends: "../tsconfig.settings.json",
 		references: newDeps,
 		compilerOptions: {
-			outDir: "lib",
 			rootDir: "src",
+			outDir: "lib",
 			tsBuildInfoFile: ".build-cache/src"
 		}
 	};

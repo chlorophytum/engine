@@ -1,6 +1,6 @@
 {
-  "packages": [
-    "liblet/*"
-  ],
-  "version": "3.0.2"
+	"packages": [
+		"liblet/*"
+	],
+	"version": "0.1.2-alpha.0"
 }

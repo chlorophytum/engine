@@ -30,6 +30,14 @@ test("Dummy test :: ${libName}", t => {
 `
 );
 fs.writeFileSync(
+	path.join(LIBLET_DIR, libName, "src", ".npmignore"),
+	`src/
+lib/**/*.map
+tsconfig.json
+.build-cache
+`
+);
+fs.writeFileSync(
 	path.join(LIBLET_DIR, libName, "package.json"),
 	stringify({
 		name: "@chlorophytum/" + libName,
@@ -52,6 +60,9 @@ fs.writeFileSync(
 		},
 		ava: {
 			files: ["lib/**/*.test.js"]
+		},
+		publishConfig: {
+			access: "public"
 		}
 	})
 );
