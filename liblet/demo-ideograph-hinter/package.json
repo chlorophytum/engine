@@ -3,6 +3,7 @@
 	"version": "0.0.1",
 	"description": "",
 	"main": "lib/index.js",
+	"private": true,
 	"typings": "lib/index.d.ts",
 	"scripts": {
 		"clean": "rimraf lib .build-cache",
