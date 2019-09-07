@@ -1,27 +1,30 @@
 {
-  "name": "@chlorophytum/fontforge-instr",
-  "version": "0.0.1",
-  "description": "",
-  "main": "lib/index.js",
-  "typings": "lib/index.d.ts",
-  "scripts": {
-    "clean": "rimraf lib .build-cache",
-    "build": "tsc --build",
-    "test": "ava --verbose"
-  },
-  "author": "Renzhi Li (aka. Belleve Invis)",
-  "license": "MIT",
-  "dependencies": {
-    "@chlorophytum/arch": "^0.0.1",
-    "@chlorophytum/hltt": "^0.0.1",
-    "tslib": "^1.9.3"
-  },
-  "devDependencies": {
-    "ava": "^1.4.1"
-  },
-  "ava": {
-    "files": [
-      "lib/**/*.test.js"
-    ]
-  }
+	"name": "@chlorophytum/fontforge-instr",
+	"version": "0.1.0-alpha.0",
+	"description": "",
+	"main": "lib/index.js",
+	"typings": "lib/index.d.ts",
+	"scripts": {
+		"clean": "rimraf lib .build-cache",
+		"build": "tsc --build",
+		"test": "ava --verbose"
+	},
+	"author": "Renzhi Li (aka. Belleve Invis)",
+	"license": "MIT",
+	"dependencies": {
+		"@chlorophytum/arch": "^0.1.0-alpha.0",
+		"@chlorophytum/hltt": "^0.1.0-alpha.0",
+		"tslib": "^1.9.3"
+	},
+	"devDependencies": {
+		"ava": "^1.4.1"
+	},
+	"ava": {
+		"files": [
+			"lib/**/*.test.js"
+		]
+	},
+	"publishConfig": {
+		"access": "public"
+	}
 }

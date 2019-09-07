@@ -1,6 +1,6 @@
 {
 	"name": "@chlorophytum/arch",
-	"version": "0.0.1",
+	"version": "0.1.0-alpha.0",
 	"description": "",
 	"main": "lib/index.js",
 	"typings": "lib/index.d.ts",
@@ -21,5 +21,8 @@
 		"files": [
 			"lib/**/*.test.js"
 		]
+	},
+	"publishConfig": {
+		"access": "public"
 	}
 }

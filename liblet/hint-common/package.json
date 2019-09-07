@@ -1,6 +1,6 @@
 {
 	"name": "@chlorophytum/hint-common",
-	"version": "0.0.1",
+	"version": "0.1.0-alpha.0",
 	"description": "",
 	"main": "lib/index.js",
 	"typings": "lib/index.d.ts",
@@ -12,9 +12,9 @@
 	"author": "Renzhi Li (aka. Belleve Invis)",
 	"license": "MIT",
 	"dependencies": {
-		"tslib": "^1.9.3",
-		"@chlorophytum/arch": "^0.0.1",
-		"@chlorophytum/final-hint-format-hltt": "^0.0.1"
+		"@chlorophytum/arch": "^0.1.0-alpha.0",
+		"@chlorophytum/final-hint-format-hltt": "^0.1.0-alpha.0",
+		"tslib": "^1.9.3"
 	},
 	"devDependencies": {
 		"ava": "^1.4.1"
@@ -23,5 +23,8 @@
 		"files": [
 			"lib/**/*.test.js"
 		]
+	},
+	"publishConfig": {
+		"access": "public"
 	}
 }
