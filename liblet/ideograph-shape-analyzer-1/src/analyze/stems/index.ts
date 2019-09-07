@@ -9,7 +9,7 @@ import { analyzeDirectOverlaps } from "./direct-overlap";
 import { analyzeEntireContourAboveBelow, analyzeStemSpatialRelationships } from "./rel";
 import { analyzeStemKeyPoints } from "./stem-keypoint";
 import findStems from "./stems";
-import analyzeTurns from "./turn";
+import { analyzeSquash, analyzeTurns } from "./turn";
 
 function OverlapMatrix(stems: Stem[], fn: (a: Stem, b: Stem) => number) {
 	let transitions: number[][] = [];
@@ -54,6 +54,7 @@ export default function analyzeStems(
 	analyzeStemSpatialRelationships(stems, radicals, stemOverlaps, strategy);
 	analyzeEntireContourAboveBelow(glyph, stems);
 	const F = analyzeTurns(glyph, strategy, stems);
+	const S = analyzeSquash(glyph, strategy, stems);
 	const { P, Q } = computePQMatrices(strategy, stems, F);
 	// We need to calculate ProximityUp and ProximityDown
 	// so computeACS would be ran TWICE
@@ -63,7 +64,8 @@ export default function analyzeStems(
 		stemOverlaps,
 		stemOverlapLengths,
 		Q,
-		F
+		F,
+		S
 	);
 	const directOverlaps = analyzeDirectOverlaps(
 		stems,
@@ -80,6 +82,7 @@ export default function analyzeStems(
 		stemOverlapLengths,
 		Q,
 		F,
+		S,
 		directOverlaps
 	);
 

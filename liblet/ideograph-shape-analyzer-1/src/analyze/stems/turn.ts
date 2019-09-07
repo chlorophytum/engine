@@ -1,3 +1,5 @@
+import { mix } from "@chlorophytum/arch/lib/support";
+
 import { HintingStrategy } from "../../strategy";
 import CGlyph from "../../types/glyph";
 import Stem from "../../types/stem";
@@ -29,6 +31,11 @@ export class Bitmap {
 		if (x < 0 || x > SIZE * this.scale) return false;
 		if (y < this.yMin * this.scale || y > this.yMax * this.scale) return false;
 		return this.array[Math.round(x / this.scale)][Math.round(y / this.scale) - this.yMin];
+	}
+	public accessRaw(x: number, y: number) {
+		if (x < 0 || x > SIZE) return false;
+		if (y < 0 || y > SIZE) return false;
+		return this.array[Math.round(x)][Math.round(y) - this.yMin];
 	}
 }
 
@@ -89,7 +96,7 @@ class FlipAnalyzer {
 	}
 }
 
-export default function analyzeTurns(g: CGlyph, strategy: HintingStrategy, stems: Stem[]) {
+export function analyzeTurns(g: CGlyph, strategy: HintingStrategy, stems: Stem[]) {
 	const bitmap = createImageBitmap(g, strategy);
 	const HLimit = bitmap.transform(strategy.UPM / 6, 0).x;
 	const VLimit = bitmap.transform(strategy.CANONICAL_STEM_WIDTH / 2, 0).x;
@@ -145,5 +152,51 @@ export default function analyzeTurns(g: CGlyph, strategy: HintingStrategy, stems
 			turnMatrix[j][k] = turnMatrix[k][j] = fa.computeFlips();
 		}
 	}
+
 	return turnMatrix;
+}
+
+export function analyzeSquash(g: CGlyph, strategy: HintingStrategy, stems: Stem[]) {
+	const bitmap = createImageBitmap(g, strategy);
+
+	let squashMatrix: number[][] = [];
+	for (let j = 0; j < stems.length; j++) {
+		squashMatrix[j] = [];
+		squashMatrix[j][j] = 0;
+		const sj = stems[j];
+		for (let k = 0; k < j; k++) {
+			squashMatrix[j][k] = squashMatrix[k][j] = 0;
+			const sk = stems[k];
+
+			const xj1 = bitmap.transform(sj.xMinEx, 0).x;
+			const xj2 = bitmap.transform(sj.xMaxEx, 0).x;
+			const xk1 = bitmap.transform(sk.xMinEx, 0).x;
+			const xk2 = bitmap.transform(sk.xMaxEx, 0).x;
+
+			const yBot = bitmap.transform(0, sj.y - sj.width).y - 2;
+			const yTop = bitmap.transform(0, sk.y).y + 2;
+
+			if (yBot <= yTop) continue;
+			if (yBot < 0 || yTop < 0) continue;
+
+			const NU = Math.max(4, Math.ceil(Math.abs(xj2 - xj1)), Math.ceil(Math.abs(xk2 - xk1)));
+			const NV = Math.max(4, Math.ceil(Math.abs(yTop - yBot)));
+			let a = 0;
+			for (let v = 0; v <= NV; v++) {
+				let s = 0;
+				const y = mix(yBot, yTop, v / NV);
+				const xLeft = mix(xj1, xk1, v / NV);
+				const xRight = mix(xj2, xk2, v / NV);
+				for (let u = 0; u <= NU; u++) {
+					const x = mix(xLeft, xRight, u / NU);
+					if (bitmap.accessRaw(x, y)) s += 1;
+				}
+				a += (s / NV) * Math.abs(xRight - xLeft);
+			}
+
+			squashMatrix[j][k] = squashMatrix[k][j] =
+				((a / NU) * Math.abs(yBot - yTop)) / (SIZE * SIZE);
+		}
+	}
+	return squashMatrix;
 }

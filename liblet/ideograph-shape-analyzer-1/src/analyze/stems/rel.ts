@@ -1,4 +1,5 @@
 import { Geometry } from "@chlorophytum/arch";
+import { cursorTo } from "readline";
 
 import { HintingStrategy } from "../../strategy";
 import CGlyph from "../../types/glyph";
@@ -381,6 +382,10 @@ export function analyzeStemSpatialRelationships(
 			if (!(sj.rid && sj.rid === sk.rid)) continue;
 			for (let p of StemSharedBoolKeys) sj[p] = sk[p] = !!sj[p] || !!sk[p];
 			for (let p of StemSharedNumberKeys) sj[p] = sk[p] = Math.max(sj[p] || 0, sk[p] || 0);
+			sj.xMinP = sk.xMinP = Math.min(sj.xMin, sk.xMin);
+			sj.xMaxP = sk.xMaxP = Math.max(sj.xMax, sk.xMax);
+			sj.xMinExP = sk.xMinExP = Math.min(sj.xMinEx, sk.xMinEx);
+			sj.xMaxExP = sk.xMaxExP = Math.max(sj.xMaxEx, sk.xMaxEx);
 		}
 	}
 }
@@ -449,4 +454,23 @@ export function analyzeEntireContourAboveBelow(glyph: CGlyph, stems: Stem[]) {
 			}
 		}
 	}
+}
+
+export function stemsAreSimilar(strategy: HintingStrategy, a: Stem, b: Stem) {
+	// console.log(a.xMinBot, a.xMaxBot, a.xMinTop, a.xMaxTop);
+	// console.log(b.xMinBot, b.xMaxBot, b.xMinTop, b.xMaxTop);
+	return (
+		((b.belongRadical === a.belongRadical &&
+			b.hasSameRadicalStemBelow &&
+			a.hasSameRadicalStemAbove) ||
+			(!b.hasSameRadicalStemBelow &&
+				!b.hasSameRadicalStemAbove &&
+				!a.hasSameRadicalStemBelow &&
+				!a.hasSameRadicalStemAbove)) &&
+		Math.abs(a.xMinBot - b.xMinBot) < strategy.UPM * strategy.X_FUZZ &&
+		Math.abs(a.xMinTop - b.xMinTop) < strategy.UPM * strategy.X_FUZZ &&
+		Math.abs(a.xMaxBot - b.xMaxBot) < strategy.UPM * strategy.X_FUZZ &&
+		Math.abs(a.xMaxTop - b.xMaxTop) < strategy.UPM * strategy.X_FUZZ &&
+		Math.abs(a.width - b.width) < strategy.UPM * strategy.Y_FUZZ
+	);
 }

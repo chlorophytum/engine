@@ -1,4 +1,5 @@
 import { EmptyImpl, IHint } from "@chlorophytum/arch";
+import { mix } from "@chlorophytum/arch/lib/support";
 import { Interpolate, LinkChain, Smooth, WithDirection } from "@chlorophytum/hint-common";
 import { EmBoxEdge, EmBoxInit, EmBoxStroke } from "@chlorophytum/hint-embox";
 import { MultipleAlignZone } from "@chlorophytum/hint-maz";
@@ -69,6 +70,13 @@ export default class HintGenSink extends HierarchySink {
 		);
 	}
 
+	private tbCollidable(top: null | Stem, s: Stem) {
+		if (!top || top === s) return false;
+		return (
+			s.xMin > mix(top.xMin, top.xMax, 1 / 10) && s.xMax < mix(top.xMin, top.xMax, 1 - 1 / 10)
+		);
+	}
+
 	public addStemPileHint(
 		bot: null | Stem,
 		middle: Stem[],
@@ -87,14 +95,18 @@ export default class HintGenSink extends HierarchySink {
 		let inkMD: number[] = Array(middle.length).fill(1);
 		let gapMD: number[] = turning.map(t => (t ? 2 : 1));
 
-		const allowCollide = annex.map(a => !!a);
+		const allowCollide = annex.map(a => true);
 
 		// Fix gapMD
 		if (botSame) gapMD[0] = 0;
-		if (botIsBoundary || botSame) allowCollide[0] = false;
+		if (!this.tbCollidable(bot, middle[0])) {
+			allowCollide[0] = false;
+		}
 
 		if (topSame) gapMD[middle.length] = 0;
-		if (topIsBoundary || topSame) allowCollide[middle.length] = false;
+		if (!this.tbCollidable(top, middle[middle.length - 1])) {
+			allowCollide[middle.length] = false;
+		}
 
 		this.subHints.push(
 			new MultipleAlignZone.Hint({

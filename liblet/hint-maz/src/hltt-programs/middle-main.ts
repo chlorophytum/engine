@@ -386,7 +386,95 @@ const THintMultipleStrokes_DoCollideMerge: EdslSymbolTemplate<[number]> = Lib.Te
 		}
 	);
 });
-export const THintMultipleStrokes_OmitImpl = Lib.Template(function*($, N: number) {
+
+const THasLargeGap = Lib.Template(function*($, N: number) {
+	const [vpOGapMD, vpGapMD] = $.args(2);
+
+	const hasLargerGap = $.local();
+	const jMaxExpandableGap = $.local();
+	const j = $.local();
+	const pOGapMD = $.coerce.fromIndex.variable(vpOGapMD);
+	const pGapMD = $.coerce.fromIndex.variable(vpGapMD);
+
+	yield $.set(hasLargerGap, 0);
+	yield $.set(j, 0);
+	yield $.while($.and($.not(hasLargerGap), $.lteq(j, N)), function*() {
+		yield $.if($.gteq($.part(pOGapMD, j), $.coerce.toF26D6(2)), function*() {
+			yield $.if(
+				$.not(hasLargerGap),
+				function*() {
+					yield $.set(hasLargerGap, 1);
+					yield $.set(jMaxExpandableGap, j);
+				},
+				function*() {
+					yield $.if(
+						$.gt($.part(pGapMD, j), $.part(pGapMD, jMaxExpandableGap)),
+						function*() {
+							yield $.set(jMaxExpandableGap, j);
+						}
+					);
+				}
+			);
+		});
+		yield $.set(j, $.add(j, 1));
+	});
+	yield $.if(hasLargerGap, function*() {
+		yield $.set(
+			$.part(pGapMD, jMaxExpandableGap),
+			$.add($.part(pGapMD, jMaxExpandableGap), $.coerce.toF26D6(1))
+		);
+	});
+	yield $.return(hasLargerGap);
+});
+
+const TTryShrinkGapMD = Lib.Template(function*($, N: number) {
+	const [vpOGapMD, vpGapMD] = $.args(2);
+
+	const pOGapMD = $.coerce.fromIndex.variable(vpOGapMD);
+	const pGapMD = $.coerce.fromIndex.variable(vpGapMD);
+
+	const hasShrinkableGap = $.local();
+	const jShrinkableGap = $.local();
+	const j = $.local();
+
+	yield $.set(hasShrinkableGap, 0);
+	yield $.set(jShrinkableGap, 0);
+	yield $.set(j, 0);
+	yield $.while($.lteq(j, N), function*() {
+		yield $.if(
+			$.gteq($.part(pGapMD, j), $.add($.part(pOGapMD, j), $.coerce.toF26D6(2))),
+			function*() {
+				yield $.if(
+					$.not(hasShrinkableGap),
+					function*() {
+						yield $.set(hasShrinkableGap, 1);
+						yield $.set(jShrinkableGap, j);
+					},
+					function*() {
+						yield $.if(
+							$.gt($.part(pGapMD, j), $.part(pGapMD, jShrinkableGap)),
+							function*() {
+								yield $.set(jShrinkableGap, j);
+							}
+						);
+					}
+				);
+			}
+		);
+		yield $.set(j, $.add(j, 1));
+	});
+
+	yield $.if(hasShrinkableGap, function*() {
+		yield $.set(
+			$.part(pGapMD, jShrinkableGap),
+			$.sub($.part(pGapMD, jShrinkableGap), $.coerce.toF26D6(1))
+		);
+	});
+
+	yield $.return(hasShrinkableGap);
+});
+
+const THintMultipleStrokes_OmitImpl = Lib.Template(function*($, N: number) {
 	const [
 		dist,
 		reqDist,
@@ -408,8 +496,16 @@ export const THintMultipleStrokes_OmitImpl = Lib.Template(function*($, N: number
 		return;
 	}
 
+	const isCollision = $.local();
+	const hasLargerGap = $.local();
+	yield $.set(isCollision, $.gteq(dist, $.sub(reqDist, $.coerce.toF26D6(1))));
+	yield $.set(hasLargerGap, 0);
+	yield $.if(isCollision, function*() {
+		yield $.set(hasLargerGap, $.call(THasLargeGap(N), vpOGapMD, vpGapMD));
+	});
+
 	yield $.if(
-		$.gteq(dist, $.sub(reqDist, $.coerce.toF26D6(1))),
+		$.and(isCollision, $.not(hasLargerGap)),
 		function*() {
 			yield $.return(
 				$.call(
@@ -471,9 +567,20 @@ export const THintMultipleStrokesMainImpl = Lib.Template(function*($, N: number)
 	const pxReqGap = $.local();
 	const pxReqGapOrig = $.local();
 	const pxReqInk = $.local();
+
 	yield $.set(pxReqGap, $.call(DecideRequiredGap, $.add(1, N), vpGapMD));
 	yield $.set(pxReqGapOrig, $.call(DecideRequiredGap, $.add(1, N), vpOGapMD));
 	yield $.set(pxReqInk, $.call(DecideRequiredGap, N, vpInkMD));
+
+	// We have an one-pixel collide? Try to shrink a large gap
+	yield $.if($.lt(dist, $.add(pxReqGap, pxReqInk)), function*() {
+		const pRecPath = $.coerce.fromIndex.variable(vpRecPath);
+		const pRecPathCollide = $.coerce.fromIndex.variable(vpRecPathCollide);
+		yield $.if($.and($.not(pRecPath), $.not(pRecPathCollide)), function*() {
+			yield $.call(TTryShrinkGapMD(N), vpOGapMD, vpGapMD);
+			yield $.set(pxReqGap, $.call(DecideRequiredGap, $.add(1, N), vpGapMD));
+		});
+	});
 
 	yield $.if($.lt(dist, $.add(pxReqGap, pxReqInk)), function*() {
 		yield $.return(
