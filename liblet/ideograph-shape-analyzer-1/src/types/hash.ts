@@ -1,9 +1,14 @@
 import * as crypto from "crypto";
 
 import CGlyph from "./glyph";
+function simpleHash(text: string) {
+	const hash = crypto.createHash("sha1");
+	hash.update(text);
+	return hash.digest("hex");
+}
 export function combineHash(...texts: string[]) {
 	const hash = crypto.createHash("sha1");
-	for (const text of texts) hash.update(text);
+	for (const text of texts) hash.update(simpleHash(text));
 	return hash.digest("hex");
 }
 export function hashGlyphContours(glyph: CGlyph) {

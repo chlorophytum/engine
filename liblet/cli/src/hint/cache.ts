@@ -1,0 +1,45 @@
+import { IHint, IHintFactory } from "@chlorophytum/arch";
+import { IHintCacheManager } from "@chlorophytum/procs";
+import { StreamJsonZip } from "@chlorophytum/util-json";
+import * as stream from "stream";
+
+type HintCacheRep = {
+	[ck: string]: any;
+};
+
+export class HintCache implements IHintCacheManager {
+	constructor(private readonly hf: IHintFactory) {}
+	private fallbackStore = new Map<string, any>();
+	private store = new Map<string, any>();
+	public getCache(id: null | string) {
+		if (!id) return undefined;
+
+		let hintRep = this.store.get(id);
+		if (!hintRep) {
+			const hintRepOld = hintRep;
+			hintRep = this.fallbackStore.get(id);
+			if (hintRep && !hintRepOld) this.store.set(id, hintRep);
+		}
+
+		if (!hintRep) {
+			return undefined;
+		} else {
+			return this.hf.readJson(hintRep, this.hf);
+		}
+	}
+	public setCache(id: null | string, hint: IHint) {
+		if (!id || !hint) return;
+		this.store.set(id, hint.toJSON());
+	}
+	public async load(input: stream.Readable) {
+		const rep = await StreamJsonZip.parse(input);
+		for (const ck in rep) {
+			this.fallbackStore.set(ck, rep[ck]);
+		}
+	}
+	public save(out: stream.Writable) {
+		const rep: HintCacheRep = {};
+		for (const [ck, hint] of this.store) rep[ck] = hint;
+		return StreamJsonZip.stringify(rep, out);
+	}
+}

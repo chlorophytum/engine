@@ -14,18 +14,8 @@ import { combineHash, hashGlyphContours } from "../types/hash";
 
 import { createGlyph } from "./create-glyph";
 import { hintGlyphGeometry } from "./glyph-hint-main";
-
-function isIdeographCodePoint(code: number) {
-	// return code === 0x2fd0;
-	return (
-		(code >= 0x2e80 && code <= 0x2fff) || // CJK radicals
-		(code >= 0x3192 && code <= 0x319f) || // CJK strokes
-		(code >= 0x3300 && code <= 0x9fff) || // BMP ideographs
-		(code >= 0xf900 && code <= 0xfa6f) || // CJK compatibility ideographs
-		(code >= 0xac00 && code <= 0xd7af) || // Hangul Syllables
-		(code >= 0x20000 && code <= 0x3ffff) // SIP, TIP
-	);
-}
+import { isHangulCodePoint, isIdeographCodePoint } from "./unicode-kind";
+import { ModelVersionPrefix } from "./version-prefix";
 
 export class IdeographHintingModel1<GID> implements IHintingModel<GID> {
 	private readonly params: HintingStrategy;
@@ -38,25 +28,36 @@ export class IdeographHintingModel1<GID> implements IHintingModel<GID> {
 	public async analyzeEffectiveGlyphs() {
 		const charSet = await this.font.getCharacterSet();
 		let gidSet: Set<GID> = new Set();
-		for (const unicode of charSet) {
-			if (!isIdeographCodePoint(unicode)) continue;
-			const gid = await this.font.getEncodedGlyph(unicode);
-			if (!gid) continue;
-			gidSet.add(gid);
-			const related = await this.font.getRelatedGlyphs(gid, unicode);
-			if (!related) continue;
-			for (const { target, relationTag } of related) {
-				const selector = WellKnownGlyphRelation.UnicodeVariant.unApply(relationTag);
-				if (selector) gidSet.add(target);
-			}
-		}
+		for (const ch of charSet) await this.analyzeEffectiveGlyphsForChar(gidSet, ch);
 		return gidSet;
 	}
+	private async analyzeEffectiveGlyphsForChar(gidSet: Set<GID>, ch: number) {
+		if (!this.unicodeAcceptable(ch)) return;
+		const gid = await this.font.getEncodedGlyph(ch);
+		if (!gid) return;
+		gidSet.add(gid);
+		const related = await this.font.getRelatedGlyphs(gid, ch);
+		if (!related) return;
+		for (const { target, relationTag } of related) {
+			const selector = WellKnownGlyphRelation.UnicodeVariant.unApply(relationTag);
+			if (selector) gidSet.add(target);
+		}
+	}
+	private unicodeAcceptable(code: number) {
+		if (isIdeographCodePoint(code) && !this.params.ignoreIdeographs) return true;
+		if (isHangulCodePoint(code) && !this.params.ignoreHangul) return true;
+		return false;
+	}
+
 	public async getGlyphCacheKey(gid: GID) {
 		const geometry = await this.font.getGeometry(gid, null);
 		if (!geometry) return null;
 		const glyph = createGlyph(geometry.eigen); // Care about outline glyphs only
-		return combineHash(JSON.stringify(this.params), hashGlyphContours(glyph));
+		return combineHash(
+			ModelVersionPrefix,
+			JSON.stringify(this.params),
+			hashGlyphContours(glyph)
+		);
 	}
 	public async analyzeGlyph(gid: GID) {
 		const geometry = await this.font.getGeometry(gid, null);
@@ -70,7 +71,7 @@ export class IdeographHintingModel1<GID> implements IHintingModel<GID> {
 
 export class IdeographParallelHintingModel1 implements IParallelHintingModel {
 	public readonly type = "Chlorophytum::IdeographHintingModel1";
-	constructor(private readonly fmd: IFontSourceMetadata, ptParams: Partial<HintingStrategy>) {
+	constructor(fmd: IFontSourceMetadata, ptParams: Partial<HintingStrategy>) {
 		this.params = createHintingStrategy(fmd.upm, ptParams);
 	}
 	private readonly params: HintingStrategy;

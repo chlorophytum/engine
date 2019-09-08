@@ -17,9 +17,8 @@ import {
 	OpenTypeFont,
 	OpenTypeHintStore
 } from "@chlorophytum/font-opentype";
-import { StreamJson } from "@chlorophytum/util-json";
+import { StreamJsonZip } from "@chlorophytum/util-json";
 import * as stream from "stream";
-import * as zlib from "zlib";
 
 function parseOtdCmapUnicode(s: string) {
 	if (s[0] === "U" || s[0] === "u") {
@@ -150,21 +149,6 @@ export class OtdSupport implements IOpenTypeFileSupport<string> {
 	public readonly hsSupport = new OtdHsSupport();
 }
 
-function stringifyJsonGz(obj: any, output: stream.Writable): Promise<void> {
-	const ts = new stream.PassThrough();
-	ts.pipe(zlib.createGzip()).pipe(output);
-	return new Promise<void>(resolve => {
-		StreamJson.stringify(obj, ts);
-		output.on("close", () => resolve());
-	});
-}
-
-async function parseJsonGz(input: stream.Readable) {
-	const ts = new stream.PassThrough();
-	input.pipe(zlib.createGunzip()).pipe(ts);
-	return await StreamJson.parse(ts);
-}
-
 export class OtdHsSupport implements IOpenTypeHsSupport {
 	private hintMapToDict(map: Map<string, IHint>) {
 		const dict: { [key: string]: any } = Object.create(null);
@@ -187,7 +171,7 @@ export class OtdHsSupport implements IOpenTypeHsSupport {
 			glyphHintCacheKeys: this.stringMapToDict(hs.glyphHintCacheKeys),
 			sharedHints: this.hintMapToDict(hs.sharedHintTypes)
 		};
-		return stringifyJsonGz(obj, output);
+		return StreamJsonZip.stringify(obj, output);
 	}
 
 	public async populateHintStore(
@@ -195,7 +179,7 @@ export class OtdHsSupport implements IOpenTypeHsSupport {
 		plugins: IHintingModelPlugin[],
 		store: IHintStore
 	): Promise<void> {
-		const hsRep = await parseJsonGz(input);
+		const hsRep = await StreamJsonZip.parse(input);
 		const hfs: IHintFactory[] = [];
 		for (const plugin of plugins) {
 			for (const hf of plugin.hintFactories) {

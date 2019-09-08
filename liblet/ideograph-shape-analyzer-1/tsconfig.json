@@ -8,8 +8,8 @@
 		{"path": "../hint-maz"}
 	],
 	"compilerOptions": {
-		"outDir": "lib",
 		"rootDir": "src",
+		"outDir": "lib",
 		"tsBuildInfoFile": ".build-cache/src"
 	}
 }

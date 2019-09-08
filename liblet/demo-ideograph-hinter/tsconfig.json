@@ -7,8 +7,8 @@
 		{"path": "../ideograph-shape-analyzer-1"}
 	],
 	"compilerOptions": {
-		"outDir": "lib",
 		"rootDir": "src",
+		"outDir": "lib",
 		"tsBuildInfoFile": ".build-cache/src"
 	}
 }

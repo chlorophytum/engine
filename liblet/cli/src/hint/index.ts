@@ -3,20 +3,64 @@ import {
 	EmptyImpl,
 	HintingPass,
 	IFontSource,
-	IHint,
 	IHintFactory,
 	IHintingModelPlugin,
 	ILogger
 } from "@chlorophytum/arch";
 import * as Procs from "@chlorophytum/procs";
-import { IHintCacheManager } from "@chlorophytum/procs";
 import * as fs from "fs";
 import { Worker } from "worker_threads";
 
 import { getFontPlugin, getHintingPasses, HintOptions } from "../env";
 
 import { HintArbitrator } from "./arbitrator";
+import { HintCache } from "./cache";
 import { HintResults, HintWorkData } from "./shared";
+
+export interface HintRestOptions {
+	cacheFilePath?: null | undefined | string;
+}
+
+export async function doHint(
+	options: HintOptions,
+	restOptions: HintRestOptions,
+	jobs: [string, string][]
+) {
+	const FontFormatPlugin = getFontPlugin(options);
+	const passes = getHintingPasses(options);
+	const modelPlugins = Array.from(new Set(passes.map(p => p.plugin)));
+	const hf = createHintFactory(modelPlugins);
+	const hc = new HintCache(hf);
+
+	const logger = new ConsoleLogger();
+	logger.log("Auto hint");
+
+	await setupCache(logger, hc, restOptions);
+
+	{
+		const briefLogger = logger.bullet(" * ");
+		for (const [input, output] of jobs) {
+			briefLogger.log(`Job: ${input} -> ${output}`);
+		}
+	}
+	{
+		const jobLogger = logger.bullet(" + ");
+		for (const [input, output] of jobs) {
+			jobLogger.log(`Analyzing ${input} -> ${output}`);
+			const otdStream = fs.createReadStream(input);
+			const fontSource = await FontFormatPlugin.createFontSource(otdStream, input);
+			const hintStore = await hintFont(
+				{ fontSource, options, logger: jobLogger.indent("  ").bullet(" - "), hf, hc },
+				input,
+				passes
+			);
+			const out = fs.createWriteStream(output);
+			await hintStore.save(out);
+		}
+	}
+
+	await saveCache(logger, hc, restOptions);
+}
 
 function createHintFactory(models: IHintingModelPlugin[]): IHintFactory {
 	const hfs: IHintFactory[] = [];
@@ -29,52 +73,18 @@ function createHintFactory(models: IHintingModelPlugin[]): IHintFactory {
 	return new EmptyImpl.FallbackHintFactory(hfs);
 }
 
-class HintCache implements IHintCacheManager {
-	constructor(private readonly hf: IHintFactory) {}
-	private store = new Map<string, any>();
-	public getCache(id: null | string) {
-		if (!id) return undefined;
-		const hintRep = this.store.get(id);
-		if (!hintRep) return undefined;
-		return this.hf.readJson(hintRep, this.hf);
-	}
-	public setCache(id: null | string, hint: IHint) {
-		if (!id || !hint) return;
-		this.store.set(id, hint.toJSON());
-	}
+async function setupCache(logger: ILogger, hc: HintCache, hro: HintRestOptions) {
+	if (!hro.cacheFilePath) return;
+	if (!fs.existsSync(hro.cacheFilePath)) return;
+	logger.bullet(` + `).log(`Reading cache <- ${hro.cacheFilePath}`);
+	const input = fs.createReadStream(hro.cacheFilePath);
+	await hc.load(input);
 }
-
-export async function doHint(options: HintOptions, jobs: [string, string][]) {
-	const FontFormatPlugin = getFontPlugin(options);
-	const passes = getHintingPasses(options);
-	const modelPlugins = Array.from(new Set(passes.map(p => p.plugin)));
-	const hf = createHintFactory(modelPlugins);
-	const hc = new HintCache(hf);
-
-	const logger = new ConsoleLogger();
-	logger.log("Auto hint");
-
-	{
-		const briefLogger = logger.bullet(" * ");
-		for (const [input, output] of jobs) {
-			briefLogger.log(`Job: ${input} -> ${output}`);
-		}
-	}
-	{
-		const jobLogger = logger.bullet(" + ");
-		for (const [input, output] of jobs) {
-			jobLogger.log(`Auto hinting ${input} -> ${output}`);
-			const otdStream = fs.createReadStream(input);
-			const fontSource = await FontFormatPlugin.createFontSource(otdStream, input);
-			const hintStore = await hintFont(
-				{ fontSource, options, logger: jobLogger.indent("  ").bullet(" - "), hf, hc },
-				input,
-				passes
-			);
-			const out = fs.createWriteStream(output);
-			await hintStore.save(out);
-		}
-	}
+async function saveCache(logger: ILogger, hc: HintCache, hro: HintRestOptions) {
+	if (!hro.cacheFilePath) return;
+	logger.bullet(` + `).log(`Saving cache -> ${hro.cacheFilePath}`);
+	const output = fs.createWriteStream(hro.cacheFilePath);
+	await hc.save(output);
 }
 
 interface HintImplState<GID> {
