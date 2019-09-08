@@ -18,7 +18,7 @@
 		"create-liblet": "node common/create-liblet",
 		"rebuild": "npm run reset && npm run build",
 		"test": "lerna run --stream test",
-		"publish": "lerna publish",
+		"prepare": "npm run build",
 		"add-dep": "lerna add"
 	}
 }
