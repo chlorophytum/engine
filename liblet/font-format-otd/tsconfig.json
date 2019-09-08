@@ -9,8 +9,8 @@
 		{"path": "../util-json"}
 	],
 	"compilerOptions": {
-		"outDir": "lib",
 		"rootDir": "src",
+		"outDir": "lib",
 		"tsBuildInfoFile": ".build-cache/src"
 	}
 }

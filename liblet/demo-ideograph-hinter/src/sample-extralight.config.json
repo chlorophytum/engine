@@ -1,9 +1,9 @@
 {
-	"fontFormat": "../../font-format-otd",
-	"finalFormat": "../../final-hint-format-hltt",
+	"fontFormat": "../../../font-format-otd",
+	"finalFormat": "../../../final-hint-format-hltt",
 	"hintPasses": [
 		{
-			"plugin": "../../ideograph-shape-analyzer-1",
+			"plugin": "../../../ideograph-shape-analyzer-1",
 			"options": { "CANONICAL_STEM_WIDTH": 0.03, "STEM_SIDE_MIN_DIST_DESCENT": 0.03 }
 		}
 	]

@@ -7,8 +7,8 @@
 		{"path": "../hltt"}
 	],
 	"compilerOptions": {
-		"outDir": "lib",
 		"rootDir": "src",
+		"outDir": "lib",
 		"tsBuildInfoFile": ".build-cache/src"
 	}
 }

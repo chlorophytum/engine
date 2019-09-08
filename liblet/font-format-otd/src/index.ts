@@ -18,26 +18,10 @@ import {
 } from "@chlorophytum/final-hint-format-hltt";
 import { OpenTypeHintStore } from "@chlorophytum/font-opentype";
 import { FontForgeTextInstr } from "@chlorophytum/fontforge-instr";
-import { StreamJson } from "@chlorophytum/util-json";
+import { StreamJson, StreamJsonZip } from "@chlorophytum/util-json";
 import * as stream from "stream";
-import * as zlib from "zlib";
 
 import { OtdFontSource, OtdHsSupport } from "./simple-otd-support";
-
-function stringifyJsonGz(obj: any, output: stream.Writable): Promise<void> {
-	const ts = new stream.PassThrough();
-	ts.pipe(zlib.createGzip()).pipe(output);
-	return new Promise<void>(resolve => {
-		StreamJson.stringify(obj, ts);
-		output.on("close", () => resolve());
-	});
-}
-
-async function parseJsonGz(input: stream.Readable) {
-	const ts = new stream.PassThrough();
-	input.pipe(zlib.createGunzip()).pipe(ts);
-	return await StreamJson.parse(ts);
-}
 
 class OtdFontFormatPlugin implements IFontFormatPlugin {
 	private readonly hsSupport = new OtdHsSupport();
@@ -94,7 +78,7 @@ class OtdHlttFinalHintSaver implements IFontFinalHintSaver {
 			throw new TypeError("Type not supported");
 		}
 		const fhsRep: HlttFinalHintStoreRep<string> = this.createHintRep(fhs);
-		return stringifyJsonGz(fhsRep, output);
+		return StreamJsonZip.stringify(fhsRep, output);
 	}
 
 	private createHintRep(fhs: HlttSession): HlttFinalHintStoreRep<string> {
@@ -115,7 +99,7 @@ class OtdTtInstrIntegrator implements IFontFinalHintIntegrator {
 		font: stream.Readable,
 		output: stream.Writable
 	): Promise<void> {
-		const store: HlttFinalHintStoreRep<string> = await parseJsonGz(hints);
+		const store: HlttFinalHintStoreRep<string> = await StreamJsonZip.parse(hints);
 		const otd = await StreamJson.parse(font);
 
 		this.updateSharedInstructions(otd, store);
@@ -131,7 +115,7 @@ class OtdTtInstrIntegrator implements IFontFinalHintIntegrator {
 		fontGlyphs: stream.Readable,
 		outputGlyphs: stream.Writable
 	): Promise<void> {
-		const store: HlttFinalHintStoreRep<string> = await parseJsonGz(hints);
+		const store: HlttFinalHintStoreRep<string> = await StreamJsonZip.parse(hints);
 		const otdGlyphs = await StreamJson.parse(fontGlyphs);
 		this.updateGlyphInstructions(otdGlyphs, store);
 		await StreamJson.stringify(otdGlyphs, outputGlyphs);
