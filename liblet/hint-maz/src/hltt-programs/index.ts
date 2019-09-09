@@ -21,9 +21,14 @@ const AmendMinGapDist = Lib.Func(function*(e) {
 
 	const j = e.local();
 	const gapDist = e.local();
+	const gapMinDistOld = e.local();
+	const gapDistCut = e.local();
 
 	yield e.set(j, 0);
 	yield e.set(gapDist, 0);
+	yield e.set(gapMinDistOld, 0);
+	yield e.set(gapDistCut, 0);
+
 	yield e.while(e.lteq(j, N), function*() {
 		yield e.if(
 			e.eq(j, 0),
@@ -53,12 +58,23 @@ const AmendMinGapDist = Lib.Func(function*(e) {
 			}
 		);
 
+		yield e.set(gapMinDistOld, e.part(pGapMD, j));
+		yield e.if(
+			e.gt(gapDist, e.max(e.coerce.toF26D6(1 / 2), gapMinDistOld)),
+			function*() {
+				yield e.set(gapDistCut, e.max(e.coerce.toF26D6(1), e.ceiling(gapMinDistOld)));
+			},
+			function*() {
+				yield e.set(gapDistCut, e.floor(gapMinDistOld));
+			}
+		);
+
 		yield e.set(
 			e.part(pGapMD, j),
 			e.max(
-				e.part(pGapMD, j),
+				gapDistCut,
 				e.mul(
-					e.min(e.coerce.toF26D6(1), e.part(pGapMD, j)),
+					e.min(e.coerce.toF26D6(1), e.floor(gapMinDistOld)),
 					e.max(
 						0,
 						e.round.white(
@@ -75,50 +91,6 @@ const AmendMinGapDist = Lib.Func(function*(e) {
 		yield e.set(j, e.add(1, j));
 	});
 });
-
-export const THintMultipleStrokesStub = Lib.TemplateEx(
-	(N: number, props: MultipleAlignZoneMeta) => {
-		return [
-			N,
-			props.gapMinDist,
-			props.inkMinDist,
-			props.bottomFree ? 1 : 0,
-			props.topFree ? 1 : 0,
-			props.recPath,
-			props.recPathCollide
-		];
-	},
-	function*($, N: number, props: MultipleAlignZoneMeta) {
-		const [zBot, zTop, ...zMids] = $.args(2 + 2 * N);
-
-		const aGapMD = $.local(N + 1);
-		const aInkMD = $.local(N);
-		const aRecPath = $.local(N);
-		const aRecPathCollide = $.local(N);
-		const aZMids = $.local(N * 2);
-
-		yield $.call(TInitMD(N + 1, props.gapMinDist), aGapMD.ptr);
-		yield $.call(TInitMD(N, props.inkMinDist), aInkMD.ptr);
-		yield $.call(TInitRecPath(N, props.recPath), aRecPath.ptr);
-		yield $.call(TInitRecPath(N, props.recPathCollide), aRecPathCollide.ptr);
-		yield $.call(TInitZMids(N), aZMids.ptr, ...zMids);
-
-		yield $.call(AmendMinGapDist, N, zBot, zTop, aZMids.ptr, aGapMD.ptr);
-
-		yield $.call(
-			THintMultipleStrokesMainImpl(N),
-			$.coerce.toF26D6(props.bottomFree ? 2 : 1),
-			$.coerce.toF26D6(props.topFree ? 2 : 1),
-			zBot,
-			zTop,
-			aZMids.ptr,
-			aGapMD.ptr,
-			aInkMD.ptr,
-			aRecPath.ptr,
-			aRecPathCollide.ptr
-		);
-	}
-);
 
 function MultipleAlignZoneArgQuantity(N: number) {
 	return N + 1 + N + N + N + 1 + 1 + 1 + 1 + 2 * N;
