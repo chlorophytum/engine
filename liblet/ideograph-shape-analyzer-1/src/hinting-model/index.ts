@@ -1,84 +1,43 @@
 import {
-	EmptyImpl,
-	Glyph,
+	IArbitratorProxy,
 	IFontSource,
-	IFontSourceMetadata,
 	IHintingModel,
-	IParallelHintingModel,
-	WellKnownGlyphRelation
+	IHintingModelExecEnv,
+	ITask
 } from "@chlorophytum/arch";
 
-import { createSharedHints } from "../hint-gen/shared-hints";
 import { createHintingStrategy, HintingStrategy } from "../strategy";
-import { combineHash, hashGlyphContours } from "../types/hash";
 
-import { createGlyph } from "./create-glyph";
-import { hintGlyphGeometry } from "./glyph-hint-main";
-import { isHangulCodePoint, isIdeographCodePoint } from "./unicode-kind";
-import { ModelVersionPrefix } from "./version-prefix";
+import { EffectiveGlyphAnalysisTask } from "./effective-glyph-analysis";
+import { GlyphHintTask } from "./glyph-hint";
+import { SharedHintTask } from "./shared-hint";
 
-export class IdeographHintingModel1<GID> implements IHintingModel<GID> {
+export class IdeographHintingModel1<GID> implements IHintingModel {
 	private readonly params: HintingStrategy;
 	constructor(private readonly font: IFontSource<GID>, ptParams: Partial<HintingStrategy>) {
 		this.params = createHintingStrategy(font.metadata.upm, ptParams);
 	}
 	public readonly type = "Chlorophytum::IdeographHintingModel1";
-	public readonly allowParallel = true;
+	public readonly allowParallel = false;
 
-	public async analyzeEffectiveGlyphs() {
-		const charSet = await this.font.getCharacterSet();
-		let gidSet: Set<GID> = new Set();
-		for (const ch of charSet) await this.analyzeEffectiveGlyphsForChar(gidSet, ch);
-		return gidSet;
-	}
-	private async analyzeEffectiveGlyphsForChar(gidSet: Set<GID>, ch: number) {
-		if (!this.unicodeAcceptable(ch)) return;
-		const gid = await this.font.getEncodedGlyph(ch);
-		if (!gid) return;
-		gidSet.add(gid);
-		const related = await this.font.getRelatedGlyphs(gid, ch);
-		if (!related) return;
-		for (const { target, relationTag } of related) {
-			const selector = WellKnownGlyphRelation.UnicodeVariant.unApply(relationTag);
-			if (selector) gidSet.add(target);
-		}
-	}
-	private unicodeAcceptable(code: number) {
-		if (isIdeographCodePoint(code) && !this.params.ignoreIdeographs) return true;
-		if (isHangulCodePoint(code) && !this.params.ignoreHangul) return true;
-		return false;
-	}
-
-	public async getGlyphCacheKey(gid: GID) {
-		const geometry = await this.font.getGeometry(gid, null);
-		if (!geometry) return null;
-		const glyph = createGlyph(geometry.eigen); // Care about outline glyphs only
-		return combineHash(
-			ModelVersionPrefix,
-			JSON.stringify(this.params),
-			hashGlyphContours(glyph)
-		);
-	}
-	public async analyzeGlyph(gid: GID) {
-		const geometry = await this.font.getGeometry(gid, null);
-		if (!geometry) return new EmptyImpl.Empty.Hint();
-		return hintGlyphGeometry(geometry, this.params);
-	}
-	public async getSharedHints() {
-		return createSharedHints(this.params);
+	public getHintingTask(ee: IHintingModelExecEnv) {
+		return new IdeographHintingTask(this.font, this.params, ee);
 	}
 }
 
-export class IdeographParallelHintingModel1 implements IParallelHintingModel {
-	public readonly type = "Chlorophytum::IdeographHintingModel1";
-	constructor(fmd: IFontSourceMetadata, ptParams: Partial<HintingStrategy>) {
-		this.params = createHintingStrategy(fmd.upm, ptParams);
-	}
-	private readonly params: HintingStrategy;
-	public async analyzeGlyph(rep: Glyph.Rep) {
-		const shapeMap = new Map(rep.shapes);
-		const geometry = shapeMap.get(null);
-		if (!geometry) return new EmptyImpl.Empty.Hint();
-		return hintGlyphGeometry(geometry, this.params);
+export class IdeographHintingTask<GID> implements ITask<void> {
+	constructor(
+		private readonly font: IFontSource<GID>,
+		private readonly params: HintingStrategy,
+		private readonly ee: IHintingModelExecEnv
+	) {}
+	public async execute(arb: IArbitratorProxy) {
+		const ga = new EffectiveGlyphAnalysisTask(this.font, this.params);
+		const glyphs = await arb.demand(ga);
+		const perGlyphHinting = Array.from(glyphs).map(gid =>
+			arb.demand(new GlyphHintTask(this.font, this.params, this.ee, gid))
+		);
+		await Promise.all(perGlyphHinting);
+		await arb.demand(new SharedHintTask(this.params, this.ee));
 	}
 }

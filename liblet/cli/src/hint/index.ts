@@ -4,18 +4,20 @@ import {
 	HintingPass,
 	IFontSource,
 	IHintFactory,
+	IHintingModelExecEnv,
 	IHintingModelPlugin,
-	ILogger
+	IHintStore,
+	ILogger,
+	ITask
 } from "@chlorophytum/arch";
-import * as Procs from "@chlorophytum/procs";
 import * as fs from "fs";
-import { Worker } from "worker_threads";
 
 import { getFontPlugin, getHintingPasses, HintOptions } from "../env";
+import { Arbitrator } from "../tasks/arb";
+import { Progress } from "../tasks/progress";
 
-import { HintArbitrator } from "./arbitrator";
 import { HintCache } from "./cache";
-import { HintResults, HintWorkData } from "./shared";
+import { Host } from "./worker-host";
 
 export interface HintRestOptions {
 	cacheFilePath?: null | undefined | string;
@@ -46,14 +48,20 @@ export async function doHint(
 	{
 		const jobLogger = logger.bullet(" + ");
 		for (const [input, output] of jobs) {
-			jobLogger.log(`Analyzing ${input} -> ${output}`);
 			const otdStream = fs.createReadStream(input);
 			const fontSource = await FontFormatPlugin.createFontSource(otdStream, input);
 			const hintStore = await hintFont(
-				{ fontSource, options, logger: jobLogger.indent("  ").bullet(" - "), hf, hc },
-				input,
+				{
+					from: input,
+					fontSource,
+					options,
+					logger: jobLogger.bullet(" - "),
+					hf,
+					hc
+				},
 				passes
 			);
+			jobLogger.log(`Saving analysis result : ${input} -> ${output}`);
 			const out = fs.createWriteStream(output);
 			await hintStore.save(out);
 		}
@@ -88,6 +96,7 @@ async function saveCache(logger: ILogger, hc: HintCache, hro: HintRestOptions) {
 }
 
 interface HintImplState<GID> {
+	from: string;
 	fontSource: IFontSource<GID>;
 	options: HintOptions;
 	logger: ILogger;
@@ -95,116 +104,52 @@ interface HintImplState<GID> {
 	hc: HintCache;
 }
 
-async function hintFont<GID>(st: HintImplState<GID>, input: string, passes: HintingPass[]) {
-	const parallelJobs = st.options.jobs || 1;
-	const forceSerial = parallelJobs <= 1;
-	const serial = await Procs.serialGlyphHint(
-		st.fontSource,
-		passes,
-		st.hc,
-		forceSerial,
-		st.logger
-	);
-	const { jobs, ghsMap: parallel } = await Procs.generateParallelGlyphHintJobs(
-		st.fontSource,
-		passes,
-		st.hc,
-		forceSerial
-	);
+async function hintFont<GID>(st: HintImplState<GID>, passes: HintingPass[]) {
+	let tasks: ITask<unknown>[] = [];
+	let localHintStores: IHintStore[] = [];
+	for (const pass of passes) {
+		const hm = pass.plugin.adopt(st.fontSource, pass.parameters);
+		if (!hm) continue;
+		const hs = st.fontSource.createHintStore();
+		if (!hs) continue;
 
-	if (parallel.size) {
-		await parallelGlyphHint(st, parallelJobs, jobs, input, parallel);
-		await Procs.parallelGlyphHintShared(st.fontSource, passes, parallel);
-	}
+		localHintStores.push(hs);
 
-	const hintStore = st.fontSource.createHintStore();
-	for (const [passID, ghs] of [...serial, ...parallel]) {
-		for (const [g, hints] of ghs.glyphHints) {
-			await hintStore.setGlyphHints(g, hints);
-			const ck = ghs.glyphCacheKeys.get(g);
-			if (ck) await hintStore.setGlyphHintsCacheKey(g, ck);
-		}
-
-		if (ghs.sharedHints) await hintStore.setSharedHints(passID, ghs.sharedHints);
-	}
-	return hintStore;
-}
-
-async function parallelGlyphHint<GID>(
-	st: HintImplState<GID>,
-	n: number,
-	jc: Procs.GlyphHintJobs,
-	input: string,
-	ghsMap: Map<string, Procs.GlyphHintStore>
-) {
-	let promises: Promise<unknown>[] = [];
-	const arbitrator = new HintArbitrator(
-		st.fontSource,
-		jc,
-		n,
-		`Parallel hinting ${input}`,
-		st.logger
-	);
-	for (let nth = 0; nth < n; nth++) {
-		promises.push(startWorker(input, st.options, arbitrator, st.hf, st.hc, ghsMap));
-	}
-	await Promise.all(promises);
-	arbitrator.updateProgress();
-}
-
-function startWorker<GID>(
-	input: string,
-	options: HintOptions,
-	arb: HintArbitrator<GID>,
-	hf: IHintFactory,
-	hc: HintCache,
-	ghsMap: Map<string, Procs.GlyphHintStore>
-) {
-	return new Promise((resolve, reject) => {
-		const workerData: HintWorkData = {
-			input,
-			options
+		const env: IHintingModelExecEnv = {
+			passUniqueID: pass.uniqueID,
+			hintFactory: st.hf,
+			modelLocalHintStore: hs,
+			cacheManager: st.hc
 		};
-		const worker = new Worker(__dirname + "/worker.js", {
-			workerData,
-			stdout: true,
-			stderr: true
-		});
+		const task = hm.getHintingTask(env);
+		if (!task) continue;
+		tasks.push(task);
+	}
+	const capacity = st.options.jobs || 1;
+	st.logger.log(`Analyzing ${st.from} with ${capacity} threads...`);
+	const progress = new Progress(`Analyzing ${st.from}`, st.logger);
 
-		function next() {
-			arb.fetch().then(nextJob => {
-				if (nextJob) worker.postMessage(nextJob);
-				else worker.postMessage({ terminate: true });
-			});
-		}
+	const host = new Host(capacity, st.options);
+	const arb = new Arbitrator(capacity <= 1, host, progress);
+	await Promise.all(tasks.map(task => arb.demand(task)));
 
-		function saveResults(results: HintResults) {
-			for (const { passID, glyph, cacheKey, hintRep } of results) {
-				const ghs = ghsMap.get(passID);
-				if (!ghs) continue;
-				const hint = hf.readJson(hintRep, hf);
-				if (hint) {
-					ghs.glyphHints.set(glyph, hint);
-					if (cacheKey && !hc.getCache(cacheKey)) hc.setCache(cacheKey, hint);
-				}
-				arb.updateProgress();
-			}
-		}
-
-		worker.on("message", _msg => {
-			if (_msg.ready) {
-				next();
-			} else if (_msg.log) {
-				console.log(_msg.log);
-			} else if (_msg.results) {
-				const results: HintResults = JSON.parse(_msg.results);
-				saveResults(results);
-				next();
-			}
-		});
-		worker.on("exit", () => resolve(null));
-		worker.on("error", e => reject(e));
-	});
+	const hsAll = st.fontSource.createHintStore();
+	for (const store of localHintStores) {
+		await combineHintStore(store, hsAll);
+	}
+	return hsAll;
+}
+async function combineHintStore(from: IHintStore, to: IHintStore) {
+	for (const g of await from.listGlyphs()) {
+		const gh = await from.getGlyphHints(g);
+		if (gh) to.setGlyphHints(g, gh);
+		const ck = await from.getGlyphHintsCacheKey(g);
+		if (ck) to.setGlyphHintsCacheKey(g, ck);
+	}
+	for (const st of await from.listSharedTypes()) {
+		const sh = await from.getSharedHints(st);
+		if (sh) to.setSharedHints(st, sh);
+	}
 }
 
 process.on("warning", e => console.warn(e.stack));
