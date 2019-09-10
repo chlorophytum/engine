@@ -30,8 +30,10 @@ class TaskState<R> {
 	private listeners: ((result: R) => void)[] = [];
 	private errorListeners: ((error: Error) => void)[] = [];
 
-	private execImpl(): Promise<R> {
-		return this.task.execute(this.arb);
+	private async execImpl(): Promise<R> {
+		if (this.task.tryGetDifficulty) this.difficulty = await this.task.tryGetDifficulty();
+		this.arb.progress.start(this.difficulty);
+		return await this.task.execute(this.arb);
 	}
 
 	private startImpl() {
