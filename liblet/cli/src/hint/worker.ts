@@ -1,41 +1,33 @@
-import { HintingPass, IFontSourceMetadata, IHint } from "@chlorophytum/arch";
-import * as Procs from "@chlorophytum/procs";
+import { HintingPass, IParallelTask } from "@chlorophytum/arch";
 import { MessagePort, parentPort, workerData } from "worker_threads";
 
 import { getHintingPasses } from "../env";
 
-import { HintResults, HintWorkData, JobMessage } from "./shared";
+import { HintWorkData, TaskMessage } from "./shared";
 
 async function main(data: HintWorkData, parentPort: MessagePort) {
 	const passes = getHintingPasses(data.options);
 	parentPort.on("message", _msg => {
 		if (_msg.terminate) {
 			process.exit(0);
-		} else if (_msg.fontMetadata && _msg.jobRequests) {
-			const msg = _msg as JobMessage;
-			doHint(passes, msg.fontMetadata, msg.jobRequests).then(results =>
-				parentPort.postMessage({ results })
-			);
+		} else if (_msg.taskType && _msg.taskArgs) {
+			const msg = _msg as TaskMessage;
+			doHint(passes, msg)
+				.then(result => parentPort.postMessage({ taskID: msg.taskID, taskResult: result }))
+				.catch(e => parentPort.postMessage({ taskID: msg.taskID, taskError: "" + e }));
 		}
 	});
 	parentPort.postMessage({ ready: true });
 }
 
-class Sender implements Procs.GlyphHintSender {
-	public results: HintResults = [];
-	public push(passID: string, glyph: string, cacheKey: null | string, hints: IHint) {
-		this.results.push({ passID, glyph, cacheKey, hintRep: hints.toJSON() });
+async function doHint(passes: HintingPass[], msg: TaskMessage) {
+	let pt: null | IParallelTask<any> = null;
+	for (const pass of passes) {
+		pt = pass.plugin.createParallelTask(msg.taskType, msg.taskArgs);
+		if (pt) break;
 	}
-}
-
-async function doHint(
-	passes: HintingPass[],
-	fmd: IFontSourceMetadata,
-	job: Procs.GlyphHintRequests
-) {
-	const sender = new Sender();
-	await Procs.parallelGlyphHintWork(fmd, passes, job, sender);
-	return JSON.stringify(sender.results);
+	if (!pt) throw new Error(`Cannot construct task for ${msg.taskType}`);
+	return await pt.execute();
 }
 
 if (!parentPort) throw new Error("Must run inside a worker.");

@@ -1,10 +1,13 @@
 import * as stream from "stream";
 
 import { Glyph } from "./geometry";
+import { IParallelTaskFactory, ITask } from "./tasks";
 import { Variation } from "./variation";
 
 export { Geometry, Glyph } from "./geometry";
 export { Variation } from "./variation";
+
+export * from "./tasks";
 
 // Font source
 export interface IFontFormatPlugin {
@@ -86,32 +89,28 @@ export interface IHintCompiler {
 }
 
 // Shape analysis (auto hinting)
-export interface IHintingModel<Glyph> {
+export interface IHintingModelExecEnv {
+	readonly passUniqueID: string;
+	readonly modelLocalHintStore: IHintStore;
+	readonly cacheManager: IHintCacheManager;
+	readonly hintFactory: IHintFactory;
+}
+export interface IHintCacheManager {
+	getCache(ck: string): null | undefined | IHint;
+	setCache(ck: string, hints: IHint): void;
+}
+export interface IHintingModel {
 	readonly type: string;
 	readonly allowParallel: boolean;
-	// Analyze glyphs worth hinting
-	analyzeEffectiveGlyphs(): Promise<null | Set<Glyph>>;
-	// Caching -- Get the cache key of a glyph if usable
-	getGlyphCacheKey(gid: Glyph): Promise<null | string>;
-	// Analyze a glyph
-	analyzeGlyph(gid: Glyph): Promise<null | IHint>;
-	// Analyze shared hints
-	getSharedHints(glyphHints: ReadonlyMap<Glyph, IHint>): Promise<null | IHint>;
+	getHintingTask(env: IHintingModelExecEnv): null | ITask<unknown>;
 }
 export interface IParallelHintingModel {
 	readonly type: string;
 	analyzeGlyph(shape: Glyph.Rep): Promise<null | IHint>;
 }
-export interface IHintingModelPlugin {
+export interface IHintingModelPlugin extends IParallelTaskFactory {
 	readonly type: string;
-	adopt<GID, VAR, MASTER>(
-		font: IFontSource<GID>,
-		parameters: any
-	): IHintingModel<GID> | null | undefined;
-	adoptParallel?<VAR, MASTER>(
-		metadata: IFontSourceMetadata,
-		parameters: any
-	): IParallelHintingModel | null | undefined;
+	adopt<GID>(font: IFontSource<GID>, parameters: any): IHintingModel | null | undefined;
 	hintFactories: IHintFactory[];
 }
 export interface HintingPass {

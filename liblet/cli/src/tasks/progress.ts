@@ -16,30 +16,54 @@ function formatDuration(ms: number) {
 }
 
 export class Progress {
-	constructor(private prefix: string, private total: number) {}
+	constructor(private prefix: string, private readonly logger: ILogger) {}
+	private totalTasks = 0;
+	private finishedTasks = 0;
+	private totalDifficulty = 0;
+	private finishedDifficulty = 0;
+
 	private lastProgress = 0;
-	private hinted = 0;
 	private startDate = new Date();
 	private lastDate = new Date();
 
-	public update(logger: ILogger, hide?: boolean) {
-		let currentProgress = Math.floor(Math.min(100, (this.hinted / this.total) * 100));
+	private percentage(a: number, b: number) {
+		if (!b) return 0;
+		return Math.floor(Math.min(100, (a / b) * 100));
+	}
+	private coRate(a: number, b: number) {
+		if (!b) return 0xffff;
+		return a / b;
+	}
+
+	public start(difficulty: number) {
+		this.totalTasks += 1;
+		this.totalDifficulty += difficulty;
+		this.update();
+	}
+	public end(difficulty: number) {
+		this.finishedTasks += 1;
+		this.finishedDifficulty += difficulty;
+		this.update();
+	}
+
+	public update() {
+		let currentProgress = this.percentage(this.finishedDifficulty, this.totalDifficulty);
 		const now = new Date();
 		if (this.shouldUpdateProgress(currentProgress, now)) {
 			this.lastProgress = currentProgress;
 			this.lastDate = now;
 			const elapsedTime = now.valueOf() - this.startDate.valueOf();
-			const remainingTime = elapsedTime * Math.max(0, this.total / this.hinted - 1);
-			if (!hide) {
-				logger.log(
-					`${this.prefix} | ` +
-						`${currentProgress}%  ` +
-						`Elapsed ${formatDuration(elapsedTime)}  ` +
-						`ETA ${formatDuration(remainingTime)}`
-				);
-			}
+			const remainingTime =
+				elapsedTime *
+				Math.max(0, this.coRate(this.totalDifficulty, this.finishedDifficulty) - 1);
+			this.logger.log(
+				`${this.prefix} | ` +
+					`${currentProgress}%  ` +
+					`Finished ${this.finishedTasks} Total ${this.totalTasks} ` +
+					`Elapsed ${formatDuration(elapsedTime)}  ` +
+					`ETA ${formatDuration(remainingTime)}`
+			);
 		}
-		this.hinted += 1;
 	}
 
 	private shouldUpdateProgress(currentProgress: number, now: Date) {

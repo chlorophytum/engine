@@ -1,10 +1,6 @@
 {
 	"extends": "../tsconfig.settings.json",
-	"references": [
-		{"path": "../arch"},
-		{"path": "../procs"},
-		{"path": "../util-json"}
-	],
+	"references": [{"path": "../arch"}, {"path": "../util-json"}],
 	"compilerOptions": {
 		"rootDir": "src",
 		"outDir": "lib",

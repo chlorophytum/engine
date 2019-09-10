@@ -8,25 +8,17 @@ export const EmptyHintingModelFactory: IHintingModelPlugin = {
 	adopt<GID, VAR, MASTER>() {
 		return new EmptyHintingModel<GID>();
 	},
-	hintFactories: [new Empty.Factory(), new Sequence.Factory()]
-};
-
-export class EmptyHintingModel<GID> implements IHintingModel<GID> {
-	public readonly type = "Chlorophytum::EmptyHinting";
-	public readonly allowParallel = false;
-
-	constructor() {}
-
-	public async analyzeEffectiveGlyphs() {
+	hintFactories: [new Empty.Factory(), new Sequence.Factory()],
+	createParallelTask() {
 		return null;
 	}
-	public async getSharedHints() {
-		return new Empty.Hint();
-	}
-	public async analyzeGlyph(gid: GID) {
-		return new Empty.Hint();
-	}
-	public async getGlyphCacheKey() {
+};
+
+export class EmptyHintingModel<GID> implements IHintingModel {
+	public readonly type = "Chlorophytum::EmptyHinting";
+	public readonly allowParallel = false;
+	constructor() {}
+	public getHintingTask() {
 		return null;
 	}
 }
