@@ -1,5 +1,4 @@
-import { IHint, IHintFactory } from "@chlorophytum/arch";
-import { IHintCacheManager } from "@chlorophytum/procs";
+import { IHint, IHintCacheManager, IHintFactory } from "@chlorophytum/arch";
 import { StreamJsonZip } from "@chlorophytum/util-json";
 import * as stream from "stream";
 

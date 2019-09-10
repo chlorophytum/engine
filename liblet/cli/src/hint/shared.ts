@@ -1,15 +1,20 @@
-import { IFontSourceMetadata } from "@chlorophytum/arch";
-import * as Procs from "@chlorophytum/procs";
-
 import { HintOptions } from "../env";
 
 export interface HintWorkData {
-	input: string;
 	options: HintOptions;
 }
-export interface JobMessage {
-	fontMetadata: IFontSourceMetadata;
-	jobRequests: Procs.GlyphHintRequests;
+export interface TaskMessage {
+	taskID: number;
+	taskType: string;
+	taskArgs: any;
+}
+export interface TaskResultMessage {
+	taskID: number;
+	taskResult: any;
+}
+export interface TaskErrorMessage {
+	taskID: number;
+	taskError: string;
 }
 
 export interface ReadyMessage {

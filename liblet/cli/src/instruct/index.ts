@@ -7,10 +7,11 @@ import {
 	IHintingModelPlugin,
 	ILogger
 } from "@chlorophytum/arch";
-import * as Procs from "@chlorophytum/procs";
 import * as fs from "fs";
 
 import { getFinalHintPlugin, getFontPlugin, getHintingPasses, HintOptions } from "../env";
+
+import { mainMidHint } from "./procs";
 
 interface ExportPlan {
 	toPath: string;
@@ -96,7 +97,7 @@ async function readHintsToSession(
 	models: IHintingModelPlugin[]
 ) {
 	const hs = await FontFormatPlugin.createHintStore(gzHsStream, models);
-	await Procs.mainMidHint(hs, ttSession);
+	await mainMidHint(hs, ttSession);
 	ttSession.consolidate();
 }
 

@@ -13,7 +13,6 @@
 		{"path": "./hint-maz"},
 		{"path": "./hltt"},
 		{"path": "./ideograph-shape-analyzer-1"},
-		{"path": "./procs"},
 		{"path": "./util-json"}
 	]
 }
