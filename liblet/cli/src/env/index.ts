@@ -4,6 +4,7 @@ export interface HintOptions {
 	jobs?: number;
 	fontFormat: string;
 	finalFormat: string;
+	hintStoreProvider: string;
 	hintPasses: { plugin: string; options?: any }[];
 }
 
@@ -14,6 +15,10 @@ export function getFontPlugin(hOpt: HintOptions) {
 export function getFinalHintPlugin(hOpt: HintOptions) {
 	const mFinalFormat: Plugins.FinalHintModule = require(hOpt.finalFormat);
 	return mFinalFormat.FinalHintPlugin;
+}
+export function getHintStoreProvider(hOpt: HintOptions) {
+	const mFinalFormat: Plugins.HintStoreModule = require(hOpt.hintStoreProvider);
+	return mFinalFormat.HintStoreProvider;
 }
 export function getHintingPasses(hOpt: HintOptions) {
 	const passes: HintingPass[] = [];

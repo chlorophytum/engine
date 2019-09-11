@@ -6,7 +6,6 @@ import {
 	WellKnownGlyphRelation
 } from "@chlorophytum/arch";
 
-import { OpenTypeHintStore } from "./hint-store";
 import { IOpenTypeFileSupport } from "./otf-support";
 
 export abstract class OpenTypeFont<GID> implements IFontSource<GID> {
@@ -61,8 +60,5 @@ export abstract class OpenTypeFont<GID> implements IFontSource<GID> {
 	}
 	public async getGeometry(glyph: GID, instance: null | Variation.Instance) {
 		return await this.support.getGeometry(glyph, instance);
-	}
-	public createHintStore() {
-		return new OpenTypeHintStore(this.support.hsSupport);
 	}
 }

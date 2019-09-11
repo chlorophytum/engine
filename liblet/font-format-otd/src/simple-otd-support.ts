@@ -1,24 +1,10 @@
-import {
-	EmptyImpl,
-	Geometry,
-	Glyph,
-	IFontSourceMetadata,
-	IHint,
-	IHintFactory,
-	IHintingModelPlugin,
-	IHintStore,
-	Variation
-} from "@chlorophytum/arch";
+import { Geometry, Glyph, IFontSourceMetadata, Variation } from "@chlorophytum/arch";
 import {
 	IOpenTypeFileSupport,
-	IOpenTypeHsSupport,
 	ISimpleGetBimap,
 	ISimpleGetMap,
-	OpenTypeFont,
-	OpenTypeHintStore
+	OpenTypeFont
 } from "@chlorophytum/font-opentype";
-import { StreamJsonZip } from "@chlorophytum/util-json";
-import * as stream from "stream";
 
 function parseOtdCmapUnicode(s: string) {
 	if (s[0] === "U" || s[0] === "u") {
@@ -144,60 +130,6 @@ export class OtdSupport implements IOpenTypeFileSupport<string> {
 	}
 	public async getGlyphMasters(glyph: string) {
 		return [];
-	}
-
-	public readonly hsSupport = new OtdHsSupport();
-}
-
-export class OtdHsSupport implements IOpenTypeHsSupport {
-	private hintMapToDict(map: Map<string, IHint>) {
-		const dict: { [key: string]: any } = Object.create(null);
-		for (const [k, v] of map) {
-			dict[k] = v.toJSON();
-		}
-		return dict;
-	}
-	private stringMapToDict(map: Map<string, string>) {
-		const dict: { [key: string]: string } = Object.create(null);
-		for (const [k, v] of map) {
-			dict[k] = v;
-		}
-		return dict;
-	}
-
-	public saveHintStore(hs: OpenTypeHintStore, output: stream.Writable) {
-		const obj = {
-			glyphs: this.hintMapToDict(hs.glyphHints),
-			glyphHintCacheKeys: this.stringMapToDict(hs.glyphHintCacheKeys),
-			sharedHints: this.hintMapToDict(hs.sharedHintTypes)
-		};
-		return StreamJsonZip.stringify(obj, output);
-	}
-
-	public async populateHintStore(
-		input: stream.Readable,
-		plugins: IHintingModelPlugin[],
-		store: IHintStore
-	): Promise<void> {
-		const hsRep = await StreamJsonZip.parse(input);
-		const hfs: IHintFactory[] = [];
-		for (const plugin of plugins) {
-			for (const hf of plugin.hintFactories) {
-				hfs.push(hf);
-			}
-		}
-		const hf = new EmptyImpl.FallbackHintFactory(hfs);
-		for (const k in hsRep.glyphs) {
-			const hint = hf.readJson(hsRep.glyphs[k], hf);
-			if (hint) await store.setGlyphHints(k, hint);
-		}
-		for (const k in hsRep.sharedHints) {
-			const hint = hf.readJson(hsRep.sharedHints[k], hf);
-			if (hint) await store.setSharedHints(k, hint);
-		}
-		for (const k in hsRep.glyphHintCacheKeys) {
-			await store.setGlyphHintsCacheKey(k, hsRep.glyphHintCacheKeys[k]);
-		}
 	}
 }
 

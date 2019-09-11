@@ -5,11 +5,18 @@ import {
 	IFinalHintSession,
 	IFontFormatPlugin,
 	IHintingModelPlugin,
+	IHintStoreProvider,
 	ILogger
 } from "@chlorophytum/arch";
 import * as fs from "fs";
 
-import { getFinalHintPlugin, getFontPlugin, getHintingPasses, HintOptions } from "../env";
+import {
+	getFinalHintPlugin,
+	getFontPlugin,
+	getHintingPasses,
+	getHintStoreProvider,
+	HintOptions
+} from "../env";
 
 import { mainMidHint } from "./procs";
 
@@ -20,6 +27,7 @@ interface ExportPlan {
 
 export async function doInstruct(options: HintOptions, jobs: [string, string, string][]) {
 	const FontFormatPlugin = getFontPlugin(options);
+	const HintStoreProvider = getHintStoreProvider(options);
 	const FinalHintPlugin = getFinalHintPlugin(options);
 	const passes = getHintingPasses(options);
 	const models = Array.from(new Set(passes.map(p => p.plugin)));
@@ -46,7 +54,7 @@ export async function doInstruct(options: HintOptions, jobs: [string, string, st
 	const ttCol = FinalHintPlugin.createFinalHintCollector(preStatSink);
 	const exportPlans = await doInstructImpl(
 		logger.bullet(" + "),
-		FontFormatPlugin,
+		HintStoreProvider,
 		ttCol,
 		models,
 		jobs
@@ -74,7 +82,7 @@ async function doPreStat(
 }
 async function doInstructImpl(
 	logger: ILogger,
-	FontFormatPlugin: IFontFormatPlugin,
+	provider: IHintStoreProvider,
 	ttCol: IFinalHintCollector,
 	models: IHintingModelPlugin[],
 	jobs: [string, string, string][]
@@ -82,23 +90,23 @@ async function doInstructImpl(
 	const exportPlans: ExportPlan[] = [];
 	for (const [font, input, output] of jobs) {
 		logger.log(`Instructing ${input}`);
-		const gzHsStream = fs.createReadStream(input);
 		const ttSession = ttCol.createSession();
-		await readHintsToSession(FontFormatPlugin, ttSession, gzHsStream, models);
+		await readHintsToSession(provider, ttSession, input, models);
 		exportPlans.push({ toPath: output, session: ttSession });
 	}
 	return exportPlans;
 }
 
 async function readHintsToSession(
-	FontFormatPlugin: IFontFormatPlugin,
+	provider: IHintStoreProvider,
 	ttSession: IFinalHintSession,
-	gzHsStream: fs.ReadStream,
+	input: string,
 	models: IHintingModelPlugin[]
 ) {
-	const hs = await FontFormatPlugin.createHintStore(gzHsStream, models);
+	const hs = await provider.connectRead(input, models);
 	await mainMidHint(hs, ttSession);
 	ttSession.consolidate();
+	await hs.disconnect();
 }
 
 async function saveInstructions(

@@ -1,6 +1,7 @@
 {
 	"fontFormat": "../../../font-format-otd",
 	"finalFormat": "../../../final-hint-format-hltt",
+	"hintStoreProvider": "../../../hint-store-provider-file",
 	"hintPasses": [
 		{
 			"plugin": "../../../ideograph-shape-analyzer-1",

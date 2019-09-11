@@ -1,20 +1,28 @@
 import * as _EmptyImpl from "./empty-impl";
-import { IFinalHintPlugin, IFontFormatPlugin, IHintingModelPlugin } from "./interfaces";
+import {
+	IFinalHintPlugin,
+	IFontFormatPlugin,
+	IHintingModelPlugin,
+	IHintStoreProvider
+} from "./interfaces";
 import * as _Support from "./support/index";
 export * from "./interfaces/index";
-export { WellKnownGlyphRelation } from "./well-known-relation";
 export * from "./logger";
+export { WellKnownGlyphRelation } from "./well-known-relation";
 export import EmptyImpl = _EmptyImpl;
 export import Support = _Support;
 
 export namespace Plugins {
 	export interface FontFormatModule {
-		FontFormatPlugin: IFontFormatPlugin;
+		readonly FontFormatPlugin: IFontFormatPlugin;
+	}
+	export interface HintStoreModule {
+		readonly HintStoreProvider: IHintStoreProvider;
 	}
 	export interface HintingModelModule {
-		HintingModelPlugin: IHintingModelPlugin;
+		readonly HintingModelPlugin: IHintingModelPlugin;
 	}
 	export interface FinalHintModule {
-		FinalHintPlugin: IFinalHintPlugin;
+		readonly FinalHintPlugin: IFinalHintPlugin;
 	}
 }
