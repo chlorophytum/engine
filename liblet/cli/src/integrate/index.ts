@@ -25,17 +25,11 @@ export async function doIntegrate(
 		const jobLogger = logger.bullet(" + ");
 		for (const [instr, input, output] of jobs) {
 			jobLogger.log(`Integrating ${instr} | ${input} -> ${output}`);
-			const instrStream = fs.createReadStream(instr);
-			const inputStream = fs.createReadStream(input);
-			const outStream = fs.createWriteStream(output);
+
 			if (glyphOnly) {
-				await integrator.integrateGlyphFinalHintsToFont(
-					instrStream,
-					inputStream,
-					outStream
-				);
+				await integrator.integrateGlyphFinalHintsToFont(instr, input, output);
 			} else {
-				await integrator.integrateFinalHintsToFont(instrStream, inputStream, outStream);
+				await integrator.integrateFinalHintsToFont(instr, input, output);
 			}
 		}
 	}

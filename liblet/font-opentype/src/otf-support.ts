@@ -1,7 +1,4 @@
-import { Glyph, IHintingModelPlugin, IHintStore, Variation } from "@chlorophytum/arch";
-import * as stream from "stream";
-
-import { OpenTypeHintStore } from "./hint-store";
+import { Glyph, Variation } from "@chlorophytum/arch";
 
 export interface ISimpleGetMap<K, V> {
 	get(key: K): V | undefined;
@@ -30,14 +27,4 @@ export interface IOpenTypeFileSupport<GID> {
 	getCmapRelatedGlyphs(source: GID, codePoint: number): Promise<CmapRelation<GID>[]>;
 	getGsubRelatedGlyphs(source: GID): Promise<GsubRelation<GID>[]>;
 	getGlyphMasters(glyph: GID): Promise<Variation.MasterRep[]>;
-
-	readonly hsSupport: IOpenTypeHsSupport;
-}
-export interface IOpenTypeHsSupport {
-	saveHintStore(hs: OpenTypeHintStore, output: stream.Writable): Promise<void>;
-	populateHintStore(
-		input: stream.Readable,
-		models: IHintingModelPlugin[],
-		store: IHintStore
-	): Promise<void>;
 }

@@ -6,8 +6,6 @@ import {
 	IFontFinalHintIntegrator,
 	IFontFinalHintSaver,
 	IFontFormatPlugin,
-	IHintingModelPlugin,
-	IHintStore,
 	Variation
 } from "@chlorophytum/arch";
 import {
@@ -16,26 +14,20 @@ import {
 	HlttPreStatSink,
 	HlttSession
 } from "@chlorophytum/final-hint-format-hltt";
-import { OpenTypeHintStore } from "@chlorophytum/font-opentype";
 import { FontForgeTextInstr } from "@chlorophytum/fontforge-instr";
 import { StreamJson, StreamJsonZip } from "@chlorophytum/util-json";
+import * as fs from "fs";
 import * as stream from "stream";
 
-import { OtdFontSource, OtdHsSupport } from "./simple-otd-support";
+import { OtdFontSource } from "./simple-otd-support";
 
 class OtdFontFormatPlugin implements IFontFormatPlugin {
-	private readonly hsSupport = new OtdHsSupport();
-
-	public async createFontSource(input: stream.Readable, identifier: string) {
-		const otd = await StreamJson.parse(input);
+	public async createFontSource(input: string, identifier: string) {
+		const inputStream = fs.createReadStream(input);
+		const otd = await StreamJson.parse(inputStream);
 		return new OtdFontSource(otd, identifier);
 	}
 
-	public async createHintStore(input: stream.Readable, plugins: IHintingModelPlugin[]) {
-		const hs: IHintStore = new OpenTypeHintStore(this.hsSupport);
-		await this.hsSupport.populateHintStore(input, plugins, hs);
-		return hs;
-	}
 	public createPreStatAnalyzer(pss: IFinalHintPreStatSink) {
 		if (pss instanceof HlttPreStatSink) return new OtdHlttPreStatAnalyzer(pss);
 		else return null;
@@ -95,12 +87,16 @@ class OtdHlttFinalHintSaver implements IFontFinalHintSaver {
 
 class OtdTtInstrIntegrator implements IFontFinalHintIntegrator {
 	public async integrateFinalHintsToFont(
-		hints: stream.Readable,
-		font: stream.Readable,
-		output: stream.Writable
+		sHints: string,
+		sFont: string,
+		sOutput: string
 	): Promise<void> {
-		const store: HlttFinalHintStoreRep<string> = await StreamJsonZip.parse(hints);
-		const otd = await StreamJson.parse(font);
+		const instrStream = fs.createReadStream(sHints);
+		const fontStream = fs.createReadStream(sFont);
+		const outputStream = fs.createWriteStream(sOutput);
+
+		const store: HlttFinalHintStoreRep<string> = await StreamJsonZip.parse(instrStream);
+		const otd = await StreamJson.parse(fontStream);
 
 		this.updateSharedInstructions(otd, store);
 		this.updateCvt(otd, store);
@@ -108,17 +104,21 @@ class OtdTtInstrIntegrator implements IFontFinalHintIntegrator {
 		this.updateMaxp(otd, store);
 		this.updateVtt(otd);
 
-		await StreamJson.stringify(otd, output);
+		await StreamJson.stringify(otd, outputStream);
 	}
 	public async integrateGlyphFinalHintsToFont(
-		hints: stream.Readable,
-		fontGlyphs: stream.Readable,
-		outputGlyphs: stream.Writable
+		sHints: string,
+		sFont: string,
+		sOutput: string
 	): Promise<void> {
-		const store: HlttFinalHintStoreRep<string> = await StreamJsonZip.parse(hints);
-		const otdGlyphs = await StreamJson.parse(fontGlyphs);
+		const instrStream = fs.createReadStream(sHints);
+		const fontStream = fs.createReadStream(sFont);
+		const outputStream = fs.createWriteStream(sOutput);
+
+		const store: HlttFinalHintStoreRep<string> = await StreamJsonZip.parse(instrStream);
+		const otdGlyphs = await StreamJson.parse(fontStream);
 		this.updateGlyphInstructions(otdGlyphs, store);
-		await StreamJson.stringify(otdGlyphs, outputGlyphs);
+		await StreamJson.stringify(otdGlyphs, outputStream);
 	}
 
 	private updateSharedInstructions(otd: any, store: HlttFinalHintStoreRep<string>) {

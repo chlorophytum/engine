@@ -11,6 +11,8 @@
 		{"path": "./hint-common"},
 		{"path": "./hint-embox"},
 		{"path": "./hint-maz"},
+		{"path": "./hint-store-memory"},
+		{"path": "./hint-store-provider-file"},
 		{"path": "./hltt"},
 		{"path": "./ideograph-shape-analyzer-1"},
 		{"path": "./util-json"}

@@ -12,9 +12,8 @@ export * from "./tasks";
 // Font source
 export interface IFontFormatPlugin {
 	// "any"s are actually existential types
-	createFontSource(input: stream.Readable, identifier: string): Promise<IFontSource<any>>;
+	createFontSource(path: string, identifier: string): Promise<IFontSource<any>>;
 	createPreStatAnalyzer(pss: IFinalHintPreStatSink): null | IFinalHintPreStatAnalyzer;
-	createHintStore(input: stream.Readable, plugins: IHintingModelPlugin[]): Promise<IHintStore>;
 	createFinalHintSaver(collector: IFinalHintCollector): null | IFontFinalHintSaver;
 	createFinalHintIntegrator(): IFontFinalHintIntegrator;
 }
@@ -25,16 +24,8 @@ export interface IFontFinalHintSaver {
 	saveFinalHint(fhs: IFinalHintSession, output: stream.Writable): Promise<void>;
 }
 export interface IFontFinalHintIntegrator {
-	integrateFinalHintsToFont(
-		hints: stream.Readable,
-		font: stream.Readable,
-		output: stream.Writable
-	): Promise<void>;
-	integrateGlyphFinalHintsToFont(
-		hints: stream.Readable,
-		font: stream.Readable,
-		output: stream.Writable
-	): Promise<void>;
+	integrateFinalHintsToFont(hints: string, font: string, output: string): Promise<void>;
+	integrateGlyphFinalHintsToFont(hints: string, font: string, output: string): Promise<void>;
 }
 export interface IFontSourceMetadata {
 	readonly identifier: string;
@@ -60,8 +51,12 @@ export interface IFontSource<GID> {
 	getGlyphMasters(glyph: GID): Promise<ReadonlyArray<Variation.MasterRep>>;
 	// Get geometry
 	getGeometry(glyph: GID, instance: null | Variation.Instance): Promise<Glyph.Shape>;
+}
 
-	createHintStore(): IHintStore;
+// Hint store plugin
+export interface IHintStoreProvider {
+	connectRead(identifier: string, plugins: IHintingModelPlugin[]): Promise<IHintStore>;
+	connectWrite(identifier: string, plugins: IHintingModelPlugin[]): Promise<IHintStore>;
 }
 export interface IHintStore {
 	listGlyphs(): Promise<Iterable<string>>;
@@ -72,7 +67,9 @@ export interface IHintStore {
 	listSharedTypes(): Promise<Iterable<string>>;
 	getSharedHints(type: string): Promise<IHint | null | undefined>;
 	setSharedHints(type: string, hint: IHint): Promise<void>;
-	save(stream: stream.Writable): Promise<void>;
+
+	commitChanges(): Promise<void>;
+	disconnect(): Promise<void>;
 }
 
 // Visual hints are geometry-invariant

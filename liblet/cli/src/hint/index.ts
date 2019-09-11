@@ -10,9 +10,10 @@ import {
 	ILogger,
 	ITask
 } from "@chlorophytum/arch";
+import { MemoryHintStore } from "@chlorophytum/hint-store-memory";
 import * as fs from "fs";
 
-import { getFontPlugin, getHintingPasses, HintOptions } from "../env";
+import { getFontPlugin, getHintingPasses, getHintStoreProvider, HintOptions } from "../env";
 import { Arbitrator } from "../tasks/arb";
 import { Progress } from "../tasks/progress";
 
@@ -28,7 +29,6 @@ export async function doHint(
 	restOptions: HintRestOptions,
 	jobs: [string, string][]
 ) {
-	const FontFormatPlugin = getFontPlugin(options);
 	const passes = getHintingPasses(options);
 	const modelPlugins = Array.from(new Set(passes.map(p => p.plugin)));
 	const hf = createHintFactory(modelPlugins);
@@ -48,12 +48,10 @@ export async function doHint(
 	{
 		const jobLogger = logger.bullet(" + ");
 		for (const [input, output] of jobs) {
-			const otdStream = fs.createReadStream(input);
-			const fontSource = await FontFormatPlugin.createFontSource(otdStream, input);
 			const hintStore = await hintFont(
 				{
-					from: input,
-					fontSource,
+					input,
+					output,
 					options,
 					logger: jobLogger.bullet(" - "),
 					hf,
@@ -62,8 +60,8 @@ export async function doHint(
 				passes
 			);
 			jobLogger.log(`Saving analysis result : ${input} -> ${output}`);
-			const out = fs.createWriteStream(output);
-			await hintStore.save(out);
+			await hintStore.commitChanges();
+			await hintStore.disconnect();
 		}
 	}
 
@@ -96,8 +94,8 @@ async function saveCache(logger: ILogger, hc: HintCache, hro: HintRestOptions) {
 }
 
 interface HintImplState<GID> {
-	from: string;
-	fontSource: IFontSource<GID>;
+	input: string;
+	output: string;
 	options: HintOptions;
 	logger: ILogger;
 	hf: IHintFactory;
@@ -105,12 +103,15 @@ interface HintImplState<GID> {
 }
 
 async function hintFont<GID>(st: HintImplState<GID>, passes: HintingPass[]) {
+	const fontSourcePlugin = getFontPlugin(st.options);
+	const fontSource = await fontSourcePlugin.createFontSource(st.input, st.input);
+
 	let tasks: ITask<unknown>[] = [];
 	let localHintStores: IHintStore[] = [];
 	for (const pass of passes) {
-		const hm = pass.plugin.adopt(st.fontSource, pass.parameters);
+		const hm = pass.plugin.adopt(fontSource, pass.parameters);
 		if (!hm) continue;
-		const hs = st.fontSource.createHintStore();
+		const hs = new MemoryHintStore();
 		if (!hs) continue;
 
 		localHintStores.push(hs);
@@ -125,18 +126,18 @@ async function hintFont<GID>(st: HintImplState<GID>, passes: HintingPass[]) {
 		if (!task) continue;
 		tasks.push(task);
 	}
+
 	const capacity = st.options.jobs || 1;
-	st.logger.log(`Analyzing ${st.from} with ${capacity} threads...`);
-	const progress = new Progress(`Analyzing ${st.from}`, st.logger);
+	st.logger.log(`Analyzing ${st.input} with ${capacity} threads...`);
+	const progress = new Progress(`Analyzing ${st.input}`, st.logger);
 
 	const host = new Host(capacity, st.options);
 	const arb = new Arbitrator(capacity <= 1, host, progress);
 	await Promise.all(tasks.map(task => arb.demand(task)));
 
-	const hsAll = st.fontSource.createHintStore();
-	for (const store of localHintStores) {
-		await combineHintStore(store, hsAll);
-	}
+	const hsProvider = getHintStoreProvider(st.options);
+	const hsAll = await hsProvider.connectWrite(st.output, passes.map(p => p.plugin));
+	for (const store of localHintStores) await combineHintStore(store, hsAll);
 	return hsAll;
 }
 async function combineHintStore(from: IHintStore, to: IHintStore) {
