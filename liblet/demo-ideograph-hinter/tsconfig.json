@@ -4,6 +4,7 @@
 		{"path": "../cli"},
 		{"path": "../final-hint-format-hltt"},
 		{"path": "../font-format-otd"},
+		{"path": "../hint-store-provider-file"},
 		{"path": "../ideograph-shape-analyzer-1"}
 	],
 	"compilerOptions": {
