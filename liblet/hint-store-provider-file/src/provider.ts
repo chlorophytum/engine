@@ -14,7 +14,7 @@ import * as stream from "stream";
 export class HintStoreFsProvider implements IHintStoreProvider {
 	public async connectRead(path: string, plugins: IHintingModelPlugin[]) {
 		const hs = new FsHintStore(path);
-		new OtdHsSupport().populateHintStore(fs.createReadStream(path), plugins, hs);
+		await new OtdHsSupport().populateHintStore(fs.createReadStream(path), plugins, hs);
 		return hs;
 	}
 	public async connectWrite(path: string, plugins: IHintingModelPlugin[]) {
