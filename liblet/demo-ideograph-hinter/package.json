@@ -1,6 +1,6 @@
 {
 	"name": "@chlorophytum/demo-ideograph-hinter",
-	"version": "0.1.6",
+	"version": "0.1.7",
 	"description": "",
 	"main": "lib/index.js",
 	"private": true,
@@ -16,7 +16,7 @@
 		"@chlorophytum/cli": "0.1.6",
 		"@chlorophytum/final-hint-format-hltt": "0.1.6",
 		"@chlorophytum/font-format-otd": "0.1.6",
-		"@chlorophytum/hint-store-provider-file": "0.1.6",
+		"@chlorophytum/hint-store-provider-file": "0.1.7",
 		"@chlorophytum/ideograph-shape-analyzer-1": "0.1.6",
 		"tslib": "^1.9.3"
 	},
