@@ -1,3 +1,4 @@
+import { AdjustStrokeDistT } from "@chlorophytum/hint-programs-stoke-adjust";
 import { Expression, ProgramDsl, TtLibrary } from "@chlorophytum/hltt";
 
 const Lib = new TtLibrary(`Chlorophytum::EmBox::HlttSupportPrograms`);
@@ -135,20 +136,6 @@ export const THintBottomStroke = Lib.Template(function*($, stretch: StretchProps
 	yield $.scfs(zsTop, $.add($.gc.cur(zsTop), dOffset));
 });
 
-const AdjustStrokeDist = Lib.Func(function*($) {
-	const [d] = $.args(1);
-	const One = $.coerce.toF26D6(1);
-	yield $.return(
-		$.add(
-			$.max(One, $.floor(d)),
-			$.mul(
-				$.sub(d, $.max(One, $.floor(d))),
-				$.sub(One, $.div(One, $.max(One, $.mul($.coerce.toF26D6(16), $.mppem()))))
-			)
-		)
-	);
-});
-
 export const THintBottomStrokeFree = Lib.Func(function*(e) {
 	const [zBot, zTop, zsBot, zsTop] = e.args(4);
 	const dBelowOrig = e.local();
@@ -159,7 +146,7 @@ export const THintBottomStrokeFree = Lib.Func(function*(e) {
 	yield e.set(dBelowOrig, e.sub(e.gc.orig(zsBot), e.gc.orig(zBot)));
 	yield e.set(dAboveOrig, e.sub(e.gc.orig(zTop), e.gc.orig(zsTop)));
 	yield e.set(wOrig, e.sub(e.gc.orig(zsTop), e.gc.orig(zsBot)));
-	yield e.set(wCur, e.max(e.coerce.toF26D6(3 / 5), e.call(AdjustStrokeDist, wOrig)));
+	yield e.set(wCur, e.max(e.coerce.toF26D6(3 / 5), e.call(AdjustStrokeDistT(2), wOrig)));
 	yield e.set(spaceCur, e.sub(e.sub(e.gc.cur(zTop), e.gc.cur(zBot)), wCur));
 	yield e.scfs(
 		zsBot,
@@ -202,7 +189,7 @@ export const THintTopStrokeFree = Lib.Func(function*(e) {
 	yield e.set(dBelowOrig, e.sub(e.gc.orig(zsBot), e.gc.orig(zBot)));
 	yield e.set(dAboveOrig, e.sub(e.gc.orig(zTop), e.gc.orig(zsTop)));
 	yield e.set(wOrig, e.sub(e.gc.orig(zsTop), e.gc.orig(zsBot)));
-	yield e.set(wCur, e.max(e.coerce.toF26D6(3 / 5), e.call(AdjustStrokeDist, wOrig)));
+	yield e.set(wCur, e.max(e.coerce.toF26D6(3 / 5), e.call(AdjustStrokeDistT(2), wOrig)));
 	yield e.set(spaceCur, e.sub(e.sub(e.gc.cur(zTop), e.gc.cur(zBot)), wCur));
 	yield e.scfs(
 		zsTop,
@@ -227,7 +214,7 @@ export const THintStrokeFreeAuto = Lib.Func(function*(e) {
 	yield e.set(dBelowOrig, e.sub(e.gc.orig(zsBot), e.gc.orig(zBot)));
 	yield e.set(dAboveOrig, e.sub(e.gc.orig(zTop), e.gc.orig(zsTop)));
 	yield e.set(wOrig, e.sub(e.gc.orig(zsTop), e.gc.orig(zsBot)));
-	yield e.set(wCur, e.max(e.coerce.toF26D6(3 / 5), e.call(AdjustStrokeDist, wOrig)));
+	yield e.set(wCur, e.max(e.coerce.toF26D6(3 / 5), e.call(AdjustStrokeDistT(2), wOrig)));
 	yield e.set(spaceCur, e.sub(e.sub(e.gc.cur(zTop), e.gc.cur(zBot)), wCur));
 	yield e.set(
 		urTop,

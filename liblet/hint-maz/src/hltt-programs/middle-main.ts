@@ -1,6 +1,7 @@
+import { VisDistT } from "@chlorophytum/hint-programs-stoke-adjust";
 import { EdslSymbolTemplate } from "@chlorophytum/hltt";
 
-import { Lib } from "./commons";
+import { ConsideredDark, GetFillRate, Lib } from "./commons";
 import { DecideRequiredGap, THintMultipleStrokesMidSize } from "./middle-midsize";
 import { HintMultipleStrokesGiveUp, HintMultipleStrokesSimple } from "./simple";
 import {
@@ -10,7 +11,6 @@ import {
 	CollideHangTop,
 	CollideUpTwoStrokes
 } from "./stroke-omit";
-import { GetFillRate, VisDist } from "./vis-dist";
 
 export const TwoN = Lib.Func(function*($) {
 	const [x] = $.args(1);
@@ -562,7 +562,7 @@ export const THintMultipleStrokesMainImpl = Lib.Template(function*($, N: number)
 	const frTop = $.local();
 	yield $.set(frBot, $.mul(fb, $.call(GetFillRate, N, zBot, zTop, vpZMids)));
 	yield $.set(frTop, $.mul(ft, $.call(GetFillRate, N, zBot, zTop, vpZMids)));
-	yield $.set(dist, $.call(VisDist, zBot, zTop, frBot, frTop));
+	yield $.set(dist, $.call(VisDistT(ConsideredDark), zBot, zTop, frBot, frTop));
 
 	const pxReqGap = $.local();
 	const pxReqGapOrig = $.local();

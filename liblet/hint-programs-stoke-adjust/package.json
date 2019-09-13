@@ -1,5 +1,5 @@
 {
-	"name": "@chlorophytum/hint-embox",
+	"name": "@chlorophytum/hint-programs-stoke-adjust",
 	"version": "0.1.6",
 	"description": "",
 	"main": "lib/index.js",
@@ -12,11 +12,9 @@
 	"author": "Renzhi Li (aka. Belleve Invis)",
 	"license": "MIT",
 	"dependencies": {
+		"tslib": "^1.9.3",
 		"@chlorophytum/arch": "0.1.6",
-		"@chlorophytum/final-hint-format-hltt": "0.1.6",
-		"@chlorophytum/hltt": "0.1.6",
-		"@chlorophytum/hint-programs-stoke-adjust": "0.1.6",
-		"tslib": "^1.9.3"
+		"@chlorophytum/hltt": "0.1.6"
 	},
 	"devDependencies": {
 		"ava": "^1.4.1"

@@ -1,12 +1,11 @@
+import { OctDistOrig } from "@chlorophytum/hint-programs-stoke-adjust";
 import { Expression, ProgramDsl, Variable } from "@chlorophytum/hltt";
 
-import { MultipleAlignZoneMeta } from "../props";
 import { splitNArgs } from "../util";
 
 import { Lib } from "./commons";
-import { MapArrIntToPx, TInitArr, TInitMD, TInitRecPath, TInitZMids } from "./middle-array";
+import { MapArrIntToPx, TInitArr, TInitZMids } from "./middle-array";
 import { THintMultipleStrokesMainImpl } from "./middle-main";
-import { OctDistOrig } from "./vis-dist";
 
 function midBot(e: ProgramDsl, zMids: Variable, index: Expression) {
 	return e.part(zMids, e.mul(e.coerce.toF26D6(2), index));

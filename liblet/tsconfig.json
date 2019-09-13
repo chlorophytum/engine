@@ -11,6 +11,7 @@
 		{"path": "./hint-common"},
 		{"path": "./hint-embox"},
 		{"path": "./hint-maz"},
+		{"path": "./hint-programs-stoke-adjust"},
 		{"path": "./hint-store-memory"},
 		{"path": "./hint-store-provider-file"},
 		{"path": "./hltt"},

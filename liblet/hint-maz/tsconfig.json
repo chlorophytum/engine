@@ -4,6 +4,7 @@
 		{"path": "../arch"},
 		{"path": "../final-hint-format-hltt"},
 		{"path": "../hint-embox"},
+		{"path": "../hint-programs-stoke-adjust"},
 		{"path": "../hltt"}
 	],
 	"compilerOptions": {
