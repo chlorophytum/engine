@@ -1,7 +1,7 @@
+import { AdjustStrokeDistT, OctDistOrig } from "@chlorophytum/hint-programs-stoke-adjust";
 import { Expression, ProgramDsl, Variable } from "@chlorophytum/hltt";
 
 import { Lib } from "./commons";
-import { OctDistOrig } from "./vis-dist";
 
 const DIV_STEP = 2;
 
@@ -70,20 +70,6 @@ export const InitMSDGapEntries = Lib.Func(function*($) {
 	});
 });
 
-const AdjustStrokeDist = Lib.Func(function*($) {
-	const [d] = $.args(1);
-	const One = $.coerce.toF26D6(1);
-	yield $.return(
-		$.add(
-			$.max(One, $.floor(d)),
-			$.mul(
-				$.sub(d, $.max(One, $.floor(d))),
-				$.sub(One, $.div(One, $.max(One, $.mul($.coerce.toF26D6(16), $.mppem()))))
-			)
-		)
-	);
-});
-
 export const InitMSDInkEntries = Lib.Func(function*($) {
 	const [N, vpTotalDist, vpA, vpB, vpC, vpDiv, vpAlloc, vpZMids, vpStrokeMD] = $.args(9);
 
@@ -104,7 +90,7 @@ export const InitMSDInkEntries = Lib.Func(function*($) {
 			vpDiv,
 			vpAlloc,
 			$.call(
-				AdjustStrokeDist,
+				AdjustStrokeDistT(2),
 				$.call(OctDistOrig, midBot($, pZMids, j), midTop($, pZMids, j))
 			),
 			$.coerce.toF26D6(1),

@@ -3,6 +3,7 @@
 	"references": [
 		{"path": "../arch"},
 		{"path": "../final-hint-format-hltt"},
+		{"path": "../hint-programs-stoke-adjust"},
 		{"path": "../hltt"}
 	],
 	"compilerOptions": {

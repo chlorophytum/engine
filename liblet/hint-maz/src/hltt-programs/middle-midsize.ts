@@ -1,12 +1,13 @@
+import { VisCeilT } from "@chlorophytum/hint-programs-stoke-adjust";
+
 import { BalanceStrokes } from "./balance";
-import { Lib } from "./commons";
+import { ConsideredDark, Lib } from "./commons";
 import {
 	InitMSDGapEntries,
 	InitMSDInkEntries,
 	MaxAverageLoop,
 	MovePointsForMiddleHint
 } from "./loop";
-import { VisCeil } from "./vis-dist";
 
 export const DecideRequiredGap = Lib.Func(function*(e) {
 	const [N, vpGapMD] = e.args(2);
@@ -111,7 +112,7 @@ export const THintMultipleStrokesMidSize = Lib.Template(function*(e, NMax: numbe
 		N,
 		zBot,
 		zTop,
-		e.call(VisCeil, e.gc.cur(zBot), frBot),
+		e.call(VisCeilT(ConsideredDark), e.gc.cur(zBot), frBot),
 		gaps.ptr,
 		inks.ptr,
 		vpZMids
