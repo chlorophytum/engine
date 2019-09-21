@@ -1,4 +1,16 @@
+import { StretchProps } from "@chlorophytum/hint-embox";
+
 const DEADLY = 1e12;
+
+const DefaultStretch: StretchProps = {
+	PIXEL_RATIO_TO_MOVE: 1.7,
+	PIXEL_SHIFT_TO_MOVE: 0.7,
+	STRETCH_BOTTOM_A: -0.5,
+	STRETCH_BOTTOM_X: 2.5,
+	STRETCH_TOP_A: -0.5,
+	STRETCH_TOP_X: 2.5,
+	CUTIN: 0
+};
 
 const DefaultStrategy = {
 	// Coverage
@@ -60,7 +72,8 @@ const DefaultStrategy = {
 	TBST_LIMIT: 0.25,
 	DO_SHORT_ABSORPTION: true,
 	SYMMETRY_TEST_PPEM: 32,
-	DEADLY_MERGE: 1e10
+	DEADLY_MERGE: 1e10,
+	EmBoxStretch: DefaultStretch
 };
 
 export type HintingStrategy = Readonly<typeof DefaultStrategy> & { readonly UPM: number };

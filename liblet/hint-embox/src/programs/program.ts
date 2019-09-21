@@ -13,16 +13,6 @@ export interface StretchProps {
 	readonly CUTIN: number;
 }
 
-export const DefaultStretch: StretchProps = {
-	PIXEL_RATIO_TO_MOVE: 1.7,
-	PIXEL_SHIFT_TO_MOVE: 0.7,
-	STRETCH_BOTTOM_A: -0.5,
-	STRETCH_BOTTOM_X: 2.5,
-	STRETCH_TOP_A: -0.5,
-	STRETCH_TOP_X: 2.5,
-	CUTIN: 0
-};
-
 const TDistAdjustBot = Lib.Template(function*(e, stretch: StretchProps) {
 	const [d] = e.args(1);
 	const correctedPpem = e.max(
