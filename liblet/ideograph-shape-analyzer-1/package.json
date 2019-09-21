@@ -1,6 +1,6 @@
 {
 	"name": "@chlorophytum/ideograph-shape-analyzer-1",
-	"version": "0.1.6",
+	"version": "0.1.8",
 	"description": "",
 	"main": "lib/index.js",
 	"typings": "lib/index.d.ts",
@@ -12,11 +12,11 @@
 	"author": "Renzhi Li (aka. Belleve Invis)",
 	"license": "MIT",
 	"dependencies": {
-		"@chlorophytum/arch": "0.1.6",
-		"@chlorophytum/font-opentype": "0.1.6",
-		"@chlorophytum/hint-common": "0.1.6",
-		"@chlorophytum/hint-embox": "0.1.6",
-		"@chlorophytum/hint-maz": "0.1.6",
+		"@chlorophytum/arch": "0.1.8",
+		"@chlorophytum/font-opentype": "0.1.8",
+		"@chlorophytum/hint-common": "0.1.8",
+		"@chlorophytum/hint-embox": "0.1.8",
+		"@chlorophytum/hint-maz": "0.1.8",
 		"deepmerge": "^3.2.0",
 		"lodash": "^4.17.11",
 		"tslib": "^1.9.3"
