@@ -1,7 +1,7 @@
 import { EmptyImpl, IHint } from "@chlorophytum/arch";
 import { mix } from "@chlorophytum/arch/lib/support";
 import { Interpolate, LinkChain, Smooth, WithDirection } from "@chlorophytum/hint-common";
-import { EmBoxEdge, EmBoxInit, EmBoxStroke } from "@chlorophytum/hint-embox";
+import { EmBoxEdge, EmBoxInit, EmBoxStroke, StretchProps } from "@chlorophytum/hint-embox";
 import { MultipleAlignZone } from "@chlorophytum/hint-maz";
 
 import HierarchySink, { DependentHintType } from "../hierarchy/sink";
@@ -25,14 +25,34 @@ export default class HintGenSink extends HierarchySink {
 		this.subHints.push(new LinkChain.Hint([rp0, z]));
 	}
 
-	public addBoundaryStem(stem: Stem, locTop: boolean, atBottom: boolean, atTop: boolean) {
+	public addBoundaryStem(
+		stem: Stem,
+		locTop: boolean,
+		atBottom: boolean,
+		atTop: boolean,
+		stretch: StretchProps
+	) {
 		if (atBottom || atTop) {
 			this.subHints.push(
-				new EmBoxStroke.Hint(this.glyphKind, atTop, false, stem.lowKey.id, stem.highKey.id)
+				new EmBoxStroke.Hint(
+					this.glyphKind,
+					atTop,
+					false,
+					stem.lowKey.id,
+					stem.highKey.id,
+					stretch
+				)
 			);
 		} else {
 			this.subHints.push(
-				new EmBoxStroke.Hint(this.glyphKind, locTop, true, stem.lowKey.id, stem.highKey.id)
+				new EmBoxStroke.Hint(
+					this.glyphKind,
+					locTop,
+					true,
+					stem.lowKey.id,
+					stem.highKey.id,
+					stretch
+				)
 			);
 		}
 	}

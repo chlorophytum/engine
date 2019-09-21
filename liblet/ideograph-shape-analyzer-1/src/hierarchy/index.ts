@@ -324,7 +324,8 @@ export default class HierarchyAnalyzer {
 				this.analysis.stems[bot],
 				false,
 				botAtGlyphBottom,
-				atGlyphTop(this.analysis.stems[bot], this.strategy)
+				atGlyphTop(this.analysis.stems[bot], this.strategy),
+				this.strategy.EmBoxStretch
 			);
 			botIsBoundary = true;
 		}
@@ -335,7 +336,8 @@ export default class HierarchyAnalyzer {
 				this.analysis.stems[top],
 				true,
 				atGlyphBottom(this.analysis.stems[top], this.strategy),
-				topAtGlyphTop
+				topAtGlyphTop,
+				this.strategy.EmBoxStretch
 			);
 			topIsBoundary = true;
 		}
@@ -380,7 +382,8 @@ export default class HierarchyAnalyzer {
 					this.analysis.stems[j],
 					!this.analysis.stems[j].hasGlyphStemAbove,
 					atGlyphBottom(this.analysis.stems[j], this.strategy),
-					atGlyphTop(this.analysis.stems[j], this.strategy)
+					atGlyphTop(this.analysis.stems[j], this.strategy),
+					this.strategy.EmBoxStretch
 				);
 			}
 		}

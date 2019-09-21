@@ -2,7 +2,6 @@ import { IFinalHintProgramSink, IHint, IHintCompiler, IHintFactory } from "@chlo
 import { HlttProgramSink } from "@chlorophytum/final-hint-format-hltt";
 
 import {
-	DefaultStretch,
 	StretchProps,
 	THintBottomStroke,
 	THintStrokeFreeAuto,
@@ -20,7 +19,7 @@ export namespace EmBoxStroke {
 			private readonly spur: boolean,
 			private readonly zSBot: number,
 			private readonly zsTop: number,
-			private readonly stretch: StretchProps | null = null
+			private readonly stretch: StretchProps
 		) {}
 		public toJSON() {
 			return {
@@ -74,7 +73,7 @@ export namespace EmBoxStroke {
 			private readonly spur: boolean,
 			private readonly zsBot: number,
 			private readonly zsTop: number,
-			private readonly stretch: StretchProps | null
+			private readonly stretch: StretchProps
 		) {}
 		public doCompile() {
 			const { boxName, top, spur, zsBot, zsTop, stretch } = this;
@@ -95,7 +94,7 @@ export namespace EmBoxStroke {
 				} else {
 					if (top) {
 						yield $.call(
-							THintTopStroke(stretch || DefaultStretch),
+							THintTopStroke(stretch),
 							strokeBottom,
 							strokeTop,
 							archBottom,
@@ -105,7 +104,7 @@ export namespace EmBoxStroke {
 						);
 					} else {
 						yield $.call(
-							THintBottomStroke(stretch || DefaultStretch),
+							THintBottomStroke(stretch),
 							strokeBottom,
 							strokeTop,
 							archBottom,
