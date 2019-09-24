@@ -1,4 +1,10 @@
-import { IFinalHintProgramSink, IHint, IHintCompiler, IHintFactory } from "@chlorophytum/arch";
+import {
+	IFinalHintProgramSink,
+	IHint,
+	IHintCompiler,
+	IHintFactory,
+	PropertyBag
+} from "@chlorophytum/arch";
 import { HlttProgramSink } from "@chlorophytum/final-hint-format-hltt";
 
 import {
@@ -8,6 +14,7 @@ import {
 	THintTopStroke
 } from "./programs/program";
 import { Twilights } from "./programs/twilight";
+import { UseEmBox } from "./use-em-box";
 
 export namespace EmBoxStroke {
 	const TAG = "Chlorophytum::EmBox::Stroke";
@@ -32,7 +39,9 @@ export namespace EmBoxStroke {
 				stretch: this.stretch
 			};
 		}
-		public createCompiler(sink: IFinalHintProgramSink): IHintCompiler | null {
+		public createCompiler(bag: PropertyBag, sink: IFinalHintProgramSink): IHintCompiler | null {
+			const ready = UseEmBox.ReadyPropT.suffix(this.boxName);
+			if (!bag.get(ready)) throw new Error(`Em box ${this.boxName} is not initialized.`);
 			if (sink instanceof HlttProgramSink) {
 				return new HlttCompiler(
 					sink,
@@ -46,6 +55,7 @@ export namespace EmBoxStroke {
 			}
 			return null;
 		}
+		public traverse() {}
 	}
 
 	export class HintFactory implements IHintFactory {

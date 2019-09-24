@@ -1,4 +1,11 @@
-import { IFinalHintProgramSink, IHint, IHintCompiler, IHintFactory } from "../interfaces";
+import {
+	IFinalHintProgramSink,
+	IHint,
+	IHintCompiler,
+	IHintFactory,
+	IHintTraveller,
+	PropertyBag
+} from "@chlorophytum/arch";
 
 export namespace Sequence {
 	const TAG = "Chlorophytum::SequenceHint";
@@ -7,14 +14,17 @@ export namespace Sequence {
 		public toJSON() {
 			return { type: TAG, of: this.children.map(c => c.toJSON()) };
 		}
-		public createCompiler(sink: IFinalHintProgramSink): IHintCompiler | null {
+		public createCompiler(bag: PropertyBag, sink: IFinalHintProgramSink): IHintCompiler | null {
 			let compilers: IHintCompiler[] = [];
 			for (const part of this.children) {
-				const c = part.createCompiler(sink);
+				const c = part.createCompiler(bag, sink);
 				if (!c) return null;
 				compilers.push(c);
 			}
 			return new Compiler(compilers);
+		}
+		public traverse(bag: PropertyBag, traveller: IHintTraveller) {
+			for (const ch of this.children) traveller.traverse(bag, ch);
 		}
 	}
 

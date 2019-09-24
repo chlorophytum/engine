@@ -1,6 +1,6 @@
-import { IFontSource, IFontSourceMetadata, IHintingModelPlugin } from "@chlorophytum/arch";
-import { Interpolate, LinkChain, Smooth, WithDirection } from "@chlorophytum/hint-common";
-import { EmBoxEdge, EmBoxInit, EmBoxShared, EmBoxStroke } from "@chlorophytum/hint-embox";
+import { IFontSource, IHintingModelPlugin } from "@chlorophytum/arch";
+import { Interpolate, LinkChain, Sequence, Smooth, WithDirection } from "@chlorophytum/hint-common";
+import { EmBoxEdge, EmBoxShared, EmBoxStroke, UseEmBox } from "@chlorophytum/hint-embox";
 import { MultipleAlignZone } from "@chlorophytum/hint-maz";
 
 import { IdeographHintingModel1 } from "./hinting-model";
@@ -15,14 +15,15 @@ class CIdeographHintingModelFactory1 implements IHintingModelPlugin {
 	public adopt<GID>(font: IFontSource<GID>, parameters: any) {
 		return new IdeographHintingModel1<GID>(font, parameters);
 	}
-	public readonly hintFactories = [
+	public readonly factoriesOfUsedHints = [
+		new Sequence.Factory(),
 		new WithDirection.HintFactory(),
 		new MultipleAlignZone.HintFactory(),
 		new LinkChain.HintFactory(),
 		new Interpolate.HintFactory(),
 		new EmBoxStroke.HintFactory(),
 		new EmBoxEdge.HintFactory(),
-		new EmBoxInit.HintFactory(),
+		new UseEmBox.HintFactory(),
 		new EmBoxShared.HintFactory(),
 		new Smooth.HintFactory()
 	];

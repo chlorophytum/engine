@@ -1,4 +1,4 @@
-import { EmptyImpl, HintingPass, Plugins } from "@chlorophytum/arch";
+import { AutoHintingPass, EmptyImpl, Plugins } from "@chlorophytum/arch";
 
 export interface HintOptions {
 	jobs?: number;
@@ -21,7 +21,7 @@ export function getHintStoreProvider(hOpt: HintOptions) {
 	return mFinalFormat.HintStoreProvider;
 }
 export function getHintingPasses(hOpt: HintOptions) {
-	const passes: HintingPass[] = [];
+	const passes: AutoHintingPass[] = [];
 	let passN = 0;
 
 	for (const { plugin, options } of hOpt.hintPasses) {

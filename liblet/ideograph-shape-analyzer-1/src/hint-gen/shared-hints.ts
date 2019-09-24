@@ -1,11 +1,10 @@
-import { EmptyImpl } from "@chlorophytum/arch";
-import { WithDirection } from "@chlorophytum/hint-common";
+import { Sequence, WithDirection } from "@chlorophytum/hint-common";
 import { EmBoxShared } from "@chlorophytum/hint-embox";
 
 import { HintingStrategy } from "../strategy";
 
 export function createSharedHints(params: HintingStrategy) {
-	return new EmptyImpl.Sequence.Hint([
+	return new Sequence.Hint([
 		WithDirection.Y(
 			new EmBoxShared.Hint({
 				name: params.groupName,

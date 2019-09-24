@@ -1,4 +1,10 @@
-import { IFinalHintProgramSink, IHint, IHintCompiler, IHintFactory } from "../interfaces";
+import {
+	IFinalHintProgramSink,
+	IHint,
+	IHintCompiler,
+	IHintFactory,
+	PropertyBag
+} from "../interfaces";
 
 export namespace Empty {
 	const TAG = "Chlorophytum::EmptyHint";
@@ -6,9 +12,10 @@ export namespace Empty {
 		public toJSON() {
 			return { type: TAG };
 		}
-		public createCompiler(sink: IFinalHintProgramSink): IHintCompiler | null {
+		public createCompiler(bag: PropertyBag, sink: IFinalHintProgramSink): IHintCompiler | null {
 			return new Compiler();
 		}
+		public traverse() {}
 	}
 
 	export class Factory implements IHintFactory {

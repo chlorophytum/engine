@@ -1,7 +1,7 @@
-import { EmptyImpl, IHint } from "@chlorophytum/arch";
+import { IHint } from "@chlorophytum/arch";
 import { mix } from "@chlorophytum/arch/lib/support";
-import { Interpolate, LinkChain, Smooth, WithDirection } from "@chlorophytum/hint-common";
-import { EmBoxEdge, EmBoxInit, EmBoxStroke, StretchProps } from "@chlorophytum/hint-embox";
+import { Interpolate, LinkChain, Sequence, Smooth, WithDirection } from "@chlorophytum/hint-common";
+import { EmBoxEdge, EmBoxStroke, StretchProps, UseEmBox } from "@chlorophytum/hint-embox";
 import { MultipleAlignZone } from "@chlorophytum/hint-maz";
 
 import HierarchySink, { DependentHintType } from "../hierarchy/sink";
@@ -201,9 +201,11 @@ export default class HintGenSink extends HierarchySink {
 	}
 
 	public getHint() {
-		return new EmptyImpl.Sequence.Hint([
+		return new Sequence.Hint([
 			WithDirection.Y(
-				new EmptyImpl.Sequence.Hint([new EmBoxInit.Hint(this.glyphKind), ...this.subHints])
+				new Sequence.Hint([
+					new UseEmBox.Hint(this.glyphKind, new Sequence.Hint(this.subHints))
+				])
 			),
 			new Smooth.Hint()
 		]);

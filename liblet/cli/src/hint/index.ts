@@ -1,7 +1,7 @@
 import {
+	AutoHintingPass,
 	ConsoleLogger,
 	EmptyImpl,
-	HintingPass,
 	IFontSource,
 	IHintFactory,
 	IHintingModelExecEnv,
@@ -71,7 +71,7 @@ export async function doHint(
 function createHintFactory(models: IHintingModelPlugin[]): IHintFactory {
 	const hfs: IHintFactory[] = [];
 	for (const plugin of models) {
-		for (const hf of plugin.hintFactories) {
+		for (const hf of plugin.factoriesOfUsedHints) {
 			hfs.push(hf);
 		}
 	}
@@ -102,7 +102,7 @@ interface HintImplState<GID> {
 	hc: HintCache;
 }
 
-async function hintFont<GID>(st: HintImplState<GID>, passes: HintingPass[]) {
+async function hintFont<GID>(st: HintImplState<GID>, passes: AutoHintingPass[]) {
 	const fontSourcePlugin = getFontPlugin(st.options);
 	const fontSource = await fontSourcePlugin.createFontSource(st.input, st.input);
 

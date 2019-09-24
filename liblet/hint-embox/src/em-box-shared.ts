@@ -1,4 +1,10 @@
-import { IFinalHintProgramSink, IHint, IHintCompiler, IHintFactory } from "@chlorophytum/arch";
+import {
+	IFinalHintProgramSink,
+	IHint,
+	IHintCompiler,
+	IHintFactory,
+	PropertyBag
+} from "@chlorophytum/arch";
 import { HlttProgramSink } from "@chlorophytum/final-hint-format-hltt";
 
 import { TInitEmBoxTwilightPoints } from "./programs/program";
@@ -23,12 +29,13 @@ export namespace EmBoxShared {
 				props: this.props
 			};
 		}
-		public createCompiler(sink: IFinalHintProgramSink): IHintCompiler | null {
+		public createCompiler(bag: PropertyBag, sink: IFinalHintProgramSink): IHintCompiler | null {
 			if (sink instanceof HlttProgramSink) {
 				return new HlttCompiler(sink, this.props);
 			}
 			return null;
 		}
+		public traverse() {}
 	}
 
 	export class HintFactory implements IHintFactory {

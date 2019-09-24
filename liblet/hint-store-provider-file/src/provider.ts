@@ -65,7 +65,7 @@ class OtdHsSupport {
 		const hsRep = await StreamJsonZip.parse(input);
 		const hfs: IHintFactory[] = [];
 		for (const plugin of plugins) {
-			for (const hf of plugin.hintFactories) {
+			for (const hf of plugin.factoriesOfUsedHints) {
 				hfs.push(hf);
 			}
 		}

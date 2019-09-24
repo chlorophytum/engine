@@ -1,6 +1,7 @@
 import * as stream from "stream";
 
 import { Glyph } from "./geometry";
+import { PropertyBag } from "./property-bag";
 import { IParallelTaskFactory, ITask } from "./tasks";
 import { Variation } from "./variation";
 
@@ -8,6 +9,7 @@ export { Geometry, Glyph } from "./geometry";
 export { Variation } from "./variation";
 
 export * from "./tasks";
+export * from "./property-bag";
 
 // Font source
 export interface IFontFormatPlugin {
@@ -75,7 +77,11 @@ export interface IHintStore {
 // Visual hints are geometry-invariant
 export interface IHint {
 	toJSON(): any;
-	createCompiler(font: IFinalHintProgramSink): IHintCompiler | null | undefined;
+	createCompiler(bag: PropertyBag, font: IFinalHintProgramSink): IHintCompiler | null | undefined;
+	traverse(bag: PropertyBag, traveller: IHintTraveller): void;
+}
+export interface IHintTraveller {
+	traverse(bag: PropertyBag, hint: IHint): void;
 }
 export interface IHintFactory {
 	readonly type: string;
@@ -98,7 +104,6 @@ export interface IHintCacheManager {
 }
 export interface IHintingModel {
 	readonly type: string;
-	readonly allowParallel: boolean;
 	getHintingTask(env: IHintingModelExecEnv): null | ITask<unknown>;
 }
 export interface IParallelHintingModel {
@@ -108,9 +113,10 @@ export interface IParallelHintingModel {
 export interface IHintingModelPlugin extends IParallelTaskFactory {
 	readonly type: string;
 	adopt<GID>(font: IFontSource<GID>, parameters: any): IHintingModel | null | undefined;
-	hintFactories: IHintFactory[];
+	// Reference all factories of all the visual hints that it would produce
+	readonly factoriesOfUsedHints: ReadonlyArray<IHintFactory>;
 }
-export interface HintingPass {
+export interface AutoHintingPass {
 	readonly plugin: IHintingModelPlugin;
 	readonly uniqueID: string;
 	readonly parameters?: any;

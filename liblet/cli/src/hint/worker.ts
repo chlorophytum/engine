@@ -1,4 +1,4 @@
-import { HintingPass, IParallelTask } from "@chlorophytum/arch";
+import { AutoHintingPass, IParallelTask } from "@chlorophytum/arch";
 import { MessagePort, parentPort, workerData } from "worker_threads";
 
 import { getHintingPasses } from "../env";
@@ -20,7 +20,7 @@ async function main(data: HintWorkData, parentPort: MessagePort) {
 	parentPort.postMessage({ ready: true });
 }
 
-async function doHint(passes: HintingPass[], msg: TaskMessage) {
+async function doHint(passes: AutoHintingPass[], msg: TaskMessage) {
 	let pt: null | IParallelTask<any> = null;
 	for (const pass of passes) {
 		pt = pass.plugin.createParallelTask(msg.taskType, msg.taskArgs);
