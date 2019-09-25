@@ -16,7 +16,7 @@ export namespace UseEmBox {
 	export class Hint implements IHint {
 		constructor(private readonly name: string, private readonly inner: IHint) {}
 		public toJSON() {
-			return { type: TAG, name: this.name, inner: this.inner };
+			return { type: TAG, name: this.name, inner: this.inner.toJSON() };
 		}
 
 		private createInnerBag(bag: PropertyBag) {
