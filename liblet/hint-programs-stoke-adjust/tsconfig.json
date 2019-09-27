@@ -1,9 +1,0 @@
-{
-	"extends": "../tsconfig.settings.json",
-	"references": [{"path": "../arch"}, {"path": "../hltt"}],
-	"compilerOptions": {
-		"rootDir": "src",
-		"outDir": "lib",
-		"tsBuildInfoFile": ".build-cache/src"
-	}
-}
