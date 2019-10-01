@@ -37,7 +37,7 @@ export namespace WithDirection {
 			if (!innerCompiler) return null;
 
 			if (sink instanceof HlttProgramSink) {
-				return new HlttCompiler(existingDir !== this.dir, sink, this.dir, innerCompiler);
+				return new HlttCompiler(this.dir, existingDir, sink, innerCompiler);
 			}
 			return null;
 		}
@@ -65,20 +65,24 @@ export namespace WithDirection {
 
 	export class HlttCompiler implements IHintCompiler {
 		constructor(
-			private readonly explicit: boolean,
-			private readonly sink: HlttProgramSink,
 			private readonly dir: Direction,
+			private readonly oldDir: null | undefined | Direction,
+			private readonly sink: HlttProgramSink,
 			private readonly innerCompiler: IHintCompiler
 		) {}
-		public doCompile() {
-			if (this.explicit) {
-				if (this.dir === Direction.Y) {
-					this.sink.addSegment($ => [$.svtca.y()]);
-				} else {
-					this.sink.addSegment($ => [$.svtca.x()]);
-				}
+		private addDir(dir: Direction, sink: HlttProgramSink) {
+			if (dir === Direction.Y) {
+				sink.addSegment($ => [$.svtca.y()]);
+			} else {
+				sink.addSegment($ => [$.svtca.x()]);
 			}
+		}
+
+		public doCompile() {
+			const shouldEmitInstr = this.dir !== this.oldDir;
+			if (shouldEmitInstr) this.addDir(this.dir, this.sink);
 			this.innerCompiler.doCompile();
+			if (this.oldDir != null && shouldEmitInstr) this.addDir(this.oldDir, this.sink);
 		}
 	}
 }
