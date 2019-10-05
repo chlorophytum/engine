@@ -4,6 +4,9 @@
 	"description": "",
 	"main": "lib/index.js",
 	"typings": "lib/index.d.ts",
+	"bin": {
+		"chlorophytum": "./lib/index.js"
+	},
 	"scripts": {
 		"clean": "rimraf lib .build-cache",
 		"build": "tsc --build",
