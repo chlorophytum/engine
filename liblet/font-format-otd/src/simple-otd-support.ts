@@ -137,13 +137,14 @@ export class OtdSupport implements IOpenTypeFileSupport<string> {
 				for (const lutId of feature) {
 					const lookup = gsub.lookups[lutId];
 					if (!lookup) continue;
-					this.analyzeGsubLookup(lid, fid, lutId, lookup, source, relations);
+					this.analyzeGsubSingle(lid, fid, lutId, lookup, source, relations);
+					this.analyzeGsubMultiAlternate(lid, fid, lutId, lookup, source, relations);
 				}
 			}
 		}
 		return relations;
 	}
-	private analyzeGsubLookup(
+	private analyzeGsubSingle(
 		lid: string,
 		fid: string,
 		lutID: string,
@@ -152,17 +153,41 @@ export class OtdSupport implements IOpenTypeFileSupport<string> {
 		sink: GsubRelation<string>[]
 	) {
 		if (!lookup || !lookup.subtables) return;
+		const [script, language] = lid.split("_");
+		if (!script || !language) return;
 		if (lookup.type !== "gsub_single") return;
 		for (const st of lookup.subtables) {
-			if (!st) continue;
-			if (st[source]) {
-				const [script, language] = lid.split("_");
+			if (!st || !st[source]) continue;
+			sink.push({
+				script,
+				language,
+				feature: fid,
+				lookupKind: "gsub_single",
+				target: st[source]
+			});
+		}
+	}
+	private analyzeGsubMultiAlternate(
+		lid: string,
+		fid: string,
+		lutID: string,
+		lookup: any,
+		source: string,
+		sink: GsubRelation<string>[]
+	) {
+		if (!lookup || !lookup.subtables) return;
+		const [script, language] = lid.split("_");
+		if (!script || !language) return;
+		if (lookup.type !== "gsub_alternate" || lookup.type !== "gsub_multiple") return;
+		for (const st of lookup.subtables) {
+			if (!st || !st[source]) continue;
+			for (const target of st[source]) {
 				sink.push({
 					script,
 					language,
 					feature: fid,
-					lookupKind: "gsub_single",
-					target: st[source]
+					lookupKind: lookup.type,
+					target: target
 				});
 			}
 		}
