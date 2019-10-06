@@ -1,5 +1,6 @@
 import { Geometry, Glyph, IFontSourceMetadata, Variation } from "@chlorophytum/arch";
 import {
+	GsubRelation,
 	IOpenTypeFileSupport,
 	ISimpleGetBimap,
 	ISimpleGetMap,
@@ -120,9 +121,53 @@ export class OtdSupport implements IOpenTypeFileSupport<string> {
 		return { eigen: this.getGlyphContours(gid, instance) };
 	}
 	public async getGsubRelatedGlyphs(source: string) {
-		// TODO: support reading GSUB relationships
-		return [];
+		const gsub = this.otd.GSUB;
+		const relations: GsubRelation<string>[] = [];
+		if (!gsub || !gsub.languages || !gsub.features || !gsub.lookups) return relations;
+		for (const lid in gsub.languages) {
+			const lang = gsub.languages[lid];
+			if (!lang) continue;
+			const fids = [
+				...(lang.features || []),
+				...(lang.requiredFeature ? [lang.requiredFeature] : [])
+			];
+			for (const fid of fids) {
+				const feature = gsub.features[fid];
+				if (!feature) continue;
+				for (const lutId of fid) {
+					const lookup = gsub.lookups[lutId];
+					if (!lookup) continue;
+					this.analyzeGsubLookup(lid, fid, lutId, lookup, source, relations);
+				}
+			}
+		}
+		return relations;
 	}
+	private analyzeGsubLookup(
+		lid: string,
+		fid: string,
+		lutID: string,
+		lookup: any,
+		source: string,
+		sink: GsubRelation<string>[]
+	) {
+		if (!lookup || !lookup.subtables) return;
+		if (lookup.type !== "gsub_single") return;
+		for (const st of lookup.subtables) {
+			if (!st) continue;
+			if (st[source]) {
+				const [script, language] = lid.split("_");
+				sink.push({
+					script,
+					language,
+					feature: fid,
+					lookupKind: "gsub_single",
+					target: st[source]
+				});
+			}
+		}
+	}
+
 	public async getCmapRelatedGlyphs(source: string, codePoint: number) {
 		const blob = this.cmapUvs.getBlob(codePoint);
 		if (!blob) return [];
