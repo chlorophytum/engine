@@ -134,7 +134,7 @@ export class OtdSupport implements IOpenTypeFileSupport<string> {
 			for (const fid of fids) {
 				const feature = gsub.features[fid];
 				if (!feature) continue;
-				for (const lutId of fid) {
+				for (const lutId of feature) {
 					const lookup = gsub.lookups[lutId];
 					if (!lookup) continue;
 					this.analyzeGsubLookup(lid, fid, lutId, lookup, source, relations);
