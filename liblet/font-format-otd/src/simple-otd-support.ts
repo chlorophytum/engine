@@ -1,10 +1,10 @@
-import { Geometry, Glyph, IFontSourceMetadata, Variation } from "@chlorophytum/arch";
+import { Geometry, Glyph, IFontSource, IFontSourceMetadata, Variation } from "@chlorophytum/arch";
 import {
 	GsubRelation,
 	IOpenTypeFileSupport,
 	ISimpleGetBimap,
 	ISimpleGetMap,
-	OpenTypeFont
+	OpenTypeFontEntry
 } from "@chlorophytum/font-opentype";
 
 function parseOtdCmapUnicode(s: string) {
@@ -203,8 +203,18 @@ export class OtdSupport implements IOpenTypeFileSupport<string> {
 	}
 }
 
-export class OtdFontSource extends OpenTypeFont<string> {
+export class OtdFontSource implements IFontSource<string> {
+	private readonly entry: OtdFontEntry;
+	constructor(otd: any, identifier: string) {
+		this.entry = new OtdFontEntry(otd, identifier);
+	}
 	public readonly format: string = "OpenType/Otd";
+	public async getEntries() {
+		return [this.entry];
+	}
+}
+
+export class OtdFontEntry extends OpenTypeFontEntry<string> {
 	public readonly metadata: IFontSourceMetadata;
 	protected support: IOpenTypeFileSupport<string>;
 

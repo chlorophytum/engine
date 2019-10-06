@@ -35,7 +35,9 @@ export interface IFontSourceMetadata {
 }
 export interface IFontSource<GID> {
 	readonly format: string;
-
+	getEntries(): Promise<ReadonlyArray<IFontEntry<GID>>>;
+}
+export interface IFontEntry<GID> {
 	readonly metadata: IFontSourceMetadata;
 
 	getGlyphFromName(name: string): Promise<GID | undefined>;

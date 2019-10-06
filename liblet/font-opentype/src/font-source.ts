@@ -1,6 +1,6 @@
 import {
 	Glyph,
-	IFontSource,
+	IFontEntry,
 	IFontSourceMetadata,
 	Variation,
 	WellKnownGlyphRelation
@@ -8,10 +8,9 @@ import {
 
 import { IOpenTypeFileSupport } from "./otf-support";
 
-export abstract class OpenTypeFont<GID> implements IFontSource<GID> {
+export abstract class OpenTypeFontEntry<GID> implements IFontEntry<GID> {
 	protected abstract support: IOpenTypeFileSupport<GID>;
 
-	public abstract readonly format: string;
 	public abstract readonly metadata: IFontSourceMetadata;
 
 	public async getGlyphFromName(name: string) {
