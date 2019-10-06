@@ -29,32 +29,37 @@ export interface IFontFinalHintIntegrator {
 	integrateFinalHintsToFont(hints: string, font: string, output: string): Promise<void>;
 	integrateGlyphFinalHintsToFont(hints: string, font: string, output: string): Promise<void>;
 }
-export interface IFontSourceMetadata {
-	readonly identifier: string;
-	readonly upm: number;
-}
+
 export interface IFontSource<GID> {
 	readonly format: string;
-	getEntries(): Promise<ReadonlyArray<IFontEntry<GID>>>;
-}
-export interface IFontEntry<GID> {
+	// Get font metadata
 	readonly metadata: IFontSourceMetadata;
-
+	// Get dimensions of variation
+	getVariationDimensions(): Promise<ReadonlyArray<string>>;
+	// Get entry points
+	getEntries(): Promise<ReadonlyArray<IFontEntry<GID>>>;
+	// Glyph names
 	getGlyphFromName(name: string): Promise<GID | undefined>;
 	getUniqueGlyphName(glyph: GID): Promise<string | undefined>;
-	getCharacterSet(): Promise<Set<number>>;
+	// Get master list
+	getGlyphMasters(glyph: GID): Promise<ReadonlyArray<Variation.MasterRep>>;
+	// Get geometry
+	getGeometry(glyph: GID, instance: null | Variation.Instance): Promise<Glyph.Shape>;
+}
+export interface IFontEntry<GID> {
+	// Glyph set and encoding
 	getGlyphSet(): Promise<Set<GID>>;
-	// Get a glyph ID from a font
+	getCharacterSet(): Promise<Set<number>>;
 	getEncodedGlyph(codePoint: number): Promise<GID | null | undefined>;
 	// Get related glyphs
 	getRelatedGlyphs(
 		from: GID,
 		codePoint?: number
 	): Promise<Glyph.Relation<GID>[] | null | undefined>;
-	// Get master list
-	getGlyphMasters(glyph: GID): Promise<ReadonlyArray<Variation.MasterRep>>;
-	// Get geometry
-	getGeometry(glyph: GID, instance: null | Variation.Instance): Promise<Glyph.Shape>;
+}
+export interface IFontSourceMetadata {
+	readonly identifier: string;
+	readonly upm: number;
 }
 
 // Hint store plugin

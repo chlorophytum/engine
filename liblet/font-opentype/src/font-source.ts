@@ -1,24 +1,40 @@
 import {
 	Glyph,
 	IFontEntry,
+	IFontSource,
 	IFontSourceMetadata,
 	Variation,
 	WellKnownGlyphRelation
 } from "@chlorophytum/arch";
 
-import { IOpenTypeFileSupport } from "./otf-support";
+import { IOpenTypeFontEntrySupport, IOpenTypeFontSourceSupport } from "./otf-support";
 
-export abstract class OpenTypeFontEntry<GID> implements IFontEntry<GID> {
-	protected abstract support: IOpenTypeFileSupport<GID>;
-
+export abstract class OpenTypeFontSource<GID> implements IFontSource<GID> {
+	public abstract format: string;
+	protected abstract support: IOpenTypeFontSourceSupport<GID>;
 	public abstract readonly metadata: IFontSourceMetadata;
 
+	public abstract getEntries(): Promise<ReadonlyArray<OpenTypeFontEntry<GID>>>;
+	public getVariationDimensions() {
+		return this.support.getVariationDimensions();
+	}
 	public async getGlyphFromName(name: string) {
 		return this.support.glyphSet.get(name);
 	}
 	public async getUniqueGlyphName(glyph: GID) {
 		return this.support.glyphSet.coGet(glyph);
 	}
+	public async getGlyphMasters(glyph: GID) {
+		return await this.support.getGlyphMasters(glyph);
+	}
+	public async getGeometry(glyph: GID, instance: null | Variation.Instance) {
+		return await this.support.getGeometry(glyph, instance);
+	}
+}
+
+export abstract class OpenTypeFontEntry<GID> implements IFontEntry<GID> {
+	protected abstract support: IOpenTypeFontEntrySupport<GID>;
+
 	public async getCharacterSet() {
 		return new Set(this.support.cmap.keys());
 	}
@@ -53,11 +69,5 @@ export abstract class OpenTypeFontEntry<GID> implements IFontEntry<GID> {
 			}
 		}
 		return result;
-	}
-	public async getGlyphMasters(glyph: GID) {
-		return await this.support.getGlyphMasters(glyph);
-	}
-	public async getGeometry(glyph: GID, instance: null | Variation.Instance) {
-		return await this.support.getGeometry(glyph, instance);
 	}
 }

@@ -1,11 +1,13 @@
 import { Geometry, Glyph, IFontSource, IFontSourceMetadata, Variation } from "@chlorophytum/arch";
 import {
 	GsubRelation,
-	IOpenTypeFileSupport,
+	IOpenTypeFontEntrySupport,
+	IOpenTypeFontSourceSupport,
 	ISimpleGetBimap,
 	ISimpleGetMap,
 	OpenTypeFontEntry
 } from "@chlorophytum/font-opentype";
+import { OpenTypeFontSource } from "@chlorophytum/font-opentype/lib/font-source";
 
 function parseOtdCmapUnicode(s: string) {
 	if (s[0] === "U" || s[0] === "u") {
@@ -83,7 +85,8 @@ class CmapUvsMap<T> {
 	}
 }
 
-export class OtdSupport implements IOpenTypeFileSupport<string> {
+export class OtdSupport
+	implements IOpenTypeFontEntrySupport<string>, IOpenTypeFontSourceSupport<string> {
 	public readonly glyphSet: ISimpleGetBimap<string, string>;
 	public readonly cmap: ISimpleGetMap<number, string>;
 	private readonly cmapUvs = new CmapUvsMap<string>();
@@ -98,6 +101,10 @@ export class OtdSupport implements IOpenTypeFileSupport<string> {
 				this.cmapUvs.set(unicode, selector, g);
 			}
 		}
+	}
+
+	public async getVariationDimensions() {
+		return [];
 	}
 
 	private getGlyphContours(gid: string, instance: null | Variation.Instance): Glyph.Geom {
@@ -203,10 +210,17 @@ export class OtdSupport implements IOpenTypeFileSupport<string> {
 	}
 }
 
-export class OtdFontSource implements IFontSource<string> {
+export class OtdFontSource extends OpenTypeFontSource<string> {
 	private readonly entry: OtdFontEntry;
+	protected support: IOpenTypeFontSourceSupport<string>;
+	public readonly metadata: IFontSourceMetadata;
+
 	constructor(otd: any, identifier: string) {
-		this.entry = new OtdFontEntry(otd, identifier);
+		super();
+		const support = new OtdSupport(otd);
+		this.support = support;
+		this.entry = new OtdFontEntry(otd, identifier, support);
+		this.metadata = { upm: otd.head.unitsPerEm, identifier };
 	}
 	public readonly format: string = "OpenType/Otd";
 	public async getEntries() {
@@ -215,12 +229,11 @@ export class OtdFontSource implements IFontSource<string> {
 }
 
 export class OtdFontEntry extends OpenTypeFontEntry<string> {
-	public readonly metadata: IFontSourceMetadata;
-	protected support: IOpenTypeFileSupport<string>;
-
-	constructor(otd: any, identifier: string) {
+	constructor(
+		otd: any,
+		identifier: string,
+		protected support: IOpenTypeFontEntrySupport<string>
+	) {
 		super();
-		this.support = new OtdSupport(otd);
-		this.metadata = { upm: otd.head.unitsPerEm, identifier };
 	}
 }
