@@ -2,6 +2,7 @@
 
 import * as program from "commander";
 import * as fs from "fs";
+import * as json5 from "json5";
 import * as _ from "lodash";
 import * as path from "path";
 
@@ -14,6 +15,12 @@ const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, "../package.
 
 program.version(packageJson.version);
 
+function readHintOptions(from: null | undefined | string) {
+	if (!from) throw new TypeError("Configuration file is mandatory");
+	const ho: HintOptions = json5.parse(fs.readFileSync(from, "utf-8"));
+	return ho;
+}
+
 program
 	.command("hint <font> <toHint> [others...]")
 	.option("-c, --config <json>", "Configuration file")
@@ -21,8 +28,7 @@ program
 	.option("-j, --jobs <jobs>", "Jobs in parallel")
 	.action(
 		WithErrors(async (font, toHint, rest, options) => {
-			if (!options.config) throw new TypeError("Configuration file is mandatory");
-			const ho: HintOptions = JSON.parse(fs.readFileSync(options.config, "utf-8"));
+			const ho = readHintOptions(options.config);
 			if (options.jobs) ho.jobs = options.jobs || 0;
 			const jobFiles = [font, toHint, ...(rest || [])];
 			const hro: HintRestOptions = {
@@ -37,8 +43,7 @@ program
 	.option("-c, --config <json>", "Configuration file")
 	.action(
 		WithErrors(async (font, hints, instr, rest, options) => {
-			if (!options.config) throw new TypeError("Configuration file is mandatory");
-			const ho = JSON.parse(fs.readFileSync(options.config, "utf-8"));
+			const ho = readHintOptions(options.config);
 			const jobFiles = [font, hints, instr, ...(rest || [])];
 			await doInstruct(ho, _.chunk(jobFiles, 3) as [string, string, string][]);
 		})
@@ -50,8 +55,7 @@ program
 	.option("-g, --glyph-only", "Glyph only mode")
 	.action(
 		WithErrors(async (instr, input, output, rest, options) => {
-			if (!options.config) throw new TypeError("Configuration file is mandatory");
-			const ho = JSON.parse(fs.readFileSync(options.config, "utf-8"));
+			const ho = readHintOptions(options.config);
 			const jobFiles = [instr, input, output, ...(rest || [])];
 			await doIntegrate(ho, !!options.glyphOnly, _.chunk(jobFiles, 3) as IntegrateJob[]);
 		})
