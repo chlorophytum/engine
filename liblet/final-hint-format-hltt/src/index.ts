@@ -1,14 +1,18 @@
 import { IFinalHintPlugin } from "@chlorophytum/arch";
-import { TtStat } from "@chlorophytum/hltt";
 
-import { HlttCollector, HlttPreStatSink } from "./sink";
+import { HlttCollectorImpl } from "./collector";
+import { createPreStatSink, HlttPreStatSink } from "./pre-stat-sink";
 
-export * from "./sink";
+export * from "./pre-stat-sink";
+export { CvtGenerator, HlttProgramSink, ProgramGenerator } from "./program-sink";
+export { HlttCollector } from "./collector";
+export { HlttSession, HlttFinalHintStoreRep } from "./session";
 
 export const FinalHintPlugin: IFinalHintPlugin = {
 	createFinalHintCollector(preStat) {
-		if (preStat instanceof HlttPreStatSink) return new HlttCollector(preStat);
+		const hlttPs = preStat.dynamicCast(HlttPreStatSink);
+		if (hlttPs) return new HlttCollectorImpl(hlttPs);
 		else throw new TypeError("Unreachable");
 	},
-	createPreStatSink: () => new HlttPreStatSink()
+	createPreStatSink: createPreStatSink
 };

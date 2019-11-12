@@ -36,9 +36,9 @@ export namespace WithDirection {
 			const innerCompiler = this.inner.createCompiler(innerBag, sink);
 			if (!innerCompiler) return null;
 
-			if (sink instanceof HlttProgramSink) {
-				return new HlttCompiler(this.dir, existingDir, sink, innerCompiler);
-			}
+			const hlttSink = sink.dynamicCast(HlttProgramSink);
+			if (hlttSink) return new HlttCompiler(this.dir, existingDir, hlttSink, innerCompiler);
+
 			return null;
 		}
 		public traverse(bag: PropertyBag, traveller: IHintTraveller) {

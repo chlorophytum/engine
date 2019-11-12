@@ -24,9 +24,9 @@ export namespace Interpolate {
 			};
 		}
 		public createCompiler(bag: PropertyBag, sink: IFinalHintProgramSink): IHintCompiler | null {
-			if (sink instanceof HlttProgramSink) {
-				return new HlttCompiler(sink, this.rp1, this.rp2, this.pts);
-			}
+			const hlttSink = sink.dynamicCast(HlttProgramSink);
+			if (hlttSink) return new HlttCompiler(hlttSink, this.rp1, this.rp2, this.pts);
+
 			return null;
 		}
 		public traverse() {}

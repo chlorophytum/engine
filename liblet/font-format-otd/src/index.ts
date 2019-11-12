@@ -29,12 +29,14 @@ class OtdFontFormatPlugin implements IFontFormatPlugin {
 	}
 
 	public createPreStatAnalyzer(pss: IFinalHintPreStatSink) {
-		if (pss instanceof HlttPreStatSink) return new OtdHlttPreStatAnalyzer(pss);
+		const hlttPss = pss.dynamicCast(HlttPreStatSink);
+		if (hlttPss) return new OtdHlttPreStatAnalyzer(hlttPss);
 		else return null;
 	}
 
 	public createFinalHintSaver(collector: IFinalHintCollector) {
-		if (collector instanceof HlttCollector) return new OtdHlttFinalHintSaver(collector);
+		const hlttCollector = collector.dynamicCast(HlttCollector);
+		if (hlttCollector) return new OtdHlttFinalHintSaver(hlttCollector);
 		else return null;
 	}
 
@@ -66,10 +68,10 @@ class OtdHlttFinalHintSaver implements IFontFinalHintSaver {
 	constructor(private readonly collector: HlttCollector) {}
 	private readonly instructionCache: Map<string, string> = new Map();
 	public async saveFinalHint(fhs: IFinalHintSession, output: stream.Writable) {
-		if (!(fhs instanceof HlttSession) || !(this.collector instanceof HlttCollector)) {
-			throw new TypeError("Type not supported");
-		}
-		const fhsRep: HlttFinalHintStoreRep<string> = this.createHintRep(fhs);
+		const hlttSession = fhs.dynamicCast(HlttSession);
+		if (!hlttSession) throw new TypeError("Type not supported");
+
+		const fhsRep: HlttFinalHintStoreRep<string> = this.createHintRep(hlttSession);
 		return StreamJsonZip.stringify(fhsRep, output);
 	}
 

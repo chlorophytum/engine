@@ -1,4 +1,5 @@
 import * as stream from "stream";
+import { Typable } from "typable";
 
 import { Glyph } from "./geometry";
 import { PropertyBag } from "./property-bag";
@@ -135,15 +136,15 @@ export interface IFinalHintPlugin {
 	createFinalHintCollector(preStat: IFinalHintPreStatSink): IFinalHintCollector;
 	createPreStatSink(): IFinalHintPreStatSink;
 }
-export interface IFinalHintPreStatSink {
+export interface IFinalHintPreStatSink extends Typable<{}> {
 	settleDown(): void;
 }
-export interface IFinalHintCollector {
+export interface IFinalHintCollector extends Typable<{}> {
 	readonly format: string;
 	createSession(): IFinalHintSession;
 	consolidate(): void;
 }
-export interface IFinalHintSession {
+export interface IFinalHintSession extends Typable<{}> {
 	readonly format: string;
 	createGlyphProgramSink(
 		gid: string,
@@ -152,7 +153,7 @@ export interface IFinalHintSession {
 	createSharedProgramSink(type: string): IFinalHintProgramSink;
 	consolidate(): void;
 }
-export interface IFinalHintProgramSink {
+export interface IFinalHintProgramSink extends Typable<{}> {
 	readonly format: string;
 	save(): void;
 }

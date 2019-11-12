@@ -18,9 +18,9 @@ export namespace LinkChain {
 			};
 		}
 		public createCompiler(bag: PropertyBag, sink: IFinalHintProgramSink): IHintCompiler | null {
-			if (sink instanceof HlttProgramSink) {
-				return new HlttCompiler(sink, this.pts);
-			}
+			const hlttSink = sink.dynamicCast(HlttProgramSink);
+			if (hlttSink) return new HlttCompiler(hlttSink, this.pts);
+
 			return null;
 		}
 		public traverse() {}

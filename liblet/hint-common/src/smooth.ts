@@ -15,9 +15,8 @@ export namespace Smooth {
 			return { type: TAG };
 		}
 		public createCompiler(bag: PropertyBag, sink: IFinalHintProgramSink): IHintCompiler | null {
-			if (sink instanceof HlttProgramSink) {
-				return new HlttCompiler(sink);
-			}
+			const hlttSink = sink.dynamicCast(HlttProgramSink);
+			if (hlttSink) return new HlttCompiler(hlttSink);
 			return null;
 		}
 		public traverse() {}
