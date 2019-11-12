@@ -4,10 +4,10 @@ import {
 	IHintCompiler,
 	IHintFactory,
 	IHintTraveller,
-	PropertyBag,
-	TypeRep
+	PropertyBag
 } from "@chlorophytum/arch";
 import { HlttProgramSink } from "@chlorophytum/final-hint-format-hltt";
+import { TypeRep } from "typable";
 
 export namespace WithDirection {
 	export enum Direction {
