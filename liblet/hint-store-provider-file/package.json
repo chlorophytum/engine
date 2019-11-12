@@ -1,6 +1,6 @@
 {
 	"name": "@chlorophytum/hint-store-provider-file",
-	"version": "0.3.1",
+	"version": "0.4.0",
 	"description": "",
 	"main": "lib/index.js",
 	"typings": "lib/index.d.ts",
@@ -12,9 +12,9 @@
 	"author": "Renzhi Li (aka. Belleve Invis)",
 	"license": "MIT",
 	"dependencies": {
-		"@chlorophytum/arch": "^0.3.1",
-		"@chlorophytum/hint-store-memory": "^0.3.1",
-		"@chlorophytum/util-json": "^0.3.1",
+		"@chlorophytum/arch": "^0.4.0",
+		"@chlorophytum/hint-store-memory": "^0.4.0",
+		"@chlorophytum/util-json": "^0.4.0",
 		"tslib": "^1.9.3"
 	},
 	"devDependencies": {
