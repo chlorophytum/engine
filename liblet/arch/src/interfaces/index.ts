@@ -15,16 +15,19 @@ export * from "./property-bag";
 // Font source
 export interface IFontFormatPlugin {
 	// "any"s are actually existential types
-	createFontSource(path: string, identifier: string): Promise<IFontSource<any>>;
+	createFontLoader(path: string, identifier: string): IFontLoader;
 	createPreStatAnalyzer(pss: IFinalHintPreStatSink): null | IFinalHintPreStatAnalyzer;
 	createFinalHintSaver(collector: IFinalHintCollector): null | IFontFinalHintSaver;
 	createFinalHintIntegrator(): IFontFinalHintIntegrator;
+}
+export interface IFontLoader {
+	load(): Promise<IFontSource<any>>;
 }
 export interface IFinalHintPreStatAnalyzer {
 	analyzeFontPreStat(font: stream.Readable): Promise<void>;
 }
 export interface IFontFinalHintSaver {
-	saveFinalHint(fhs: IFinalHintSession, output: stream.Writable): Promise<void>;
+	saveFinalHint(fhs: IFinalHintSession, output: string): Promise<void>;
 }
 export interface IFontFinalHintIntegrator {
 	integrateFinalHintsToFont(hints: string, font: string, output: string): Promise<void>;
@@ -114,12 +117,10 @@ export interface IHintingModel {
 	readonly type: string;
 	getHintingTask(env: IHintingModelExecEnv): null | ITask<unknown>;
 }
-export interface IParallelHintingModel {
-	readonly type: string;
-	analyzeGlyph(shape: Glyph.Rep): Promise<null | IHint>;
-}
 export interface IHintingModelPlugin extends IParallelTaskFactory {
+	// Type identifier
 	readonly type: string;
+	// HM creation for single font
 	adopt<GID>(font: IFontSource<GID>, parameters: any): IHintingModel | null | undefined;
 	// Reference all factories of all the visual hints that it would produce
 	readonly factoriesOfUsedHints: ReadonlyArray<IHintFactory>;

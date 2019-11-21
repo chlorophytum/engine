@@ -104,7 +104,8 @@ interface HintImplState<GID> {
 
 async function hintFont<GID>(st: HintImplState<GID>, passes: AutoHintingPass[]) {
 	const fontSourcePlugin = getFontPlugin(st.options);
-	const fontSource = await fontSourcePlugin.createFontSource(st.input, st.input);
+	const loader = fontSourcePlugin.createFontLoader(st.input, st.input);
+	const fontSource = await loader.load();
 
 	let tasks: ITask<unknown>[] = [];
 	let localHintStores: IHintStore[] = [];

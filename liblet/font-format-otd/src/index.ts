@@ -6,6 +6,7 @@ import {
 	IFontFinalHintIntegrator,
 	IFontFinalHintSaver,
 	IFontFormatPlugin,
+	IFontLoader,
 	Variation
 } from "@chlorophytum/arch";
 import {
@@ -22,26 +23,33 @@ import * as stream from "stream";
 import { OtdFontSource } from "./simple-otd-support";
 
 class OtdFontFormatPlugin implements IFontFormatPlugin {
-	public async createFontSource(input: string, identifier: string) {
-		const inputStream = fs.createReadStream(input);
-		const otd = await StreamJson.parse(inputStream);
-		return new OtdFontSource(otd, identifier);
+	public createFontLoader(path: string, identifier: string): IFontLoader {
+		return new OtdFontLoader(path, identifier);
 	}
 
-	public createPreStatAnalyzer(pss: IFinalHintPreStatSink) {
+	public createPreStatAnalyzer(pss: IFinalHintPreStatSink): null | IFinalHintPreStatAnalyzer {
 		const hlttPss = pss.dynamicCast(HlttPreStatSink);
 		if (hlttPss) return new OtdHlttPreStatAnalyzer(hlttPss);
 		else return null;
 	}
 
-	public createFinalHintSaver(collector: IFinalHintCollector) {
+	public createFinalHintSaver(collector: IFinalHintCollector): null | IFontFinalHintSaver {
 		const hlttCollector = collector.dynamicCast(HlttCollector);
 		if (hlttCollector) return new OtdHlttFinalHintSaver(hlttCollector);
 		else return null;
 	}
 
-	public createFinalHintIntegrator() {
+	public createFinalHintIntegrator(): IFontFinalHintIntegrator {
 		return new OtdTtInstrIntegrator();
+	}
+}
+
+class OtdFontLoader implements IFontLoader {
+	constructor(private readonly path: string, private readonly identifier: string) {}
+	public async load() {
+		const inputStream = fs.createReadStream(this.path);
+		const otd = await StreamJson.parse(inputStream);
+		return new OtdFontSource(otd, this.identifier);
 	}
 }
 
@@ -67,7 +75,8 @@ class OtdHlttPreStatAnalyzer implements IFinalHintPreStatAnalyzer {
 class OtdHlttFinalHintSaver implements IFontFinalHintSaver {
 	constructor(private readonly collector: HlttCollector) {}
 	private readonly instructionCache: Map<string, string> = new Map();
-	public async saveFinalHint(fhs: IFinalHintSession, output: stream.Writable) {
+	public async saveFinalHint(fhs: IFinalHintSession, outputPath: string) {
+		const output = fs.createWriteStream(outputPath);
 		const hlttSession = fhs.dynamicCast(HlttSession);
 		if (!hlttSession) throw new TypeError("Type not supported");
 

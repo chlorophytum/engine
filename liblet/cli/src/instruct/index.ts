@@ -119,6 +119,6 @@ async function saveInstructions(
 	if (!saver) throw new TypeError(`Final hint format not supported by font.`);
 	for (const plan of exportPlans) {
 		logger.log(`Saving instructions -> ${plan.toPath}`);
-		await saver.saveFinalHint(plan.session, fs.createWriteStream(plan.toPath));
+		await saver.saveFinalHint(plan.session, plan.toPath);
 	}
 }
