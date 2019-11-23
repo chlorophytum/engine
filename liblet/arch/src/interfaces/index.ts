@@ -104,10 +104,32 @@ export interface IHintCompiler {
 
 // Shape analysis (auto hinting)
 export interface IHintingModelExecEnv {
+	/// Font index
+	readonly fontIndex: number;
+	/// Quantity of fonts
+	readonly totalFonts: number;
+	/// Unique identifier of pass
 	readonly passUniqueID: string;
+	/// Model-local hint store
 	readonly modelLocalHintStore: IHintStore;
+	/// Global cache manager
 	readonly cacheManager: IHintCacheManager;
+	/// Global hint factory
 	readonly hintFactory: IHintFactory;
+	/// Property bag carried over hinting passes
+	readonly carry: PropertyBag;
+}
+export interface IHintingModelPreEnv {
+	/// Round
+	readonly round: number;
+	/// Font index
+	readonly fontIndex: number;
+	/// Quantity of fonts
+	readonly totalFonts: number;
+	/// Unique identifier of pass
+	readonly passUniqueID: string;
+	/// Property bag carried over hinting passes
+	readonly carry: PropertyBag;
 }
 export interface IHintCacheManager {
 	getCache(ck: string): null | undefined | IHint;
@@ -115,11 +137,14 @@ export interface IHintCacheManager {
 }
 export interface IHintingModel {
 	readonly type: string;
+	getPreTask?(env: IHintingModelPreEnv): null | ITask<unknown>;
 	getHintingTask(env: IHintingModelExecEnv): null | ITask<unknown>;
 }
 export interface IHintingModelPlugin extends IParallelTaskFactory {
 	// Type identifier
 	readonly type: string;
+	// Required rounds of pre-hinting
+	readonly requiredPreHintRounds?: number;
 	// HM creation for single font
 	adopt<GID>(font: IFontSource<GID>, parameters: any): IHintingModel | null | undefined;
 	// Reference all factories of all the visual hints that it would produce
