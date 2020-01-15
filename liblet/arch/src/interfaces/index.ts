@@ -1,4 +1,3 @@
-import * as stream from "stream";
 import { Typable } from "typable";
 
 import { Glyph } from "./geometry";
@@ -7,24 +6,29 @@ import { IParallelTaskFactory, ITask } from "./tasks";
 import { Variation } from "./variation";
 
 export { Geometry, Glyph } from "./geometry";
-export { Variation } from "./variation";
-
-export * from "./tasks";
 export * from "./property-bag";
+export * from "./tasks";
+export { Variation } from "./variation";
 
 // Font source
 export interface IFontFormatPlugin {
 	// "any"s are actually existential types
 	createFontLoader(path: string, identifier: string): IFontLoader;
 	createPreStatAnalyzer(pss: IFinalHintPreStatSink): null | IFinalHintPreStatAnalyzer;
+	createFinalHintSessionConnection(
+		collector: IFinalHintCollector
+	): null | IFinalHintSessionConnection;
 	createFinalHintSaver(collector: IFinalHintCollector): null | IFontFinalHintSaver;
 	createFinalHintIntegrator(): IFontFinalHintIntegrator;
 }
 export interface IFontLoader {
 	load(): Promise<IFontSource<any>>;
 }
+export interface IFinalHintSessionConnection {
+	connectFont(path: string): Promise<null | IFinalHintSession>;
+}
 export interface IFinalHintPreStatAnalyzer {
-	analyzeFontPreStat(font: stream.Readable): Promise<void>;
+	analyzeFontPreStat(path: string): Promise<void>;
 }
 export interface IFontFinalHintSaver {
 	saveFinalHint(fhs: IFinalHintSession, output: string): Promise<void>;
@@ -167,7 +171,6 @@ export interface IFinalHintPreStatSink extends Typable<{}> {
 }
 export interface IFinalHintCollector extends Typable<{}> {
 	readonly format: string;
-	createSession(): IFinalHintSession;
 	consolidate(): void;
 }
 export interface IFinalHintSession extends Typable<{}> {
@@ -175,8 +178,8 @@ export interface IFinalHintSession extends Typable<{}> {
 	createGlyphProgramSink(
 		gid: string,
 		glyphCacheKey?: null | undefined | string
-	): IFinalHintProgramSink;
-	createSharedProgramSink(type: string): IFinalHintProgramSink;
+	): Promise<IFinalHintProgramSink>;
+	createSharedProgramSink(type: string): Promise<IFinalHintProgramSink>;
 	consolidate(): void;
 }
 export interface IFinalHintProgramSink extends Typable<{}> {

@@ -1,4 +1,5 @@
 import {
+	Geometry,
 	IFinalHintProgramSink,
 	IHint,
 	IHintCompiler,
@@ -10,7 +11,7 @@ import { HlttProgramSink } from "@chlorophytum/final-hint-format-hltt";
 export namespace LinkChain {
 	const TAG = "Chlorophytum::CommonHints::LinkChain";
 	export class Hint implements IHint {
-		constructor(private readonly pts: number[]) {}
+		constructor(private readonly pts: Geometry.PointReference[]) {}
 		public toJSON() {
 			return {
 				type: TAG,
@@ -37,12 +38,16 @@ export namespace LinkChain {
 	}
 
 	export class HlttCompiler implements IHintCompiler {
-		constructor(private readonly sink: HlttProgramSink, private readonly pts: number[]) {}
+		constructor(
+			private readonly sink: HlttProgramSink,
+			private readonly pts: Geometry.PointReference[]
+		) {}
 		public doCompile() {
+			const ptIndex = this.pts.map(pt => this.sink.resolveGlyphPoint(pt));
 			const hc = this;
 			this.sink.addSegment(function*($) {
 				for (let j = 1; j < hc.pts.length; j++) {
-					yield $.mdrp(hc.pts[j - 1], hc.pts[j]);
+					yield $.mdrp(ptIndex[j - 1], ptIndex[j]);
 				}
 			});
 		}

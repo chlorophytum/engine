@@ -1,16 +1,17 @@
 import { Variation } from "./variation";
 
 export namespace Geometry {
-	export interface Point {
+	export type Point = {
 		readonly x: number;
 		readonly y: number;
-	}
-	export interface GlyphPoint {
+	};
+	export type GlyphPoint = {
 		readonly x: number;
 		readonly y: number;
 		readonly on: boolean;
 		readonly id: number;
-	}
+	};
+	export type PointReference = { readonly kind: string; readonly id: number };
 }
 
 export namespace Glyph {

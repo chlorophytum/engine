@@ -3,6 +3,7 @@ import {
 	IFinalHintPreStatAnalyzer,
 	IFinalHintPreStatSink,
 	IFinalHintSession,
+	IFinalHintSessionConnection,
 	IFontFinalHintIntegrator,
 	IFontFinalHintSaver,
 	IFontFormatPlugin,
@@ -18,7 +19,6 @@ import {
 import { FontForgeTextInstr } from "@chlorophytum/fontforge-instr";
 import { StreamJson, StreamJsonZip } from "@chlorophytum/util-json";
 import * as fs from "fs";
-import * as stream from "stream";
 
 import { OtdFontSource } from "./simple-otd-support";
 
@@ -33,6 +33,13 @@ class OtdFontFormatPlugin implements IFontFormatPlugin {
 		else return null;
 	}
 
+	public createFinalHintSessionConnection(
+		collector: IFinalHintCollector
+	): null | IFinalHintSessionConnection {
+		const hlttCollector = collector.dynamicCast(HlttCollector);
+		if (hlttCollector) return new OtdHlttHintSessionConnection(hlttCollector);
+		else return null;
+	}
 	public createFinalHintSaver(collector: IFinalHintCollector): null | IFontFinalHintSaver {
 		const hlttCollector = collector.dynamicCast(HlttCollector);
 		if (hlttCollector) return new OtdHlttFinalHintSaver(hlttCollector);
@@ -53,10 +60,17 @@ class OtdFontLoader implements IFontLoader {
 	}
 }
 
+class OtdHlttHintSessionConnection implements IFinalHintSessionConnection {
+	constructor(private readonly collector: HlttCollector) {}
+	public async connectFont(path: string): Promise<IFinalHintSession> {
+		return this.collector.createSession();
+	}
+}
+
 class OtdHlttPreStatAnalyzer implements IFinalHintPreStatAnalyzer {
 	constructor(private readonly preStat: HlttPreStatSink) {}
-	public async analyzeFontPreStat(font: stream.Readable) {
-		const otd = await StreamJson.parse(font);
+	public async analyzeFontPreStat(font: string) {
+		const otd = await StreamJson.parse(fs.createReadStream(font));
 		if (!otd.maxp) return;
 		this.preStat.maxFunctionDefs = Math.max(
 			this.preStat.maxFunctionDefs,

@@ -55,6 +55,7 @@ export async function doInstruct(options: HintOptions, jobs: [string, string, st
 	const exportPlans = await doInstructImpl(
 		logger.bullet(" + "),
 		HintStoreProvider,
+		FontFormatPlugin,
 		ttCol,
 		models,
 		jobs
@@ -76,13 +77,14 @@ async function doPreStat(
 	if (!preStatAnalyzer) throw new TypeError(`Final hint format not supported by font.`);
 	for (const [font, input, output] of jobs) {
 		logger.log(`Pre-stating ${font}`);
-		await preStatAnalyzer.analyzeFontPreStat(fs.createReadStream(font));
+		await preStatAnalyzer.analyzeFontPreStat(font);
 	}
 	return preStatSink;
 }
 async function doInstructImpl(
 	logger: ILogger,
 	provider: IHintStoreProvider,
+	FontFormatPlugin: IFontFormatPlugin,
 	ttCol: IFinalHintCollector,
 	models: IHintingModelPlugin[],
 	jobs: [string, string, string][]
@@ -90,7 +92,10 @@ async function doInstructImpl(
 	const exportPlans: ExportPlan[] = [];
 	for (const [font, input, output] of jobs) {
 		logger.log(`Instructing ${input}`);
-		const ttSession = ttCol.createSession();
+		const ttSessionConn = FontFormatPlugin.createFinalHintSessionConnection(ttCol);
+		if (!ttSessionConn) throw new TypeError(`Final hint format not supported by font.`);
+		const ttSession = await ttSessionConn.connectFont(font);
+		if (!ttSession) throw new TypeError(`Final hint format not supported by font.`);
 		await readHintsToSession(provider, ttSession, input, models);
 		exportPlans.push({ toPath: output, session: ttSession });
 	}

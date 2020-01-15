@@ -16,6 +16,7 @@ export const HlttCollector = new TypeRep<HlttCollector>(
 	"Chlorophytum::HlttFinalHintPlugin::HlttCollector"
 );
 export interface HlttCollector extends IFinalHintCollector {
+	createSession(): HlttSession;
 	getFunctionDefs<F>(format: InstrFormat<F>): Map<Variable, F>;
 	getControlValueDefs(): (undefined | Variation.Variance<number>)[];
 	getStats(): TtStat;

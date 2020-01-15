@@ -49,7 +49,10 @@ export class HlttSessionImpl implements Typable<HlttSession> {
 	private preProgramSegments: ProgramGenerator[] = [];
 	private preProgram: ProgramRecord | null = null;
 
-	public createGlyphProgramSink(gid: string, ck?: null | undefined | string): HlttProgramSink {
+	public async createGlyphProgramSink(
+		gid: string,
+		ck?: null | undefined | string
+	): Promise<HlttProgramSink> {
 		if (ck) {
 			this.cacheKeyMaps.set(gid, ck);
 			if (!this.shared.programs.has(ck)) {
@@ -67,7 +70,7 @@ export class HlttSessionImpl implements Typable<HlttSession> {
 			});
 		}
 	}
-	public createSharedProgramSink(type: string): HlttProgramSink {
+	public async createSharedProgramSink(type: string): Promise<HlttProgramSink> {
 		return new HlttProgramSinkImpl((gen, cv) => {
 			this.preProgramSegments.push(gen);
 			this.saveControlValues(cv);

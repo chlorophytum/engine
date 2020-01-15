@@ -1,4 +1,4 @@
-import { IFinalHintProgramSink, Variation } from "@chlorophytum/arch";
+import { Geometry, IFinalHintProgramSink, Variation } from "@chlorophytum/arch";
 import { EdslSymbol, GlobalDsl, ProgramDsl, Statement, Variable } from "@chlorophytum/hltt";
 import { implDynamicCast, Typable, TypeRep } from "typable";
 
@@ -14,6 +14,7 @@ export interface HlttProgramSink extends IFinalHintProgramSink {
 		symbol: EdslSymbol,
 		...values: (number | Variation.Variance<number>)[]
 	): void;
+	resolveGlyphPoint(from: Geometry.PointReference): number;
 }
 
 export class HlttProgramSinkImpl implements Typable<HlttProgramSink> {
@@ -51,5 +52,9 @@ export class HlttProgramSinkImpl implements Typable<HlttProgramSink> {
 		for (const [symbol, value] of this.pendingCvtSets) {
 			yield [$.convertSymbol(symbol), value];
 		}
+	}
+	public resolveGlyphPoint(from: Geometry.PointReference): number {
+		if (typeof from === "number") return from;
+		throw new Error("Unable to resolve point. Not inside Geometry.");
 	}
 }

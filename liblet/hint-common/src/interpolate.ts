@@ -1,4 +1,5 @@
 import {
+	Geometry,
 	IFinalHintProgramSink,
 	IHint,
 	IHintCompiler,
@@ -11,9 +12,9 @@ export namespace Interpolate {
 	const TAG = "Chlorophytum::CommonHints::Interpolate";
 	export class Hint implements IHint {
 		constructor(
-			private readonly rp1: number,
-			private readonly rp2: number,
-			private readonly pts: number[]
+			private readonly rp1: Geometry.PointReference,
+			private readonly rp2: Geometry.PointReference,
+			private readonly pts: Geometry.PointReference[]
 		) {}
 		public toJSON() {
 			return {
@@ -45,13 +46,19 @@ export namespace Interpolate {
 	class HlttCompiler implements IHintCompiler {
 		constructor(
 			private readonly sink: HlttProgramSink,
-			private readonly rp1: number,
-			private readonly rp2: number,
-			private readonly pts: number[]
+			private readonly rp1: Geometry.PointReference,
+			private readonly rp2: Geometry.PointReference,
+			private readonly pts: Geometry.PointReference[]
 		) {}
 		public doCompile() {
 			const hc = this;
-			this.sink.addSegment($ => [$.ip(hc.rp1, hc.rp2, ...hc.pts)]);
+			this.sink.addSegment($ => [
+				$.ip(
+					this.sink.resolveGlyphPoint(hc.rp1),
+					this.sink.resolveGlyphPoint(hc.rp2),
+					...hc.pts.map(pt => this.sink.resolveGlyphPoint(pt))
+				)
+			]);
 		}
 	}
 }
