@@ -1,4 +1,9 @@
-import { Geometry, IFinalHintProgramSink, Variation } from "@chlorophytum/arch";
+import {
+	Geometry,
+	IFinalHintProgramSink,
+	Variation,
+	WellKnownGeometryKind
+} from "@chlorophytum/arch";
 import { EdslSymbol, GlobalDsl, ProgramDsl, Statement, Variable } from "@chlorophytum/hltt";
 import { implDynamicCast, Typable, TypeRep } from "typable";
 
@@ -54,7 +59,7 @@ export class HlttProgramSinkImpl implements Typable<HlttProgramSink> {
 		}
 	}
 	public resolveGlyphPoint(from: Geometry.PointReference): number {
-		if (typeof from === "number") return from;
+		if (from.kind === WellKnownGeometryKind.Identity.kind) return from.id;
 		throw new Error("Unable to resolve point. Not inside Geometry.");
 	}
 }

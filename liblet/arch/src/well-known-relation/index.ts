@@ -1,3 +1,5 @@
+import { Geometry } from "../interfaces";
+
 export namespace WellKnownGlyphRelation {
 	export interface Pattern<A extends any[]> {
 		apply(...a: A): string;
@@ -25,4 +27,11 @@ export namespace WellKnownGlyphRelation {
 			else return null;
 		}
 	};
+}
+
+export namespace WellKnownGeometryKind {
+	export function CreateRefKind(id: string): Geometry.PointRefKind {
+		return Object.assign((z: number) => ({ kind: id, id: z }), { kind: id });
+	}
+	export const Identity = CreateRefKind("Chlorophytum::WellKnownGeometryKind::Identity");
 }

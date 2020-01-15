@@ -8,7 +8,7 @@ import {
 import * as _Support from "./support/index";
 export * from "./interfaces/index";
 export * from "./logger";
-export { WellKnownGlyphRelation } from "./well-known-relation";
+export { WellKnownGlyphRelation, WellKnownGeometryKind } from "./well-known-relation";
 export import EmptyImpl = _EmptyImpl;
 export import Support = _Support;
 
