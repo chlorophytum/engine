@@ -1,4 +1,11 @@
-import { Geometry, Glyph, IFontSource, IFontSourceMetadata, Variation } from "@chlorophytum/arch";
+import {
+	Geometry,
+	Glyph,
+	IFontSource,
+	IFontSourceMetadata,
+	Variation,
+	WellKnownGeometryKind
+} from "@chlorophytum/arch";
 import {
 	GsubRelation,
 	IOpenTypeFontEntrySupport,
@@ -116,7 +123,14 @@ export class OtdSupport
 		if (g.contours) {
 			for (const c of g.contours) {
 				const contour: Geometry.GlyphPoint[] = [];
-				for (const z of c) contour.push({ x: z.x, y: z.y, on: z.on, id: zid++ });
+				for (const z of c) {
+					contour.push({
+						x: z.x,
+						y: z.y,
+						on: z.on,
+						references: [WellKnownGeometryKind.Identity(zid++)]
+					});
+				}
 				c1.push(contour);
 			}
 		}

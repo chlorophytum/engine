@@ -9,7 +9,7 @@ export namespace Geometry {
 		readonly x: number;
 		readonly y: number;
 		readonly on: boolean;
-		readonly id: number;
+		readonly references: null | PointReference[];
 	};
 	export type PointReference = { readonly kind: string; readonly id: number };
 	export type PointRefKind = { readonly kind: string } & ((x: number) => PointReference);
