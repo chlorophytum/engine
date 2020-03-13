@@ -30,6 +30,9 @@ export abstract class OpenTypeFontSource<GID> implements IFontSource<GID> {
 	public async getGeometry(glyph: GID, instance: null | Variation.Instance) {
 		return await this.support.getGeometry(glyph, instance);
 	}
+	public async getMetric(glyph: GID, instance: null | Variation.Instance) {
+		return await this.support.getMetric(glyph, instance);
+	}
 }
 
 export abstract class OpenTypeFontEntry<GID> implements IFontEntry<GID> {

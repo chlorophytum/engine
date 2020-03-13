@@ -3,7 +3,7 @@
 		"composite": true,
 		"declaration": true,
 		"declarationMap": true,
-		"target": "es6",
+		"target": "es2017",
 		"sourceMap": true,
 		"module": "commonjs",
 		"importHelpers": true,

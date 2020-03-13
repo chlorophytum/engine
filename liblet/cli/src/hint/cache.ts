@@ -17,7 +17,10 @@ export class HintCache implements IHintCacheManager {
 		if (!hintRep) {
 			const hintRepOld = hintRep;
 			hintRep = this.fallbackStore.get(id);
-			if (hintRep && !hintRepOld) this.store.set(id, hintRep);
+			if (hintRep && !hintRepOld) {
+				this.store.set(id, hintRep);
+				this.fallbackStore.delete(id);
+			}
 		}
 
 		if (!hintRep) {
@@ -29,6 +32,7 @@ export class HintCache implements IHintCacheManager {
 	public setCache(id: null | string, hint: IHint) {
 		if (!id || !hint) return;
 		this.store.set(id, hint.toJSON());
+		this.fallbackStore.delete(id);
 	}
 	public async load(input: stream.Readable) {
 		const rep = await StreamJsonZip.parse(input);

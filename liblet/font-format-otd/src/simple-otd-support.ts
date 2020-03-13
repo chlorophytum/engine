@@ -1,7 +1,6 @@
 import {
 	Geometry,
 	Glyph,
-	IFontSource,
 	IFontSourceMetadata,
 	Variation,
 	WellKnownGeometryKind
@@ -12,9 +11,9 @@ import {
 	IOpenTypeFontSourceSupport,
 	ISimpleGetBimap,
 	ISimpleGetMap,
-	OpenTypeFontEntry
+	OpenTypeFontEntry,
+	OpenTypeFontSource
 } from "@chlorophytum/font-opentype";
-import { OpenTypeFontSource } from "@chlorophytum/font-opentype/lib/font-source";
 
 function parseOtdCmapUnicode(s: string) {
 	if (s[0] === "U" || s[0] === "u") {
@@ -140,6 +139,10 @@ export class OtdSupport
 	public async getGeometry(gid: string, instance: null | Variation.Instance) {
 		// TODO: support reading references
 		return { eigen: this.getGlyphContours(gid, instance) };
+	}
+	public async getMetric(gid: string, instance: null | Variation.Instance) {
+		const g = this.otd.glyf[gid];
+		return { hStart: 0, hEnd: g.advanceWidth, vStart: 0, vEnd: 0 };
 	}
 	public async getGsubRelatedGlyphs(source: string) {
 		const gsub = this.otd.GSUB;

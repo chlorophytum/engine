@@ -33,4 +33,11 @@ export namespace Glyph {
 	export interface Rep {
 		readonly shapes: Variation.Variance<Shape>;
 	}
+
+	export interface Metric {
+		readonly hStart: number;
+		readonly hEnd: number;
+		readonly vStart: number;
+		readonly vEnd: number;
+	}
 }

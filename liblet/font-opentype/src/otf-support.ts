@@ -25,6 +25,7 @@ export interface IOpenTypeFontSourceSupport<GID> {
 	readonly glyphSet: ISimpleGetBimap<string, GID>;
 	getVariationDimensions(): Promise<ReadonlyArray<string>>;
 	getGeometry(glyph: GID, instance: null | Variation.Instance): Promise<Glyph.Shape>;
+	getMetric(glyph: GID, instance: null | Variation.Instance): Promise<Glyph.Metric>;
 	getGlyphMasters(glyph: GID): Promise<Variation.MasterRep[]>;
 }
 export interface IOpenTypeFontEntrySupport<GID> {

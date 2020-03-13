@@ -5,6 +5,7 @@
 		{"path": "./cli"},
 		{"path": "./final-hint-format-hltt"},
 		{"path": "./font-format-otd"},
+		{"path": "./font-format-ttf"},
 		{"path": "./font-opentype"},
 		{"path": "./fontforge-instr"},
 		{"path": "./hint-common"},

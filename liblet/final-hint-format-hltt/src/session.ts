@@ -19,7 +19,7 @@ export interface HlttFinalHintStoreRep<F> {
 	stats: TtStat;
 	fpgm: F[];
 	prep: F[];
-	glyf: { [key: string]: string };
+	glyf: { [key: string]: F };
 	cvt: (null | undefined | Variation.Variance<number>)[];
 }
 

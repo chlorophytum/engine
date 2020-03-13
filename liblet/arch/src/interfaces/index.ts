@@ -53,6 +53,8 @@ export interface IFontSource<GID> {
 	getGlyphMasters(glyph: GID): Promise<ReadonlyArray<Variation.MasterRep>>;
 	// Get geometry
 	getGeometry(glyph: GID, instance: null | Variation.Instance): Promise<Glyph.Shape>;
+	// Get metric
+	getMetric(glyph: GID, instance: null | Variation.Instance): Promise<Glyph.Metric>;
 }
 export interface IFontEntry<GID> {
 	// Glyph set and encoding
