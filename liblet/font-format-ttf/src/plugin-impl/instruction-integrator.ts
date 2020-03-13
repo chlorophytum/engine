@@ -50,7 +50,7 @@ export class TtfInstrIntegrator implements IFontFinalHintIntegrator {
 		return FontIo.readFont(sfnt, Ot.ListGlyphStoreFactory);
 	}
 	private async saveFont(otd: Ot.Font, sOutput: string) {
-		const sfntOut = FontIo.writeFont(otd);
+		const sfntOut = FontIo.writeFont(otd, { glyphStore: { statOs2XAvgCharWidth: false } });
 		await fs.writeFile(sOutput, FontIo.writeSfntOtf(sfntOut));
 	}
 
