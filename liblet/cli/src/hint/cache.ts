@@ -10,6 +10,10 @@ export class HintCache implements IHintCacheManager {
 	constructor(private readonly hf: IHintFactory) {}
 	private fallbackStore = new Map<string, any>();
 	private store = new Map<string, any>();
+	public clear() {
+		this.fallbackStore = new Map();
+		this.store = new Map();
+	}
 	public getCache(id: null | string) {
 		if (!id) return undefined;
 

@@ -111,7 +111,12 @@ async function setupCache(logger: ILogger, hc: HintCache, hro: HintRestOptions) 
 	if (!fs.existsSync(hro.cacheFilePath)) return;
 	logger.bullet(` + `).log(`Reading cache <- ${hro.cacheFilePath}`);
 	const input = fs.createReadStream(hro.cacheFilePath);
-	await hc.load(input);
+	try {
+		await hc.load(input);
+	} catch (e) {
+		logger.bullet(` ! `).log(`Cache reading failed. Start with new cache.`);
+		hc.clear();
+	}
 }
 async function saveCache(logger: ILogger, hc: HintCache, hro: HintRestOptions) {
 	if (!hro.cacheFilePath) return;
@@ -198,7 +203,10 @@ async function hintFont<GID>(passes: AutoHintingPass[], st: HintImplState<GID>) 
 	await startTasks<GID>(st, `Analyzing`, tasks);
 
 	const hsProvider = getHintStoreProvider(st.options);
-	const hsAll = await hsProvider.connectWrite(st.output, passes.map(p => p.plugin));
+	const hsAll = await hsProvider.connectWrite(
+		st.output,
+		passes.map(p => p.plugin)
+	);
 	for (const store of localHintStores) await combineHintStore(store, hsAll);
 	return hsAll;
 }
