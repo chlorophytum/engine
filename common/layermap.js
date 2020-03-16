@@ -27,12 +27,12 @@ for (const package of tsPackages.keys()) {
 	}
 	const tsconfigJson = {
 		extends: "../tsconfig.settings.json",
-		references: newDeps,
 		compilerOptions: {
 			rootDir: "src",
 			outDir: "lib",
 			tsBuildInfoFile: ".build-cache/src"
-		}
+		},
+		references: newDeps
 	};
 
 	fs.writeFileSync(tsconfigJsonPath, stringify(tsconfigJson, { indent: "\t" }));

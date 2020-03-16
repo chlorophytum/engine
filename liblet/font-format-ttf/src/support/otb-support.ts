@@ -189,7 +189,7 @@ class GeometryEvaluator {
 				break;
 			case Ot.Glyph.GeometryType.GeometryList:
 				for (const child of geometry.items) {
-					this.processGeometry(ev, child.ref, instance);
+					this.processGeometry(ev, child, instance);
 				}
 				break;
 			case Ot.Glyph.GeometryType.TtReference:

@@ -1,5 +1,10 @@
 {
 	"extends": "../tsconfig.settings.json",
+	"compilerOptions": {
+		"rootDir": "src",
+		"outDir": "lib",
+		"tsBuildInfoFile": ".build-cache/src"
+	},
 	"references": [
 		{"path": "../arch"},
 		{"path": "../final-hint-format-hltt"},
@@ -7,10 +12,5 @@
 		{"path": "../fontforge-instr"},
 		{"path": "../hltt"},
 		{"path": "../util-json"}
-	],
-	"compilerOptions": {
-		"rootDir": "src",
-		"outDir": "lib",
-		"tsBuildInfoFile": ".build-cache/src"
-	}
+	]
 }

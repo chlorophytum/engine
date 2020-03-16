@@ -10,7 +10,7 @@
 		"typescript": "^3.3"
 	},
 	"scripts": {
-		"init": "node common/layermap && lerna bootstrap --hoist --no-ci",
+		"init": "npm install && node common/layermap && lerna bootstrap --hoist --no-ci",
 		"build": "tsc --build liblet",
 		"watch": "tsc --build --watch liblet",
 		"lint": "tslint -c tslint.json --fix liblet/*/src/**/*.ts",

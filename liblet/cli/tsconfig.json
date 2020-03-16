@@ -1,13 +1,13 @@
 {
 	"extends": "../tsconfig.settings.json",
-	"references": [
-		{"path": "../arch"},
-		{"path": "../hint-store-memory"},
-		{"path": "../util-json"}
-	],
 	"compilerOptions": {
 		"rootDir": "src",
 		"outDir": "lib",
 		"tsBuildInfoFile": ".build-cache/src"
-	}
+	},
+	"references": [
+		{"path": "../arch"},
+		{"path": "../hint-store-memory"},
+		{"path": "../util-json"}
+	]
 }
