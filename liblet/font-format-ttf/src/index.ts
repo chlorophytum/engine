@@ -16,7 +16,7 @@ import { TtfInstrIntegrator } from "./plugin-impl/instruction-integrator";
 import { TtfPreStatAnalyzer } from "./plugin-impl/pre-stat";
 import { HlttHintSessionConnection } from "./plugin-impl/session-connection";
 
-class TtfFontFormatPlugin implements IFontFormatPlugin {
+export class TtfFontFormatPlugin implements IFontFormatPlugin {
 	public createFontLoader(path: string, identifier: string): IFontLoader {
 		return new TtfFontLoader(path, identifier);
 	}

@@ -59,7 +59,9 @@ export class OtbSupport
 	}
 
 	public async getGlyphMasters(glyph: Ot.Glyph) {
-		return []; // TODO
+		const mc = new MasterCollector(this.fvarWrapper);
+		mc.processGlyph(glyph);
+		return mc.getResults();
 	}
 
 	public async getGeometry(glyph: Ot.Glyph, instCh: null | Variation.Instance) {
@@ -147,6 +149,65 @@ export class OtbSupport
 				});
 			}
 		}
+	}
+}
+
+class MasterCollector {
+	constructor(private readonly fvarWrapper: VarWrapper) {}
+	private readonly masterCache = new WeakSet<Ot.Var.Master>();
+	private readonly collectedMasters = new Map<string, Variation.MasterRep>();
+
+	public processGlyph(g: Ot.Glyph) {
+		this.processValue(g.horizontal.start);
+		this.processValue(g.horizontal.end);
+		this.processValue(g.vertical.start);
+		this.processValue(g.vertical.end);
+	}
+	public processGeometry(g: Ot.Glyph.Geometry) {
+		switch (g.type) {
+			case Ot.Glyph.GeometryType.ContourSet:
+				for (const c of g.contours) {
+					for (const z of c) {
+						this.processValue(z.x);
+						this.processValue(z.y);
+					}
+				}
+				break;
+			case Ot.Glyph.GeometryType.GeometryList:
+				for (const child of g.items) {
+					this.processGeometry(child);
+				}
+				break;
+			case Ot.Glyph.GeometryType.TtReference:
+				if (g.to) this.processGlyph(g.to);
+				break;
+		}
+	}
+	public processValue(v: Ot.Var.Value) {
+		for (const [m, delta] of Ot.Var.Ops.varianceOf(v)) {
+			this.processMaster(m);
+		}
+	}
+	private processMaster(m: Ot.Var.Master) {
+		if (this.masterCache.has(m)) return;
+		let mx: Variation.Master = {};
+		let peak: Variation.Instance = {};
+		for (const region of m.regions) {
+			const axisTag = this.fvarWrapper.coGet(region.dim);
+			if (!axisTag) continue;
+			mx[axisTag] = { min: region.min, peak: region.peak, max: region.max };
+			peak[axisTag] = region.peak;
+		}
+		const masterKey = JSON.stringify(
+			Array.from(Object.entries(mx)).sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))
+		);
+		if (!this.collectedMasters.has(masterKey)) {
+			this.collectedMasters.set(masterKey, { peak, master: mx });
+		}
+		this.masterCache.add(m);
+	}
+	public getResults(): Array<Variation.MasterRep> {
+		return Array.from(this.collectedMasters.values());
 	}
 }
 
