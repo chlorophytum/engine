@@ -19,7 +19,7 @@
 		"@chlorophytum/hltt": "^0.7.3",
 		"@chlorophytum/util-json": "^0.7.3",
 		"fs-extra": "^8.1.0",
-		"ot-builder": "^0.6.1",
+		"ot-builder": "^0.10.5",
 		"tslib": "^1.9.3"
 	},
 	"devDependencies": {

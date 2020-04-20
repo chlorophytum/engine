@@ -72,7 +72,7 @@ export class TtfInstrIntegrator implements IFontFinalHintIntegrator {
 		const glyphBimap = new GlyphSetWrapper(otd);
 		for (const [gn, glyph] of glyphBimap) {
 			const hint = store.glyf[gn];
-			if (hint) glyph.hints = Ot.Glyph.TtInstruction.create(Base64Instr.decode(hint));
+			if (hint) glyph.hints = new Ot.Glyph.TtInstruction(Base64Instr.decode(hint));
 		}
 	}
 	private updateMaxp(otd: Ot.Font.Ttf, store: HlttFinalHintStoreRep<string>) {
