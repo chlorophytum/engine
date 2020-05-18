@@ -216,10 +216,7 @@ class GeometryEvaluator {
 		if (parent) {
 			parent.children.push(this);
 			this.zid = parent.zid;
-			this.transformStack = [
-				tfm || Ot.Glyph.Transform2X3.Neutral(),
-				...parent.transformStack
-			];
+			this.transformStack = [tfm || Ot.Glyph.Transform2X3.Identity, ...parent.transformStack];
 		} else {
 			this.zid = 0;
 			this.transformStack = [];
@@ -325,7 +322,7 @@ export class VarWrapper implements ISimpleGetBimap<string, Ot.Var.Dim> {
 			const val = masterCh[dimKey];
 			masterRep.push({ dim, min: val.min, peak: val.peak, max: val.max });
 		}
-		return Ot.Var.Create.Master(masterRep);
+		return new Ot.Var.Master(masterRep);
 	}
 	public convertInstance(instCh: null | Variation.Instance): Ot.Var.Instance {
 		if (instCh == null) return instCh;

@@ -97,7 +97,7 @@ export class TtfInstrIntegrator implements IFontFinalHintIntegrator {
 
 	private updateCvt(otd: Ot.Font.Ttf, store: HlttFinalHintStoreRep<string>) {
 		const varWrapper = new VarWrapper(otd);
-		const mc = Ot.Var.Create.ValueFactory();
+		const mc = new Ot.Var.ValueFactory();
 		if (!otd.cvt) otd.cvt = new Ot.Cvt.Table();
 		const cvtMask: boolean[] = [];
 		for (let j = 0; j < store.cvt.length; j++) {
