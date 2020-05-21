@@ -95,6 +95,7 @@ export class CCombinedHintingModel implements IHintingModel {
 			const st = model.getHintingTask({ ...env, hintStore: lhs });
 			if (!st) continue;
 			tasks.push(st);
+			localHintStores.push(lhs);
 		}
 		if (tasks.length) {
 			return new CCombinedHintTask(tasks, localHintStores, env.hintStore);
@@ -109,7 +110,7 @@ export class CCombinedHintingModel implements IHintingModel {
 class CCombinedTask implements ITask<unknown> {
 	constructor(protected tasks: ITask<unknown>[]) {}
 	public async execute(arb: IArbitratorProxy) {
-		for (const task of this.tasks) await task.execute(arb);
+		for (const task of this.tasks) await arb.demand(task);
 		return null;
 	}
 }
@@ -123,9 +124,9 @@ class CCombinedHintTask extends CCombinedTask {
 		super(tasks);
 	}
 	public async execute(arb: IArbitratorProxy) {
-		super.execute(arb);
+		await super.execute(arb);
 		for (const lhs of this.localHintStores) {
-			this.combineHintStore(lhs, this.upstream);
+			await this.combineHintStore(lhs, this.upstream);
 		}
 		return null;
 	}
