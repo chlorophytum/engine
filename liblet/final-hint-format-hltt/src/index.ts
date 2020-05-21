@@ -9,10 +9,12 @@ export { HlttCollector } from "./collector";
 export { HlttSession, HlttFinalHintStoreRep } from "./session";
 
 export const FinalHintPlugin: IFinalHintPlugin = {
-	createFinalHintCollector(preStat) {
+	async createFinalHintCollector(preStat) {
 		const hlttPs = preStat.dynamicCast(HlttPreStatSink);
 		if (hlttPs) return new HlttCollectorImpl(hlttPs);
 		else throw new TypeError("Unreachable");
 	},
-	createPreStatSink: createPreStatSink
+	async createPreStatSink() {
+		return createPreStatSink();
+	}
 };

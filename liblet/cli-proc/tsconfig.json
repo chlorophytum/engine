@@ -7,7 +7,6 @@
 	},
 	"references": [
 		{"path": "../arch"},
-		{"path": "../cli-proc"},
 		{"path": "../hint-store-memory"},
 		{"path": "../util-json"}
 	]

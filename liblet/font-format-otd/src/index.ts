@@ -23,30 +23,28 @@ import * as fs from "fs";
 import { OtdFontSource } from "./simple-otd-support";
 
 class OtdFontFormatPlugin implements IFontFormatPlugin {
-	public createFontLoader(path: string, identifier: string): IFontLoader {
+	public async createFontLoader(path: string, identifier: string) {
 		return new OtdFontLoader(path, identifier);
 	}
 
-	public createPreStatAnalyzer(pss: IFinalHintPreStatSink): null | IFinalHintPreStatAnalyzer {
+	public async createPreStatAnalyzer(pss: IFinalHintPreStatSink) {
 		const hlttPss = pss.dynamicCast(HlttPreStatSink);
 		if (hlttPss) return new OtdHlttPreStatAnalyzer(hlttPss);
 		else return null;
 	}
 
-	public createFinalHintSessionConnection(
-		collector: IFinalHintCollector
-	): null | IFinalHintSessionConnection {
+	public async createFinalHintSessionConnection(collector: IFinalHintCollector) {
 		const hlttCollector = collector.dynamicCast(HlttCollector);
 		if (hlttCollector) return new OtdHlttHintSessionConnection(hlttCollector);
 		else return null;
 	}
-	public createFinalHintSaver(collector: IFinalHintCollector): null | IFontFinalHintSaver {
+	public async createFinalHintSaver(collector: IFinalHintCollector) {
 		const hlttCollector = collector.dynamicCast(HlttCollector);
 		if (hlttCollector) return new OtdHlttFinalHintSaver(hlttCollector);
 		else return null;
 	}
 
-	public createFinalHintIntegrator(): IFontFinalHintIntegrator {
+	public async createFinalHintIntegrator() {
 		return new OtdTtInstrIntegrator();
 	}
 }

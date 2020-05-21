@@ -1,16 +1,13 @@
 import { ConsoleLogger } from "@chlorophytum/arch";
 import * as fs from "fs";
 
-import { getFontPlugin, HintOptions } from "../env";
+import { getFontPlugin, ProcOptions } from "../env";
 
+export type IntegrateOptions = ProcOptions & { glyphOnly: boolean };
 export type IntegrateJob = [string, string, string];
-export async function doIntegrate(
-	options: HintOptions,
-	glyphOnly: boolean,
-	jobs: [string, string, string][]
-) {
+export async function doIntegrate(options: IntegrateOptions, jobs: IntegrateJob[]) {
 	const FontFormatPlugin = getFontPlugin(options);
-	const integrator = FontFormatPlugin.createFinalHintIntegrator();
+	const integrator = await FontFormatPlugin.createFinalHintIntegrator();
 
 	const logger = new ConsoleLogger();
 	logger.log("Instruction integration");
@@ -26,7 +23,7 @@ export async function doIntegrate(
 		for (const [instr, input, output] of jobs) {
 			jobLogger.log(`Integrating ${instr} | ${input} -> ${output}`);
 
-			if (glyphOnly) {
+			if (options.glyphOnly) {
 				await integrator.integrateGlyphFinalHintsToFont(instr, input, output);
 			} else {
 				await integrator.integrateFinalHintsToFont(instr, input, output);

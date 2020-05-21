@@ -3,6 +3,7 @@
 	"references": [
 		{"path": "./arch"},
 		{"path": "./cli"},
+		{"path": "./cli-proc"},
 		{"path": "./final-hint-format-hltt"},
 		{"path": "./font-format-otd"},
 		{"path": "./font-format-ttf"},
@@ -12,6 +13,7 @@
 		{"path": "./hint-store-memory"},
 		{"path": "./hint-store-provider-file"},
 		{"path": "./hltt"},
+		{"path": "./hm-combine"},
 		{"path": "./util-json"}
 	]
 }

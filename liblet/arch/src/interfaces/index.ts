@@ -13,13 +13,13 @@ export { Variation } from "./variation";
 // Font source
 export interface IFontFormatPlugin {
 	// "any"s are actually existential types
-	createFontLoader(path: string, identifier: string): IFontLoader;
-	createPreStatAnalyzer(pss: IFinalHintPreStatSink): null | IFinalHintPreStatAnalyzer;
+	createFontLoader(path: string, identifier: string): Promise<IFontLoader>;
+	createPreStatAnalyzer(pss: IFinalHintPreStatSink): Promise<null | IFinalHintPreStatAnalyzer>;
 	createFinalHintSessionConnection(
 		collector: IFinalHintCollector
-	): null | IFinalHintSessionConnection;
-	createFinalHintSaver(collector: IFinalHintCollector): null | IFontFinalHintSaver;
-	createFinalHintIntegrator(): IFontFinalHintIntegrator;
+	): Promise<null | IFinalHintSessionConnection>;
+	createFinalHintSaver(collector: IFinalHintCollector): Promise<null | IFontFinalHintSaver>;
+	createFinalHintIntegrator(): Promise<IFontFinalHintIntegrator>;
 }
 export interface IFontLoader {
 	load(): Promise<IFontSource<any>>;
@@ -74,8 +74,8 @@ export interface IFontSourceMetadata {
 
 // Hint store plugin
 export interface IHintStoreProvider {
-	connectRead(identifier: string, plugins: IHintingModelPlugin[]): Promise<IHintStore>;
-	connectWrite(identifier: string, plugins: IHintingModelPlugin[]): Promise<IHintStore>;
+	connectRead(identifier: string, plugins: IHintingPass): Promise<IHintStore>;
+	connectWrite(identifier: string, plugins: IHintingPass): Promise<IHintStore>;
 }
 export interface IHintStore {
 	listGlyphs(): Promise<Iterable<string>>;
@@ -114,10 +114,8 @@ export interface IHintingModelExecEnv {
 	readonly fontIndex: number;
 	/// Quantity of fonts
 	readonly totalFonts: number;
-	/// Unique identifier of pass
-	readonly passUniqueID: string;
 	/// Model-local hint store
-	readonly modelLocalHintStore: IHintStore;
+	readonly hintStore: IHintStore;
 	/// Global cache manager
 	readonly cacheManager: IHintCacheManager;
 	/// Global hint factory
@@ -132,8 +130,6 @@ export interface IHintingModelPreEnv {
 	readonly fontIndex: number;
 	/// Quantity of fonts
 	readonly totalFonts: number;
-	/// Unique identifier of pass
-	readonly passUniqueID: string;
 	/// Property bag carried over hinting passes
 	readonly carry: PropertyBag;
 }
@@ -146,27 +142,19 @@ export interface IHintingModel {
 	getPreTask?(env: IHintingModelPreEnv): null | ITask<unknown>;
 	getHintingTask(env: IHintingModelExecEnv): null | ITask<unknown>;
 }
-export interface IHintingModelPlugin extends IParallelTaskFactory {
-	// Type identifier
-	readonly type: string;
-	// Required rounds of pre-hinting
-	readonly requiredPreHintRounds?: number;
-	// HM creation for single font
-	adopt<GID>(font: IFontSource<GID>, parameters: any): IHintingModel | null | undefined;
-	// Reference all factories of all the visual hints that it would produce
+export interface IHintingPass extends IParallelTaskFactory {
+	readonly requirePreHintRounds: number;
 	readonly factoriesOfUsedHints: ReadonlyArray<IHintFactory>;
+	adopt<GID>(font: IFontSource<GID>): IHintingModel | null | undefined;
 }
-export interface AutoHintingPass {
-	readonly plugin: IHintingModelPlugin;
-	readonly uniqueID: string;
-	readonly parameters?: any;
+export interface IHintingModelPlugin {
+	load(parameters: any): Promise<IHintingPass>;
 }
 
 // Hint compilation (instructing)
-
 export interface IFinalHintPlugin {
-	createFinalHintCollector(preStat: IFinalHintPreStatSink): IFinalHintCollector;
-	createPreStatSink(): IFinalHintPreStatSink;
+	createFinalHintCollector(preStat: IFinalHintPreStatSink): Promise<IFinalHintCollector>;
+	createPreStatSink(): Promise<IFinalHintPreStatSink>;
 }
 export interface IFinalHintPreStatSink extends Typable<{}> {
 	settleDown(): void;

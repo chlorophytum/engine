@@ -1,13 +1,4 @@
-import {
-	IFinalHintCollector,
-	IFinalHintPreStatAnalyzer,
-	IFinalHintPreStatSink,
-	IFinalHintSessionConnection,
-	IFontFinalHintIntegrator,
-	IFontFinalHintSaver,
-	IFontFormatPlugin,
-	IFontLoader
-} from "@chlorophytum/arch";
+import { IFinalHintCollector, IFinalHintPreStatSink, IFontFormatPlugin } from "@chlorophytum/arch";
 import { HlttCollector, HlttPreStatSink } from "@chlorophytum/final-hint-format-hltt";
 
 import { TtfFinalHintSaver } from "./plugin-impl/final-hint-saver";
@@ -17,30 +8,28 @@ import { TtfPreStatAnalyzer } from "./plugin-impl/pre-stat";
 import { HlttHintSessionConnection } from "./plugin-impl/session-connection";
 
 export class TtfFontFormatPlugin implements IFontFormatPlugin {
-	public createFontLoader(path: string, identifier: string): IFontLoader {
+	public async createFontLoader(path: string, identifier: string) {
 		return new TtfFontLoader(path, identifier);
 	}
 
-	public createPreStatAnalyzer(pss: IFinalHintPreStatSink): null | IFinalHintPreStatAnalyzer {
+	public async createPreStatAnalyzer(pss: IFinalHintPreStatSink) {
 		const hlttPss = pss.dynamicCast(HlttPreStatSink);
 		if (hlttPss) return new TtfPreStatAnalyzer(hlttPss);
 		else return null;
 	}
 
-	public createFinalHintSessionConnection(
-		collector: IFinalHintCollector
-	): null | IFinalHintSessionConnection {
+	public async createFinalHintSessionConnection(collector: IFinalHintCollector) {
 		const hlttCollector = collector.dynamicCast(HlttCollector);
 		if (hlttCollector) return new HlttHintSessionConnection(hlttCollector);
 		else return null;
 	}
-	public createFinalHintSaver(collector: IFinalHintCollector): null | IFontFinalHintSaver {
+	public async createFinalHintSaver(collector: IFinalHintCollector) {
 		const hlttCollector = collector.dynamicCast(HlttCollector);
 		if (hlttCollector) return new TtfFinalHintSaver(hlttCollector);
 		else return null;
 	}
 
-	public createFinalHintIntegrator(): IFontFinalHintIntegrator {
+	public async createFinalHintIntegrator() {
 		return new TtfInstrIntegrator();
 	}
 }

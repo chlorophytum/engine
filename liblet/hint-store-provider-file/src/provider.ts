@@ -1,23 +1,16 @@
-import {
-	EmptyImpl,
-	IHint,
-	IHintFactory,
-	IHintingModelPlugin,
-	IHintStore,
-	IHintStoreProvider
-} from "@chlorophytum/arch";
+import { EmptyImpl, IHint, IHintingPass, IHintStore, IHintStoreProvider } from "@chlorophytum/arch";
 import { MemoryHintStore } from "@chlorophytum/hint-store-memory";
 import { StreamJsonZip } from "@chlorophytum/util-json";
 import * as fs from "fs";
 import * as stream from "stream";
 
 export class HintStoreFsProvider implements IHintStoreProvider {
-	public async connectRead(path: string, plugins: IHintingModelPlugin[]) {
+	public async connectRead(path: string, pass: IHintingPass) {
 		const hs = new FsHintStore(path);
-		await new OtdHsSupport().populateHintStore(fs.createReadStream(path), plugins, hs);
+		await new OtdHsSupport().populateHintStore(fs.createReadStream(path), pass, hs);
 		return hs;
 	}
-	public async connectWrite(path: string, plugins: IHintingModelPlugin[]) {
+	public async connectWrite(path: string, pass: IHintingPass) {
 		return new FsHintStore(path);
 	}
 }
@@ -57,19 +50,10 @@ class OtdHsSupport {
 		return StreamJsonZip.stringify(obj, output);
 	}
 
-	public async populateHintStore(
-		input: stream.Readable,
-		plugins: IHintingModelPlugin[],
-		store: IHintStore
-	): Promise<void> {
+	public async populateHintStore(input: stream.Readable, pass: IHintingPass, store: IHintStore) {
 		const hsRep = await StreamJsonZip.parse(input);
-		const hfs: IHintFactory[] = [];
-		for (const plugin of plugins) {
-			for (const hf of plugin.factoriesOfUsedHints) {
-				hfs.push(hf);
-			}
-		}
-		const hf = new EmptyImpl.FallbackHintFactory(hfs);
+
+		const hf = new EmptyImpl.FallbackHintFactory(pass.factoriesOfUsedHints);
 		for (const k in hsRep.glyphs) {
 			const hint = hf.readJson(hsRep.glyphs[k], hf);
 			if (hint) await store.setGlyphHints(k, hint);

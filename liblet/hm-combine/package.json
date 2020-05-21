@@ -1,12 +1,9 @@
 {
-	"name": "@chlorophytum/cli",
+	"name": "@chlorophytum/hm-combine",
 	"version": "0.7.3",
 	"description": "",
 	"main": "lib/index.js",
 	"typings": "lib/index.d.ts",
-	"bin": {
-		"chlorophytum": "./bin/_startup"
-	},
 	"scripts": {
 		"clean": "rimraf lib .build-cache",
 		"build": "tsc --build",
@@ -17,10 +14,6 @@
 	"dependencies": {
 		"@chlorophytum/arch": "^0.7.3",
 		"@chlorophytum/hint-store-memory": "^0.7.3",
-		"@chlorophytum/util-json": "^0.7.3",
-		"@chlorophytum/cli-proc": "^0.7.3",
-		"commander": "^4.1.0",
-		"json5": "^2.1.1",
 		"lodash": "^4.17.14",
 		"tslib": "^1.9.3"
 	},

@@ -1,5 +1,4 @@
 import { IHint, IHintStore } from "@chlorophytum/arch";
-import * as stream from "stream";
 
 export class MemoryHintStore implements IHintStore {
 	public glyphHints = new Map<string, IHint>();

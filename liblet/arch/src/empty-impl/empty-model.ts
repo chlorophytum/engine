@@ -1,17 +1,23 @@
-import { IHintingModel, IHintingModelPlugin } from "../interfaces";
+import { IHintingModel, IHintingModelPlugin, IHintingPass } from "../interfaces";
 
 import { Empty } from "./empty-hint";
 
 export const EmptyHintingModelFactory: IHintingModelPlugin = {
-	type: "Chlorophytum::EmptyHinting",
-	adopt<GID, VAR, MASTER>() {
-		return new EmptyHintingModel<GID>();
-	},
-	factoriesOfUsedHints: [new Empty.Factory()],
-	createParallelTask() {
-		return null;
+	async load() {
+		return new EmptyHintingPass();
 	}
 };
+
+class EmptyHintingPass implements IHintingPass {
+	public requirePreHintRounds = 0;
+	public factoriesOfUsedHints = [new Empty.Factory()];
+	public adopt<GID>() {
+		return new EmptyHintingModel<GID>();
+	}
+	public createParallelTask() {
+		return null;
+	}
+}
 
 export class EmptyHintingModel<GID> implements IHintingModel {
 	public readonly type = "Chlorophytum::EmptyHinting";
