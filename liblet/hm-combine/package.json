@@ -1,6 +1,6 @@
 {
 	"name": "@chlorophytum/hm-combine",
-	"version": "0.7.3",
+	"version": "0.8.0",
 	"description": "",
 	"main": "lib/index.js",
 	"typings": "lib/index.d.ts",
@@ -12,8 +12,8 @@
 	"author": "Renzhi Li (aka. Belleve Invis)",
 	"license": "MIT",
 	"dependencies": {
-		"@chlorophytum/arch": "^0.7.3",
-		"@chlorophytum/hint-store-memory": "^0.7.3",
+		"@chlorophytum/arch": "^0.8.0",
+		"@chlorophytum/hint-store-memory": "^0.8.0",
 		"lodash": "^4.17.14",
 		"tslib": "^1.9.3"
 	},
