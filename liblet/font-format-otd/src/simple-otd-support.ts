@@ -229,7 +229,7 @@ export class OtdSupport
 
 export class OtdFontSource extends OpenTypeFontSource<string> {
 	private readonly entry: OtdFontEntry;
-	protected support: IOpenTypeFontSourceSupport<string>;
+	protected support: OtdSupport;
 	public readonly metadata: IFontSourceMetadata;
 
 	constructor(otd: any, identifier: string) {

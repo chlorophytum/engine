@@ -3,25 +3,34 @@ import { Plugins } from "@chlorophytum/arch";
 export interface ProcOptions {
 	jobs?: number;
 	fontFormat: string;
+	fontFormatOptions?: any;
 	finalFormat: string;
+	finalFormatOptions?: any;
 	hintStoreProvider: string;
+	hintStoreProviderOptions?: any;
 	hintPlugin: string;
-	hintOptions: any;
+	hintOptions?: any;
 }
 
-export function getFontPlugin(hOpt: ProcOptions) {
-	const mFontFormat: Plugins.FontFormatModule = require(hOpt.fontFormat);
-	return mFontFormat.FontFormatPlugin;
+const CJS: Plugins.IAsyncModuleLoader = {
+	async import<T>(path: string): Promise<T> {
+		return require(path) as T;
+	}
+};
+
+export async function getFontPlugin(hOpt: ProcOptions) {
+	const mFontFormat = await CJS.import<Plugins.FontFormatModule>(hOpt.fontFormat);
+	return await mFontFormat.FontFormatPlugin.load(CJS, hOpt.fontFormatOptions);
 }
-export function getFinalHintPlugin(hOpt: ProcOptions) {
-	const mFinalFormat: Plugins.FinalHintModule = require(hOpt.finalFormat);
-	return mFinalFormat.FinalHintPlugin;
+export async function getFinalHintPlugin(hOpt: ProcOptions) {
+	const mFinalFormat = await CJS.import<Plugins.FinalHintModule>(hOpt.finalFormat);
+	return await mFinalFormat.FinalHintFormatPlugin.load(CJS, hOpt.finalFormatOptions);
 }
-export function getHintStoreProvider(hOpt: ProcOptions) {
-	const mFinalFormat: Plugins.HintStoreModule = require(hOpt.hintStoreProvider);
-	return mFinalFormat.HintStoreProvider;
+export async function getHintStoreProvider(hOpt: ProcOptions) {
+	const mFinalFormat = await CJS.import<Plugins.HintStoreModule>(hOpt.hintStoreProvider);
+	return await mFinalFormat.HintStoreProviderPlugin.load(CJS, hOpt.hintStoreProviderOptions);
 }
 export async function getHintingPasses(hOpt: ProcOptions) {
-	const plugin: Plugins.HintingModelModule = require(hOpt.hintPlugin);
-	return plugin.HintingModelPlugin.load(hOpt.hintOptions);
+	const plugin = await CJS.import<Plugins.HintingModelModule>(hOpt.hintPlugin);
+	return await plugin.HintingModelPlugin.load(CJS, hOpt.hintOptions);
 }

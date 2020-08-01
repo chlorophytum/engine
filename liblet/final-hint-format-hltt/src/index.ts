@@ -1,20 +1,25 @@
-import { IFinalHintPlugin } from "@chlorophytum/arch";
-
+import { IFinalHintFormat, IFinalHintPreStatSink, Plugins } from "@chlorophytum/arch";
 import { HlttCollectorImpl } from "./collector";
 import { createPreStatSink, HlttPreStatSink } from "./pre-stat-sink";
 
+export { HlttCollector } from "./collector";
 export * from "./pre-stat-sink";
 export { CvtGenerator, HlttProgramSink, ProgramGenerator } from "./program-sink";
-export { HlttCollector } from "./collector";
-export { HlttSession, HlttFinalHintStoreRep } from "./session";
+export { HlttFinalHintStoreRep, HlttSession } from "./session";
 
-export const FinalHintPlugin: IFinalHintPlugin = {
-	async createFinalHintCollector(preStat) {
+export class CHlttFinalHintFormat implements IFinalHintFormat {
+	async createFinalHintCollector(preStat: IFinalHintPreStatSink) {
 		const hlttPs = preStat.dynamicCast(HlttPreStatSink);
 		if (hlttPs) return new HlttCollectorImpl(hlttPs);
 		else throw new TypeError("Unreachable");
-	},
+	}
 	async createPreStatSink() {
 		return createPreStatSink();
+	}
+}
+
+export const FinalHintPlugin: Plugins.IFinalHintFormatPlugin = {
+	async load() {
+		return new CHlttFinalHintFormat();
 	}
 };

@@ -35,28 +35,13 @@ program
 	);
 
 program
-	.command("instruct <font> <hints> <instr> [others...]")
+	.command("instruct <font> <hints> <font-output> [others...]")
 	.option("-c, --config <json>", "Configuration file")
 	.action(
-		WithErrors(async (font, hints, instr, rest, options) => {
+		WithErrors(async (font, hints, fontOut, rest, options) => {
 			const ho = readProcOptions(options.config);
-			const jobFiles = [font, hints, instr, ...(rest || [])];
+			const jobFiles = [font, hints, fontOut, ...(rest || [])];
 			await CliProc.doInstruct(ho, _.chunk(jobFiles, 3) as CliProc.InstructJob[]);
-		})
-	);
-
-program
-	.command("integrate <instr> <input> <output> [others...]")
-	.option("-c, --config <json>", "Configuration file")
-	.option("-g, --glyph-only", "Glyph only mode")
-	.action(
-		WithErrors(async (instr, input, output, rest, options) => {
-			const ho = readProcOptions(options.config);
-			const jobFiles = [instr, input, output, ...(rest || [])];
-			await CliProc.doIntegrate(
-				{ ...ho, glyphOnly: !!options.glyphOnly },
-				_.chunk(jobFiles, 3) as CliProc.IntegrateJob[]
-			);
 		})
 	);
 

@@ -16,6 +16,7 @@ export interface HlttPreStatSink extends IFinalHintPreStatSink {
 	maxStorage: number;
 	maxStack: number;
 	cvtSize: number;
+	varDimensionCount: number;
 }
 export function createPreStatSink(): HlttPreStatSink {
 	return new HlttPreStatSinkImpl();
@@ -30,5 +31,6 @@ class HlttPreStatSinkImpl implements Typable<HlttPreStatSink> {
 	public maxStorage = 0;
 	public maxStack = 0;
 	public cvtSize = 0;
+	public varDimensionCount = 0;
 	public settleDown() {}
 }

@@ -1,4 +1,10 @@
-import { EmptyImpl, IHint, IHintingPass, IHintStore, IHintStoreProvider } from "@chlorophytum/arch";
+import {
+	BuiltInCombinators,
+	IHint,
+	IHintingPass,
+	IHintStore,
+	IHintStoreProvider
+} from "@chlorophytum/arch";
 import { MemoryHintStore } from "@chlorophytum/hint-store-memory";
 import { StreamJsonZip } from "@chlorophytum/util-json";
 import * as fs from "fs";
@@ -53,7 +59,7 @@ class OtdHsSupport {
 	public async populateHintStore(input: stream.Readable, pass: IHintingPass, store: IHintStore) {
 		const hsRep = await StreamJsonZip.parse(input);
 
-		const hf = new EmptyImpl.FallbackHintFactory(pass.factoriesOfUsedHints);
+		const hf = new BuiltInCombinators.FallbackHintFactory(pass.factoriesOfUsedHints);
 		for (const k in hsRep.glyphs) {
 			const hint = hf.readJson(hsRep.glyphs[k], hf);
 			if (hint) await store.setGlyphHints(k, hint);

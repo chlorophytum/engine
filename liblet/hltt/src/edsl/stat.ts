@@ -6,4 +6,5 @@ export interface TtStat {
 	maxFunctionDefs?: number;
 	maxTwilightPoints?: number;
 	cvtSize?: number;
+	varDimensionCount?: number;
 }

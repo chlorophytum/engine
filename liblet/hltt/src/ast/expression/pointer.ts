@@ -135,3 +135,36 @@ export class ArrayInit extends Statement {
 		for (const part of this.parts) part.refer(asm);
 	}
 }
+export class ArrayInitGetVariation extends Statement {
+	constructor(readonly arr: PointerExpression, private readonly arity: number) {
+		super();
+	}
+	public refer(asm: Assembler) {}
+	public compile(asm: Assembler) {
+		this.arr.dereference.compilePtr(asm);
+		asm.prim(TTI.GETVARIATION).added(this.arity);
+
+		if (this.arity !== this.arr.dereference.size) {
+			throw new TypeError("Array initializer arity mismatch");
+		}
+
+		// Stack: pArray a b c ... x
+		for (let k = 0; k < this.arity; k++) {
+			asm.needAccurateStackHeight();
+			asm.push(this.arity - k - 1, this.arity + 2 - k);
+			asm.prim(TTI.CINDEX)
+				.deleted(1)
+				.added(1);
+			// pArray a b c ... x pArray
+			asm.prim(TTI.ADD)
+				.deleted(2)
+				.added(1);
+			// pArray a[0] a[1] ... a[A - 1 - k] (pArray + (j + A - 1 - k))
+			asm.prim(TTI.SWAP)
+				.deleted(2)
+				.added(2);
+			this.arr.dereference.accessor.compileSet(asm);
+		}
+		asm.prim(TTI.POP).deleted(1);
+	}
+}

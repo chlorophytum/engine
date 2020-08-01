@@ -1,6 +1,6 @@
 import {
+	BuiltInCombinators,
 	ConsoleLogger,
-	EmptyImpl,
 	IHintFactory,
 	IHintingPass,
 	IHintStore,
@@ -10,11 +10,9 @@ import {
 } from "@chlorophytum/arch";
 import { MemoryHintStore } from "@chlorophytum/hint-store-memory";
 import * as fs from "fs";
-
 import { getFontPlugin, getHintingPasses, getHintStoreProvider, ProcOptions } from "../env";
 import { Arbitrator } from "../tasks/arb";
 import { Progress } from "../tasks/progress";
-
 import { HintCache } from "./cache";
 import { Host } from "./worker-host";
 
@@ -57,7 +55,7 @@ export async function doHint(options: HintOptions, jobs: HintJob[]) {
 		const jobLogger = logger.bullet(" + ");
 		for (let jid = 0; jid < jobs.length; jid++) {
 			const [input, output] = jobs[jid];
-			const hsProvider = getHintStoreProvider(options);
+			const hsProvider = await getHintStoreProvider(options);
 			const hintStore = await hsProvider.connectWrite(output, pass);
 			await hintFont(hintStore, pass, {
 				round: 0,
@@ -81,7 +79,7 @@ export async function doHint(options: HintOptions, jobs: HintJob[]) {
 }
 
 function createHintFactory(pass: IHintingPass): IHintFactory {
-	return new EmptyImpl.FallbackHintFactory(pass.factoriesOfUsedHints);
+	return new BuiltInCombinators.FallbackHintFactory(pass.factoriesOfUsedHints);
 }
 
 async function setupCache(logger: ILogger, hc: HintCache, hro: HintOptions) {
@@ -114,9 +112,8 @@ interface PreHintImplState<GID> {
 	carry: PropertyBag;
 }
 async function preHintFont<GID>(pass: IHintingPass, st: PreHintImplState<GID>) {
-	const fontSourcePlugin = getFontPlugin(st.options);
-	const loader = await fontSourcePlugin.createFontLoader(st.input, st.input);
-	const fontSource = await loader.load();
+	const fontSourcePlugin = await getFontPlugin(st.options);
+	const fontSource = await fontSourcePlugin.loadFont(st.input, st.input);
 
 	const hm = await pass.adopt(fontSource);
 	if (!hm || !hm.getPreTask) return;
@@ -147,9 +144,8 @@ interface HintImplState<GID> extends PreHintImplState<GID> {
 }
 
 async function hintFont<GID>(hs: IHintStore, pass: IHintingPass, st: HintImplState<GID>) {
-	const fontSourcePlugin = getFontPlugin(st.options);
-	const loader = await fontSourcePlugin.createFontLoader(st.input, st.input);
-	const fontSource = await loader.load();
+	const fontSourcePlugin = await getFontPlugin(st.options);
+	const fontSource = await fontSourcePlugin.loadFont(st.input, st.input);
 
 	const hm = await pass.adopt(fontSource);
 	if (!hm) return;

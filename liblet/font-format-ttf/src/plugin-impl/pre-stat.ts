@@ -20,5 +20,6 @@ export class TtfPreStatAnalyzer implements IFinalHintPreStatAnalyzer {
 		this.preStat.maxStorage = Math.max(this.preStat.maxStorage, otd.maxp.maxStorage || 0);
 		this.preStat.maxStack = Math.max(this.preStat.maxStack, otd.maxp.maxStackElements || 0);
 		this.preStat.cvtSize = Math.max(this.preStat.cvtSize, otd.cvt ? otd.cvt.items.length : 0);
+		this.preStat.varDimensionCount = otd.fvar ? otd.fvar.axes.length : 0;
 	}
 }

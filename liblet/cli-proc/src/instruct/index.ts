@@ -1,14 +1,13 @@
 import {
 	ConsoleLogger,
 	IFinalHintCollector,
-	IFinalHintPlugin,
+	IFinalHintFormat,
 	IFinalHintSession,
-	IFontFormatPlugin,
+	IFontFormat,
 	IHintingPass,
 	IHintStoreProvider,
 	ILogger
 } from "@chlorophytum/arch";
-
 import {
 	getFinalHintPlugin,
 	getFontPlugin,
@@ -16,18 +15,18 @@ import {
 	getHintStoreProvider,
 	ProcOptions
 } from "../env";
-
 import { mainMidHint } from "./procs";
 
 interface ExportPlan {
+	fromPath: string;
 	toPath: string;
 	session: IFinalHintSession;
 }
 export type InstructJob = [string, string, string];
 export async function doInstruct(options: ProcOptions, jobs: InstructJob[]) {
-	const FontFormatPlugin = getFontPlugin(options);
-	const HintStoreProvider = getHintStoreProvider(options);
-	const FinalHintPlugin = getFinalHintPlugin(options);
+	const FontFormat = await getFontPlugin(options);
+	const HintStoreProvider = await getHintStoreProvider(options);
+	const FinalHintPlugin = await getFinalHintPlugin(options);
 	const pass = await getHintingPasses(options);
 
 	const logger = new ConsoleLogger();
@@ -41,19 +40,14 @@ export async function doInstruct(options: ProcOptions, jobs: InstructJob[]) {
 	}
 
 	// Pre-stat
-	const preStatSink = await doPreStat(
-		logger.bullet(" + "),
-		FontFormatPlugin,
-		FinalHintPlugin,
-		jobs
-	);
+	const preStatSink = await doPreStat(logger.bullet(" + "), FontFormat, FinalHintPlugin, jobs);
 
 	// Instruct
 	const ttCol = await FinalHintPlugin.createFinalHintCollector(preStatSink);
 	const exportPlans = await doInstructImpl(
 		logger.bullet(" + "),
 		HintStoreProvider,
-		FontFormatPlugin,
+		FontFormat,
 		ttCol,
 		pass,
 		jobs
@@ -61,17 +55,17 @@ export async function doInstruct(options: ProcOptions, jobs: InstructJob[]) {
 
 	// Save
 	ttCol.consolidate();
-	await saveInstructions(logger.bullet(" + "), FontFormatPlugin, ttCol, exportPlans);
+	await saveInstructions(logger.bullet(" + "), FontFormat, ttCol, exportPlans);
 }
 
 async function doPreStat(
 	logger: ILogger,
-	FontFormatPlugin: IFontFormatPlugin,
-	FinalHintPlugin: IFinalHintPlugin,
+	FontFormat: IFontFormat,
+	FinalHintFormat: IFinalHintFormat,
 	jobs: [string, string, string][]
 ) {
-	const preStatSink = await FinalHintPlugin.createPreStatSink();
-	const preStatAnalyzer = await FontFormatPlugin.createPreStatAnalyzer(preStatSink);
+	const preStatSink = await FinalHintFormat.createPreStatSink();
+	const preStatAnalyzer = await FontFormat.createPreStatAnalyzer(preStatSink);
 	if (!preStatAnalyzer) throw new TypeError(`Final hint format not supported by font.`);
 	for (const [font, input, output] of jobs) {
 		logger.log(`Pre-stating ${font}`);
@@ -82,7 +76,7 @@ async function doPreStat(
 async function doInstructImpl(
 	logger: ILogger,
 	provider: IHintStoreProvider,
-	FontFormatPlugin: IFontFormatPlugin,
+	FontFormat: IFontFormat,
 	ttCol: IFinalHintCollector,
 	pass: IHintingPass,
 	jobs: [string, string, string][]
@@ -90,12 +84,12 @@ async function doInstructImpl(
 	const exportPlans: ExportPlan[] = [];
 	for (const [font, input, output] of jobs) {
 		logger.log(`Instructing ${input}`);
-		const ttSessionConn = await FontFormatPlugin.createFinalHintSessionConnection(ttCol);
+		const ttSessionConn = await FontFormat.createFinalHintSessionConnection(ttCol);
 		if (!ttSessionConn) throw new TypeError(`Final hint format not supported by font.`);
 		const ttSession = await ttSessionConn.connectFont(font);
 		if (!ttSession) throw new TypeError(`Final hint format not supported by font.`);
 		await readHintsToSession(provider, ttSession, input, pass);
-		exportPlans.push({ toPath: output, session: ttSession });
+		exportPlans.push({ fromPath: font, toPath: output, session: ttSession });
 	}
 	return exportPlans;
 }
@@ -114,14 +108,13 @@ async function readHintsToSession(
 
 async function saveInstructions(
 	logger: ILogger,
-	FontFormatPlugin: IFontFormatPlugin,
+	FontFormatPlugin: IFontFormat,
 	ttCol: IFinalHintCollector,
 	exportPlans: ExportPlan[]
 ) {
-	const saver = await FontFormatPlugin.createFinalHintSaver(ttCol);
-	if (!saver) throw new TypeError(`Final hint format not supported by font.`);
 	for (const plan of exportPlans) {
-		logger.log(`Saving instructions -> ${plan.toPath}`);
-		await saver.saveFinalHint(plan.session, plan.toPath);
+		const integrator = await FontFormatPlugin.createFinalHintIntegrator(plan.fromPath);
+		await integrator.apply(ttCol, plan.session);
+		await integrator.save(plan.toPath);
 	}
 }

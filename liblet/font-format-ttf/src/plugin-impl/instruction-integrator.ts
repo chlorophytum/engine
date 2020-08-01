@@ -1,111 +1,119 @@
-import { IFontFinalHintIntegrator } from "@chlorophytum/arch";
-import { HlttFinalHintStoreRep } from "@chlorophytum/final-hint-format-hltt";
-import { StreamJsonZip } from "@chlorophytum/util-json";
+import { IFinalHintCollector, IFinalHintIntegrator, IFinalHintSession } from "@chlorophytum/arch";
+import {
+	HlttCollector,
+	HlttFinalHintStoreRep,
+	HlttSession
+} from "@chlorophytum/final-hint-format-hltt";
 import * as fs from "fs-extra";
 import { FontIo, Ot } from "ot-builder";
-
 import { Base64Instr } from "../support/binary-instr";
 import { GlyphSetWrapper, VarWrapper } from "../support/otb-support";
 
-export class TtfInstrIntegrator implements IFontFinalHintIntegrator {
-	public async integrateFinalHintsToFont(
-		sHints: string,
-		sFont: string,
-		sOutput: string
-	): Promise<void> {
-		const store = await this.readInstrStore(sHints);
-		const otd = await this.readFont(sFont);
-		if (!Ot.Font.isTtf(otd)) return;
+export class TtfInstrIntegrator implements IFinalHintIntegrator {
+	constructor(private readonly sFont: string) {}
 
-		this.updateSharedInstructions(otd, store);
-		this.updateCvt(otd, store);
-		this.updateGlyphInstructions(otd, store);
-		this.updateMaxp(otd, store);
-
-		await this.saveFont(otd, sOutput);
+	private ttf: null | Ot.Font<Ot.ListGlyphStore> = null;
+	private async ensureFontRead() {
+		if (!this.ttf) {
+			const sfnt = FontIo.readSfntOtf(await fs.readFile(this.sFont));
+			this.ttf = FontIo.readFont(sfnt, Ot.ListGlyphStoreFactory);
+		}
 	}
 
-	public async integrateGlyphFinalHintsToFont(
-		sHints: string,
-		sFont: string,
-		sOutput: string
-	): Promise<void> {
-		const store = await this.readInstrStore(sHints);
-		const otd = await this.readFont(sFont);
-		if (!Ot.Font.isTtf(otd)) return;
-
-		this.updateGlyphInstructions(otd, store);
-
-		await this.saveFont(otd, sOutput);
-	}
-
-	private async readInstrStore(sHints: string) {
-		const instrStream = fs.createReadStream(sHints);
-		const store: HlttFinalHintStoreRep<string> = await StreamJsonZip.parse(instrStream);
-		return store;
-	}
-
-	private async readFont(sFont: string) {
-		const sfnt = FontIo.readSfntOtf(await fs.readFile(sFont));
-		return FontIo.readFont(sfnt, Ot.ListGlyphStoreFactory);
+	public async save(output: string) {
+		await this.ensureFontRead();
+		if (!this.ttf) throw new Error("Invalid font format");
+		await this.saveFont(this.ttf, output);
 	}
 	private async saveFont(otd: Ot.Font, sOutput: string) {
-		const sfntOut = FontIo.writeFont(otd, { glyphStore: { statOs2XAvgCharWidth: false } });
+		const sfntOut = FontIo.writeFont(otd, {
+			glyphStore: { statOs2XAvgCharWidth: false }
+		});
 		await fs.writeFile(sOutput, FontIo.writeSfntOtf(sfntOut));
 	}
 
-	private updateSharedInstructions(otd: Ot.Font.Ttf, store: HlttFinalHintStoreRep<string>) {
-		otd.fpgm = new Ot.Fpgm.Table(
+	async apply(collector: IFinalHintCollector, session: IFinalHintSession) {
+		const hlttCollector = collector.dynamicCast(HlttCollector);
+		const hlttSession = session.dynamicCast(HlttSession);
+		if (hlttCollector && hlttSession) {
+			await this.ensureFontRead();
+			if (!this.ttf || !Ot.Font.isTtf(this.ttf)) {
+				throw new Error("Invalid font format");
+			}
+			const store = this.createHintRep(hlttCollector, hlttSession);
+			this.updateSharedInstructions(this.ttf, store);
+			this.updateCvt(this.ttf, store);
+			this.updateGlyphInstructions(this.ttf, store);
+			this.updateMaxp(this.ttf, store);
+		} else {
+			throw new TypeError("Final hint format not supported.");
+		}
+	}
+
+	private readonly instructionCache: Map<string, string> = new Map();
+	private createHintRep(col: HlttCollector, fhs: HlttSession): HlttFinalHintStoreRep<string> {
+		const fpgm = [...col.getFunctionDefs(Base64Instr).values()];
+		const prep = [fhs.getPreProgram(Base64Instr)];
+		const cvt = col.getControlValueDefs();
+		const glyf: { [key: string]: string } = {};
+		for (let gid of fhs.listGlyphNames()) {
+			glyf[gid] = fhs.getGlyphProgram(gid, Base64Instr, this.instructionCache);
+		}
+		return { stats: col.getStats(), fpgm, prep, glyf, cvt };
+	}
+
+	private updateSharedInstructions(ttf: Ot.Font.Ttf, store: HlttFinalHintStoreRep<string>) {
+		ttf.fpgm = new Ot.Fpgm.Table(
 			Buffer.concat([
-				otd.fpgm ? otd.fpgm.instructions : Buffer.alloc(0),
+				ttf.fpgm ? ttf.fpgm.instructions : Buffer.alloc(0),
 				...store.fpgm.map(Base64Instr.decode)
 			])
 		);
-		otd.prep = new Ot.Fpgm.Table(
+		ttf.prep = new Ot.Fpgm.Table(
 			Buffer.concat([
-				otd.prep ? otd.prep.instructions : Buffer.alloc(0),
+				ttf.prep ? ttf.prep.instructions : Buffer.alloc(0),
 				...store.prep.map(Base64Instr.decode)
 			])
 		);
 	}
-	private updateGlyphInstructions(otd: Ot.Font.Ttf, store: HlttFinalHintStoreRep<string>) {
-		const glyphBimap = new GlyphSetWrapper(otd);
+	private updateGlyphInstructions(ttf: Ot.Font.Ttf, store: HlttFinalHintStoreRep<string>) {
+		const glyphBimap = new GlyphSetWrapper(ttf);
 		for (const [gn, glyph] of glyphBimap) {
 			const hint = store.glyf[gn];
 			if (hint) glyph.hints = new Ot.Glyph.TtInstruction(Base64Instr.decode(hint));
 		}
 	}
-	private updateMaxp(otd: Ot.Font.Ttf, store: HlttFinalHintStoreRep<string>) {
-		otd.maxp.maxZones = 2;
-		otd.maxp.maxFunctionDefs = Math.min(
+	private updateMaxp(ttf: Ot.Font.Ttf, store: HlttFinalHintStoreRep<string>) {
+		ttf.maxp.maxZones = 2;
+		ttf.maxp.maxFunctionDefs = Math.min(
 			0xffff,
-			Math.max(otd.maxp.maxFunctionDefs || 0, store.stats.maxFunctionDefs || 0)
+			Math.max(ttf.maxp.maxFunctionDefs || 0, store.stats.maxFunctionDefs || 0)
 		);
-		otd.maxp.maxStackElements = Math.min(
+		ttf.maxp.maxStackElements = Math.min(
 			0xffff,
-			Math.max(otd.maxp.maxStackElements || 0, store.stats.stackHeight || 0)
+			Math.max(ttf.maxp.maxStackElements || 0, store.stats.stackHeight || 0)
 		);
-		otd.maxp.maxStorage = Math.min(
+		ttf.maxp.maxStorage = Math.min(
 			0xffff,
-			Math.max(otd.maxp.maxStorage || 0, store.stats.maxStorage || 0)
+			Math.max(ttf.maxp.maxStorage || 0, store.stats.maxStorage || 0)
 		);
-		otd.maxp.maxTwilightPoints = Math.min(
+		ttf.maxp.maxTwilightPoints = Math.min(
 			0xffff,
-			Math.max(otd.maxp.maxTwilightPoints || 0, store.stats.maxTwilightPoints || 0)
+			Math.max(ttf.maxp.maxTwilightPoints || 0, store.stats.maxTwilightPoints || 0)
 		);
 	}
 
-	private updateCvt(otd: Ot.Font.Ttf, store: HlttFinalHintStoreRep<string>) {
-		const varWrapper = new VarWrapper(otd);
+	private updateCvt(ttf: Ot.Font.Ttf, store: HlttFinalHintStoreRep<string>) {
+		const varWrapper = new VarWrapper(ttf);
 		const mc = new Ot.Var.ValueFactory();
-		if (!otd.cvt) otd.cvt = new Ot.Cvt.Table();
+		if (!ttf.cvt) ttf.cvt = new Ot.Cvt.Table();
 		const cvtMask: boolean[] = [];
 		for (let j = 0; j < store.cvt.length; j++) {
 			const item = store.cvt[j];
 			if (!item) {
 				cvtMask[j] = false;
 			} else {
-				otd.cvt.items[j] = varWrapper.convertValue(mc, item);
+				ttf.cvt.items[j] = varWrapper.convertValue(mc, item);
 				cvtMask[j] = true;
 			}
 		}

@@ -4,7 +4,6 @@ import {
 	IHintFactory,
 	IHintingModel,
 	IHintingModelExecEnv,
-	IHintingModelPlugin,
 	IHintingModelPreEnv,
 	IHintingPass,
 	IHintStore,
@@ -21,14 +20,14 @@ export interface CombineOptions {
 	passes: SubpassOption[];
 }
 
-export class CHmCombinedPlugin implements IHintingModelPlugin {
-	public async load(_parameters: any) {
+export class CHmCombinedPlugin implements Plugins.IHintingModelPlugin {
+	public async load(loader: Plugins.IAsyncModuleLoader, _parameters: any) {
 		if (!_parameters.passes) throw new Error("Must specify passes.");
 		const parameters: CombineOptions = _parameters;
 		const subpasses: IHintingPass[] = [];
 		for (const sp of parameters.passes) {
-			const plugin: Plugins.HintingModelModule = require(sp.hintPlugin);
-			subpasses.push(await plugin.HintingModelPlugin.load(sp.hintOptions));
+			const plugin = await loader.import<Plugins.HintingModelModule>(sp.hintPlugin);
+			subpasses.push(await plugin.HintingModelPlugin.load(loader, sp.hintOptions));
 		}
 		return new CCombinedHintPass(subpasses);
 	}

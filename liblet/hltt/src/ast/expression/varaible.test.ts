@@ -5,7 +5,7 @@ import { compileFdef, compileProgram } from "../test-util";
 
 import { BinaryExpression } from "./arith";
 import { VolatileExpression } from "./constant";
-import { ArrayIndex, ArrayInit, TupleExpression } from "./pointer";
+import { ArrayIndex, ArrayInit, TupleExpression, ArrayInitGetVariation } from "./pointer";
 import { VariableSet } from "./variable";
 
 test("Expression: Local variable (entry)", t => {
@@ -195,5 +195,35 @@ test("Expression: CVT array init 3", t => {
 			WCVTP
 			POP
 	`)
+	);
+});
+
+test("Expression: GETVARIATION array init", t => {
+	const asm = compileProgram(function*(gs, ls) {
+		const a = gs.cvt.declare("a", 3);
+		yield new ArrayInitGetVariation(a.index, 3);
+	});
+	t.deepEqual(
+		asm.codeGen(new TextInstrSink()),
+		TextInstrSink.rectify(`
+		PUSHB_1 0
+		GETVARIATION
+		PUSHB_2 2 5
+		CINDEX
+		ADD
+		SWAP
+		WCVTP
+		PUSHB_2 1 4
+		CINDEX
+		ADD
+		SWAP
+		WCVTP
+		PUSHB_2 0 3
+		CINDEX
+		ADD
+		SWAP
+		WCVTP
+		POP
+		`)
 	);
 });

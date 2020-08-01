@@ -1,13 +1,12 @@
 import {
 	IFinalHintCollector,
+	IFinalHintIntegrator,
 	IFinalHintPreStatAnalyzer,
 	IFinalHintPreStatSink,
 	IFinalHintSession,
 	IFinalHintSessionConnection,
-	IFontFinalHintIntegrator,
-	IFontFinalHintSaver,
-	IFontFormatPlugin,
-	IFontLoader,
+	IFontFormat,
+	Plugins,
 	Variation
 } from "@chlorophytum/arch";
 import {
@@ -17,14 +16,15 @@ import {
 	HlttSession
 } from "@chlorophytum/final-hint-format-hltt";
 import { FontForgeTextInstr } from "@chlorophytum/fontforge-instr";
-import { StreamJson, StreamJsonZip } from "@chlorophytum/util-json";
+import { StreamJson } from "@chlorophytum/util-json";
 import * as fs from "fs";
-
 import { OtdFontSource } from "./simple-otd-support";
 
-class OtdFontFormatPlugin implements IFontFormatPlugin {
-	public async createFontLoader(path: string, identifier: string) {
-		return new OtdFontLoader(path, identifier);
+class OtdFontFormat implements IFontFormat {
+	public async loadFont(path: string, identifier: string) {
+		const inputStream = fs.createReadStream(path);
+		const otd = await StreamJson.parse(inputStream);
+		return new OtdFontSource(otd, identifier);
 	}
 
 	public async createPreStatAnalyzer(pss: IFinalHintPreStatSink) {
@@ -38,23 +38,8 @@ class OtdFontFormatPlugin implements IFontFormatPlugin {
 		if (hlttCollector) return new OtdHlttHintSessionConnection(hlttCollector);
 		else return null;
 	}
-	public async createFinalHintSaver(collector: IFinalHintCollector) {
-		const hlttCollector = collector.dynamicCast(HlttCollector);
-		if (hlttCollector) return new OtdHlttFinalHintSaver(hlttCollector);
-		else return null;
-	}
-
-	public async createFinalHintIntegrator() {
-		return new OtdTtInstrIntegrator();
-	}
-}
-
-class OtdFontLoader implements IFontLoader {
-	constructor(private readonly path: string, private readonly identifier: string) {}
-	public async load() {
-		const inputStream = fs.createReadStream(this.path);
-		const otd = await StreamJson.parse(inputStream);
-		return new OtdFontSource(otd, this.identifier);
+	public async createFinalHintIntegrator(fontPath: string) {
+		return new OtdHlttIntegrator(fontPath);
 	}
 }
 
@@ -84,64 +69,48 @@ class OtdHlttPreStatAnalyzer implements IFinalHintPreStatAnalyzer {
 	}
 }
 
-class OtdHlttFinalHintSaver implements IFontFinalHintSaver {
-	constructor(private readonly collector: HlttCollector) {}
-	private readonly instructionCache: Map<string, string> = new Map();
-	public async saveFinalHint(fhs: IFinalHintSession, outputPath: string) {
-		const output = fs.createWriteStream(outputPath);
-		const hlttSession = fhs.dynamicCast(HlttSession);
-		if (!hlttSession) throw new TypeError("Type not supported");
+class OtdHlttIntegrator implements IFinalHintIntegrator {
+	constructor(private readonly sFont: string) {}
+	private otd: any = null;
 
-		const fhsRep: HlttFinalHintStoreRep<string> = this.createHintRep(hlttSession);
-		return StreamJsonZip.stringify(fhsRep, output);
+	private async readFont() {
+		if (!this.otd) {
+			const fontStream = fs.createReadStream(this.sFont);
+			this.otd = await StreamJson.parse(fontStream);
+		}
 	}
 
-	private createHintRep(fhs: HlttSession): HlttFinalHintStoreRep<string> {
-		const fpgm = [...this.collector.getFunctionDefs(FontForgeTextInstr).values()];
+	async apply(collector: IFinalHintCollector, session: IFinalHintSession) {
+		const hlttCollector = collector.dynamicCast(HlttCollector);
+		const hlttSession = session.dynamicCast(HlttSession);
+		if (hlttCollector && hlttSession) {
+			await this.readFont();
+			const store = this.createHintRep(hlttCollector, hlttSession);
+			this.updateSharedInstructions(this.otd, store);
+			this.updateCvt(this.otd, store);
+			this.updateGlyphInstructions(this.otd, store);
+			this.updateMaxp(this.otd, store);
+		} else {
+			throw new TypeError("Final hint format not supported.");
+		}
+	}
+
+	async save(output: string) {
+		await this.readFont();
+		const outputStream = fs.createWriteStream(output);
+		await StreamJson.stringify(this.otd, outputStream);
+	}
+
+	private readonly instructionCache: Map<string, string> = new Map();
+	private createHintRep(col: HlttCollector, fhs: HlttSession): HlttFinalHintStoreRep<string> {
+		const fpgm = [...col.getFunctionDefs(FontForgeTextInstr).values()];
 		const prep = [fhs.getPreProgram(FontForgeTextInstr)];
-		const cvt = this.collector.getControlValueDefs();
+		const cvt = col.getControlValueDefs();
 		const glyf: { [key: string]: string } = {};
 		for (let gid of fhs.listGlyphNames()) {
 			glyf[gid] = fhs.getGlyphProgram(gid, FontForgeTextInstr, this.instructionCache);
 		}
-		return { stats: this.collector.getStats(), fpgm, prep, glyf, cvt };
-	}
-}
-
-class OtdTtInstrIntegrator implements IFontFinalHintIntegrator {
-	public async integrateFinalHintsToFont(
-		sHints: string,
-		sFont: string,
-		sOutput: string
-	): Promise<void> {
-		const instrStream = fs.createReadStream(sHints);
-		const fontStream = fs.createReadStream(sFont);
-		const outputStream = fs.createWriteStream(sOutput);
-
-		const store: HlttFinalHintStoreRep<string> = await StreamJsonZip.parse(instrStream);
-		const otd = await StreamJson.parse(fontStream);
-
-		this.updateSharedInstructions(otd, store);
-		this.updateCvt(otd, store);
-		this.updateGlyphInstructions(otd, store);
-		this.updateMaxp(otd, store);
-		this.updateVtt(otd);
-
-		await StreamJson.stringify(otd, outputStream);
-	}
-	public async integrateGlyphFinalHintsToFont(
-		sHints: string,
-		sFont: string,
-		sOutput: string
-	): Promise<void> {
-		const instrStream = fs.createReadStream(sHints);
-		const fontStream = fs.createReadStream(sFont);
-		const outputStream = fs.createWriteStream(sOutput);
-
-		const store: HlttFinalHintStoreRep<string> = await StreamJsonZip.parse(instrStream);
-		const otdGlyphs = await StreamJson.parse(fontStream);
-		this.updateGlyphInstructions(otdGlyphs, store);
-		await StreamJson.stringify(otdGlyphs, outputStream);
+		return { stats: col.getStats(), fpgm, prep, glyf, cvt };
 	}
 
 	private updateSharedInstructions(otd: any, store: HlttFinalHintStoreRep<string>) {
@@ -193,8 +162,8 @@ class OtdTtInstrIntegrator implements IFontFinalHintIntegrator {
 		}
 		otd.cvt_mask = cvtMask;
 	}
-	private updateVtt(otd: any) {
-		otd.TSI_01 = otd.TSI_23 = otd.TSI5 = null;
-	}
 }
-export const FontFormatPlugin: IFontFormatPlugin = new OtdFontFormatPlugin();
+
+export const FontFormatPlugin: Plugins.IFontFormatPlugin = {
+	load: async () => new OtdFontFormat()
+};

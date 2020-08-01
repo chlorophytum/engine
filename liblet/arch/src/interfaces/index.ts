@@ -11,18 +11,15 @@ export * from "./tasks";
 export { Variation } from "./variation";
 
 // Font source
-export interface IFontFormatPlugin {
-	// "any"s are actually existential types
-	createFontLoader(path: string, identifier: string): Promise<IFontLoader>;
+export interface IFontFormat {
+	// IO
+	loadFont(path: string, identifier: string): Promise<IFontSource<any>>;
+
 	createPreStatAnalyzer(pss: IFinalHintPreStatSink): Promise<null | IFinalHintPreStatAnalyzer>;
 	createFinalHintSessionConnection(
 		collector: IFinalHintCollector
 	): Promise<null | IFinalHintSessionConnection>;
-	createFinalHintSaver(collector: IFinalHintCollector): Promise<null | IFontFinalHintSaver>;
-	createFinalHintIntegrator(): Promise<IFontFinalHintIntegrator>;
-}
-export interface IFontLoader {
-	load(): Promise<IFontSource<any>>;
+	createFinalHintIntegrator(fontPath: string): Promise<IFinalHintIntegrator>;
 }
 export interface IFinalHintSessionConnection {
 	connectFont(path: string): Promise<null | IFinalHintSession>;
@@ -30,12 +27,9 @@ export interface IFinalHintSessionConnection {
 export interface IFinalHintPreStatAnalyzer {
 	analyzeFontPreStat(path: string): Promise<void>;
 }
-export interface IFontFinalHintSaver {
-	saveFinalHint(fhs: IFinalHintSession, output: string): Promise<void>;
-}
-export interface IFontFinalHintIntegrator {
-	integrateFinalHintsToFont(hints: string, font: string, output: string): Promise<void>;
-	integrateGlyphFinalHintsToFont(hints: string, font: string, output: string): Promise<void>;
+export interface IFinalHintIntegrator {
+	apply(collector: IFinalHintCollector, fhs: IFinalHintSession): Promise<void>;
+	save(output: string): Promise<void>;
 }
 
 export interface IFontSource<GID> {
@@ -72,10 +66,10 @@ export interface IFontSourceMetadata {
 	readonly upm: number;
 }
 
-// Hint store plugin
+// Hint store
 export interface IHintStoreProvider {
-	connectRead(identifier: string, plugins: IHintingPass): Promise<IHintStore>;
-	connectWrite(identifier: string, plugins: IHintingPass): Promise<IHintStore>;
+	connectRead(identifier: string, passes: IHintingPass): Promise<IHintStore>;
+	connectWrite(identifier: string, passes: IHintingPass): Promise<IHintStore>;
 }
 export interface IHintStore {
 	listGlyphs(): Promise<Iterable<string>>;
@@ -147,12 +141,10 @@ export interface IHintingPass extends IParallelTaskFactory {
 	readonly factoriesOfUsedHints: ReadonlyArray<IHintFactory>;
 	adopt<GID>(font: IFontSource<GID>): IHintingModel | null | undefined;
 }
-export interface IHintingModelPlugin {
-	load(parameters: any): Promise<IHintingPass>;
-}
 
 // Hint compilation (instructing)
-export interface IFinalHintPlugin {
+
+export interface IFinalHintFormat {
 	createFinalHintCollector(preStat: IFinalHintPreStatSink): Promise<IFinalHintCollector>;
 	createPreStatSink(): Promise<IFinalHintPreStatSink>;
 }

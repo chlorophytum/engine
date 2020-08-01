@@ -1,15 +1,18 @@
-import { IFinalHintCollector, IFinalHintPreStatSink, IFontFormatPlugin } from "@chlorophytum/arch";
+import {
+	IFinalHintCollector,
+	IFinalHintPreStatSink,
+	IFontFormat,
+	Plugins
+} from "@chlorophytum/arch";
 import { HlttCollector, HlttPreStatSink } from "@chlorophytum/final-hint-format-hltt";
-
-import { TtfFinalHintSaver } from "./plugin-impl/final-hint-saver";
 import { TtfFontLoader } from "./plugin-impl/font-loader";
 import { TtfInstrIntegrator } from "./plugin-impl/instruction-integrator";
 import { TtfPreStatAnalyzer } from "./plugin-impl/pre-stat";
 import { HlttHintSessionConnection } from "./plugin-impl/session-connection";
 
-export class TtfFontFormatPlugin implements IFontFormatPlugin {
-	public async createFontLoader(path: string, identifier: string) {
-		return new TtfFontLoader(path, identifier);
+export class TtfFontFormat implements IFontFormat {
+	public async loadFont(path: string, identifier: string) {
+		return await new TtfFontLoader(path, identifier).load();
 	}
 
 	public async createPreStatAnalyzer(pss: IFinalHintPreStatSink) {
@@ -23,15 +26,11 @@ export class TtfFontFormatPlugin implements IFontFormatPlugin {
 		if (hlttCollector) return new HlttHintSessionConnection(hlttCollector);
 		else return null;
 	}
-	public async createFinalHintSaver(collector: IFinalHintCollector) {
-		const hlttCollector = collector.dynamicCast(HlttCollector);
-		if (hlttCollector) return new TtfFinalHintSaver(hlttCollector);
-		else return null;
-	}
-
-	public async createFinalHintIntegrator() {
-		return new TtfInstrIntegrator();
+	public async createFinalHintIntegrator(fontPath: string) {
+		return new TtfInstrIntegrator(fontPath);
 	}
 }
 
-export const FontFormatPlugin: IFontFormatPlugin = new TtfFontFormatPlugin();
+export const FontFormatPlugin: Plugins.IFontFormatPlugin = {
+	load: async () => new TtfFontFormat()
+};

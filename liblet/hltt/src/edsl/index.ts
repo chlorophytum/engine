@@ -1,9 +1,13 @@
 import * as stringify from "json-stable-stringify";
-
 import { BinaryExpression, NullaryExpression, UnaryExpression } from "../ast/expression/arith";
 import { cExpr } from "../ast/expression/constant";
 import { InvokeExpression } from "../ast/expression/invoke";
-import { ArrayIndex, ArrayInit, CoercedVariable } from "../ast/expression/pointer";
+import {
+	ArrayIndex,
+	ArrayInit,
+	ArrayInitGetVariation,
+	CoercedVariable
+} from "../ast/expression/pointer";
 import {
 	ControlValueAccessor,
 	VariableAccessor,
@@ -32,7 +36,6 @@ import { SequenceStatement } from "../ast/statement/sequence";
 import { InstrFormat, InstrSink, TTI } from "../instr";
 import Assembler from "../ir";
 import { GlobalScope, ProgramScope, TtFunctionScopeSolver, TtSymbol } from "../scope";
-
 import { mxapFunctionSys, mxrpFunctionSys } from "./flags";
 import { TtStat } from "./stat";
 
@@ -378,18 +381,54 @@ export class EdslProgram {
 
 	// Deltas
 	public delta = {
-		p1: (...a: ([number | Expression, number | Expression])[]) =>
-			new DeltaStatement(this.scope, TTI.DELTAP1, true, a.map(x => x[0]), a.map(x => x[1])),
-		p2: (...a: ([number | Expression, number | Expression])[]) =>
-			new DeltaStatement(this.scope, TTI.DELTAP2, true, a.map(x => x[0]), a.map(x => x[1])),
-		p3: (...a: ([number | Expression, number | Expression])[]) =>
-			new DeltaStatement(this.scope, TTI.DELTAP3, true, a.map(x => x[0]), a.map(x => x[1])),
-		c1: (...a: ([number | PointerExpression, number | Expression])[]) =>
-			new DeltaStatement(this.scope, TTI.DELTAC1, false, a.map(x => x[0]), a.map(x => x[1])),
-		c2: (...a: ([number | PointerExpression, number | Expression])[]) =>
-			new DeltaStatement(this.scope, TTI.DELTAC2, false, a.map(x => x[0]), a.map(x => x[1])),
-		c3: (...a: ([number | PointerExpression, number | Expression])[]) =>
-			new DeltaStatement(this.scope, TTI.DELTAC3, false, a.map(x => x[0]), a.map(x => x[1]))
+		p1: (...a: [number | Expression, number | Expression][]) =>
+			new DeltaStatement(
+				this.scope,
+				TTI.DELTAP1,
+				true,
+				a.map(x => x[0]),
+				a.map(x => x[1])
+			),
+		p2: (...a: [number | Expression, number | Expression][]) =>
+			new DeltaStatement(
+				this.scope,
+				TTI.DELTAP2,
+				true,
+				a.map(x => x[0]),
+				a.map(x => x[1])
+			),
+		p3: (...a: [number | Expression, number | Expression][]) =>
+			new DeltaStatement(
+				this.scope,
+				TTI.DELTAP3,
+				true,
+				a.map(x => x[0]),
+				a.map(x => x[1])
+			),
+		c1: (...a: [number | PointerExpression, number | Expression][]) =>
+			new DeltaStatement(
+				this.scope,
+				TTI.DELTAC1,
+				false,
+				a.map(x => x[0]),
+				a.map(x => x[1])
+			),
+		c2: (...a: [number | PointerExpression, number | Expression][]) =>
+			new DeltaStatement(
+				this.scope,
+				TTI.DELTAC2,
+				false,
+				a.map(x => x[0]),
+				a.map(x => x[1])
+			),
+		c3: (...a: [number | PointerExpression, number | Expression][]) =>
+			new DeltaStatement(
+				this.scope,
+				TTI.DELTAC3,
+				false,
+				a.map(x => x[0]),
+				a.map(x => x[1])
+			)
 	};
 
 	// Measure
@@ -408,6 +447,15 @@ export class EdslProgram {
 		y: () => new IupStatement(TTI.IUP_y)
 	};
 
+	// GetVariation
+	public getVariationDimensionCount() {
+		return this.globalDsl.getStats().varDimensionCount || 0;
+	}
+	public getVariation(a: Variable) {
+		return new ArrayInitGetVariation(a.ptr, this.getVariationDimensionCount());
+	}
+
+	// NOP
 	public emptyBlock = () => function*(): Iterable<Statement> {};
 
 	// Coercions
