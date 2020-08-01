@@ -6,14 +6,14 @@ import {
 	IFontFormat,
 	IHintingPass,
 	IHintStoreProvider,
-	ILogger
+	ILogger,
 } from "@chlorophytum/arch";
 import {
 	getFinalHintPlugin,
 	getFontPlugin,
 	getHintingPasses,
 	getHintStoreProvider,
-	ProcOptions
+	ProcOptions,
 } from "../env";
 import { mainMidHint } from "./procs";
 
@@ -83,7 +83,7 @@ async function doInstructImpl(
 ) {
 	const exportPlans: ExportPlan[] = [];
 	for (const [font, input, output] of jobs) {
-		logger.log(`Instructing ${input}`);
+		logger.log(`Compiling hints ${input}`);
 		const ttSessionConn = await FontFormat.createFinalHintSessionConnection(ttCol);
 		if (!ttSessionConn) throw new TypeError(`Final hint format not supported by font.`);
 		const ttSession = await ttSessionConn.connectFont(font);
@@ -113,6 +113,7 @@ async function saveInstructions(
 	exportPlans: ExportPlan[]
 ) {
 	for (const plan of exportPlans) {
+		logger.log(`Instructing -> ${plan.toPath}`);
 		const integrator = await FontFormatPlugin.createFinalHintIntegrator(plan.fromPath);
 		await integrator.apply(ttCol, plan.session);
 		await integrator.save(plan.toPath);
