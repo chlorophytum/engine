@@ -15,7 +15,7 @@ export interface ProcOptions {
 const CJS: Plugins.IAsyncModuleLoader = {
 	async import<T>(path: string): Promise<T> {
 		return require(path) as T;
-	}
+	},
 };
 
 export async function getFontPlugin(hOpt: ProcOptions) {
