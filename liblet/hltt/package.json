@@ -13,7 +13,7 @@
 	"license": "MIT",
 	"dependencies": {
 		"json-stable-stringify": "^1.0.1",
-		"tslib": "^1.9.3"
+		"tslib": "^2.0.1"
 	},
 	"devDependencies": {
 		"@types/json-stable-stringify": "^1.0.32",

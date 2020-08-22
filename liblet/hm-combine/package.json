@@ -15,7 +15,7 @@
 		"@chlorophytum/arch": "^0.10.0",
 		"@chlorophytum/hint-store-memory": "^0.10.0",
 		"lodash": "^4.17.14",
-		"tslib": "^1.9.3"
+		"tslib": "^2.0.1"
 	},
 	"devDependencies": {
 		"@types/json5": "^0.0.30",

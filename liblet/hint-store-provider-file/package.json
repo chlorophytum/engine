@@ -15,7 +15,7 @@
 		"@chlorophytum/arch": "^0.10.0",
 		"@chlorophytum/hint-store-memory": "^0.10.0",
 		"@chlorophytum/util-json": "^0.10.0",
-		"tslib": "^1.9.3"
+		"tslib": "^2.0.1"
 	},
 	"devDependencies": {
 		"ava": "^1.4.1"

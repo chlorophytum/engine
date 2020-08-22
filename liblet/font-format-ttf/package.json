@@ -20,7 +20,7 @@
 		"@chlorophytum/util-json": "^0.10.0",
 		"fs-extra": "^8.1.0",
 		"ot-builder": "^0.10.8",
-		"tslib": "^1.9.3"
+		"tslib": "^2.0.1"
 	},
 	"devDependencies": {
 		"@types/fs-extra": "^8.1.0",

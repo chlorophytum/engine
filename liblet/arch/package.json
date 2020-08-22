@@ -12,7 +12,7 @@
 	"author": "Renzhi Li (aka. Belleve Invis)",
 	"license": "MIT",
 	"dependencies": {
-		"tslib": "^1.9.3",
+		"tslib": "^2.0.1",
 		"typable": "^1.0.0"
 	},
 	"devDependencies": {
