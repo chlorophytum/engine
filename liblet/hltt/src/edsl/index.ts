@@ -6,13 +6,13 @@ import {
 	ArrayIndex,
 	ArrayInit,
 	ArrayInitGetVariation,
-	CoercedVariable
+	CoercedVariable,
 } from "../ast/expression/pointer";
 import {
 	ControlValueAccessor,
 	VariableAccessor,
 	VariableFactory,
-	VariableSet
+	VariableSet,
 } from "../ast/expression/variable";
 import { Expression, PointerExpression, Statement, Variable } from "../ast/interface";
 import { AssemblyStatement } from "../ast/statement/assembly";
@@ -21,14 +21,14 @@ import {
 	AlternativeStatement,
 	DoWhileStatement,
 	IfStatement,
-	WhileStatement
+	WhileStatement,
 } from "../ast/statement/branch";
 import { GCExpression, SCFSStatement } from "../ast/statement/coord";
 import { DeltaStatement } from "../ast/statement/deltas";
 import {
 	GraphStateStatement,
 	GraphStateStatement1,
-	IupStatement
+	IupStatement,
 } from "../ast/statement/graph-state";
 import { LIp, LMdap, LMdrp, LMiap, LMirp } from "../ast/statement/move-point";
 import { ReturnStatement } from "../ast/statement/return";
@@ -45,7 +45,7 @@ function createFuncScopeSolver(store: EdslProgramStore): TtFunctionScopeSolver<V
 			const fr = store.fpgm.get(v);
 			if (fr) return fr.scope;
 			else return undefined;
-		}
+		},
 	};
 }
 
@@ -118,9 +118,7 @@ export class EdslGlobal {
 		const { scope: ls, program: funcProgram } = fpgmRec;
 		ls.assignID();
 		const asm = new Assembler();
-		asm.push(v)
-			.prim(TTI.FDEF)
-			.deleted(1);
+		asm.push(v).prim(TTI.FDEF).deleted(1);
 		if (funcProgram instanceof AssemblyStatement) {
 			asm.added(ls.arguments.size);
 			funcProgram.refer(asm);
@@ -244,20 +242,18 @@ export class EdslProgram {
 		}
 		return ret;
 	}
+	public begin(...statements: Statement[]) {
+		return () => statements;
+	}
 	public if(
 		condition: number | Expression,
-		consequent: () => Iterable<Statement>,
-		alternate?: () => Iterable<Statement>
+		FConsequence?: () => Iterable<Statement>,
+		FAlternate?: () => Iterable<Statement>
 	) {
-		if (alternate) {
-			return new IfStatement(
-				condition,
-				new AlternativeStatement(consequent()),
-				new AlternativeStatement(alternate())
-			);
-		} else {
-			return new IfStatement(condition, new AlternativeStatement(consequent()));
-		}
+		const consequence = FConsequence ? new AlternativeStatement(FConsequence()) : null;
+		const alternate = FAlternate ? new AlternativeStatement(FAlternate()) : null;
+
+		return new IfStatement(condition, consequence, alternate);
 	}
 	public while(condition: number | Expression, consequent: () => Iterable<Statement>) {
 		return new WhileStatement(condition, new AlternativeStatement(consequent()));
@@ -266,7 +262,7 @@ export class EdslProgram {
 		return {
 			while(condition: number | Expression) {
 				return new DoWhileStatement(new AlternativeStatement(consequent()), condition);
-			}
+			},
 		};
 	}
 
@@ -322,32 +318,41 @@ export class EdslProgram {
 	public and = (a: number | Expression, b: number | Expression) => BinaryExpression.And(a, b);
 	public or = (a: number | Expression, b: number | Expression) => BinaryExpression.Or(a, b);
 
+	public addSet = (a: Variable, x: number | Expression) =>
+		new VariableSet(a, BinaryExpression.Add(a, x));
+	public subSet = (a: Variable, x: number | Expression) =>
+		new VariableSet(a, BinaryExpression.Sub(a, x));
+	public mulSet = (a: Variable, x: number | Expression) =>
+		new VariableSet(a, BinaryExpression.Mul(a, x));
+	public divSet = (a: Variable, x: number | Expression) =>
+		new VariableSet(a, BinaryExpression.Div(a, x));
+
 	// Unary
-	public abs = (a: number | Expression) => new UnaryExpression(TTI.ABS, a, a => Math.abs(a));
-	public neg = (a: number | Expression) => new UnaryExpression(TTI.NEG, a, a => -a);
+	public abs = (a: number | Expression) => new UnaryExpression(TTI.ABS, a, (a) => Math.abs(a));
+	public neg = (a: number | Expression) => new UnaryExpression(TTI.NEG, a, (a) => -a);
 	public floor = (a: number | Expression) =>
-		new UnaryExpression(TTI.FLOOR, a, a => Math.floor(a / 64) * 64);
+		new UnaryExpression(TTI.FLOOR, a, (a) => Math.floor(a / 64) * 64);
 	public ceiling = (a: number | Expression) =>
-		new UnaryExpression(TTI.CEILING, a, a => Math.ceil(a / 64) * 64);
+		new UnaryExpression(TTI.CEILING, a, (a) => Math.ceil(a / 64) * 64);
 	public even = (a: number | Expression) => new UnaryExpression(TTI.EVEN, a);
 	public odd = (a: number | Expression) => new UnaryExpression(TTI.ODD, a);
-	public not = (a: number | Expression) => new UnaryExpression(TTI.NOT, a, a => (a ? 0 : 1));
+	public not = (a: number | Expression) => new UnaryExpression(TTI.NOT, a, (a) => (a ? 0 : 1));
 	public round = {
 		gray: (a: number | Expression) => new UnaryExpression(TTI.ROUND_Grey, a),
 		black: (a: number | Expression) => new UnaryExpression(TTI.ROUND_Black, a),
 		white: (a: number | Expression) => new UnaryExpression(TTI.ROUND_White, a),
-		mode3: (a: number | Expression) => new UnaryExpression(TTI.ROUND_Undef4, a)
+		mode3: (a: number | Expression) => new UnaryExpression(TTI.ROUND_Undef4, a),
 	};
 	public nRound = {
 		gray: (a: number | Expression) => new UnaryExpression(TTI.NROUND_Grey, a),
 		black: (a: number | Expression) => new UnaryExpression(TTI.NROUND_Black, a),
 		white: (a: number | Expression) => new UnaryExpression(TTI.NROUND_White, a),
-		mode3: (a: number | Expression) => new UnaryExpression(TTI.NROUND_Undef4, a)
+		mode3: (a: number | Expression) => new UnaryExpression(TTI.NROUND_Undef4, a),
 	};
 	public getInfo = (a: number | Expression) => new UnaryExpression(TTI.GETINFO, a);
 	public gc = {
 		cur: (a: number | Expression) => new GCExpression(a, TTI.GC_cur, this.scope),
-		orig: (a: number | Expression) => new GCExpression(a, TTI.GC_orig, this.scope)
+		orig: (a: number | Expression) => new GCExpression(a, TTI.GC_orig, this.scope),
 	};
 
 	//
@@ -376,7 +381,7 @@ export class EdslProgram {
 	public rawState = {
 		szp0: (a: number | Expression) => new GraphStateStatement1(TTI.SZP0, a),
 		szp1: (a: number | Expression) => new GraphStateStatement1(TTI.SZP1, a),
-		szp2: (a: number | Expression) => new GraphStateStatement1(TTI.SZP2, a)
+		szp2: (a: number | Expression) => new GraphStateStatement1(TTI.SZP2, a),
 	};
 
 	// Deltas
@@ -386,49 +391,49 @@ export class EdslProgram {
 				this.scope,
 				TTI.DELTAP1,
 				true,
-				a.map(x => x[0]),
-				a.map(x => x[1])
+				a.map((x) => x[0]),
+				a.map((x) => x[1])
 			),
 		p2: (...a: [number | Expression, number | Expression][]) =>
 			new DeltaStatement(
 				this.scope,
 				TTI.DELTAP2,
 				true,
-				a.map(x => x[0]),
-				a.map(x => x[1])
+				a.map((x) => x[0]),
+				a.map((x) => x[1])
 			),
 		p3: (...a: [number | Expression, number | Expression][]) =>
 			new DeltaStatement(
 				this.scope,
 				TTI.DELTAP3,
 				true,
-				a.map(x => x[0]),
-				a.map(x => x[1])
+				a.map((x) => x[0]),
+				a.map((x) => x[1])
 			),
 		c1: (...a: [number | PointerExpression, number | Expression][]) =>
 			new DeltaStatement(
 				this.scope,
 				TTI.DELTAC1,
 				false,
-				a.map(x => x[0]),
-				a.map(x => x[1])
+				a.map((x) => x[0]),
+				a.map((x) => x[1])
 			),
 		c2: (...a: [number | PointerExpression, number | Expression][]) =>
 			new DeltaStatement(
 				this.scope,
 				TTI.DELTAC2,
 				false,
-				a.map(x => x[0]),
-				a.map(x => x[1])
+				a.map((x) => x[0]),
+				a.map((x) => x[1])
 			),
 		c3: (...a: [number | PointerExpression, number | Expression][]) =>
 			new DeltaStatement(
 				this.scope,
 				TTI.DELTAC3,
 				false,
-				a.map(x => x[0]),
-				a.map(x => x[1])
-			)
+				a.map((x) => x[0]),
+				a.map((x) => x[1])
+			),
 	};
 
 	// Measure
@@ -440,11 +445,11 @@ export class EdslProgram {
 	// GS
 	public svtca = {
 		x: () => new GraphStateStatement(TTI.SVTCA_x),
-		y: () => new GraphStateStatement(TTI.SVTCA_y)
+		y: () => new GraphStateStatement(TTI.SVTCA_y),
 	};
 	public iup = {
 		x: () => new IupStatement(TTI.IUP_x),
-		y: () => new IupStatement(TTI.IUP_y)
+		y: () => new IupStatement(TTI.IUP_y),
 	};
 
 	// GetVariation
@@ -456,18 +461,18 @@ export class EdslProgram {
 	}
 
 	// NOP
-	public emptyBlock = () => function*(): Iterable<Statement> {};
+	public emptyBlock = () => function* (): Iterable<Statement> {};
 
 	// Coercions
 	public coerce = {
 		fromIndex: {
 			cvt: (e: number | Expression) => new CoercedVariable(cExpr(e), ControlValueAccessor),
 			variable: (e: number | Expression, size = 1) =>
-				new CoercedVariable(cExpr(e), VariableAccessor, size)
+				new CoercedVariable(cExpr(e), VariableAccessor, size),
 		},
 		toF26D6(x: number) {
 			return Math.round(x * 64);
-		}
+		},
 	};
 }
 

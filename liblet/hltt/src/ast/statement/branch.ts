@@ -27,7 +27,7 @@ export class IfStatement extends Statement {
 	private readonly condition: Expression;
 	constructor(
 		_condition: number | Expression,
-		public readonly consequent: AlternativeStatement,
+		public readonly consequent?: null | undefined | AlternativeStatement,
 		public readonly alternate?: null | undefined | AlternativeStatement
 	) {
 		super();
@@ -35,7 +35,7 @@ export class IfStatement extends Statement {
 	}
 	public refer(asm: Assembler) {
 		this.condition.refer(asm);
-		this.consequent.refer(asm);
+		if (this.consequent) this.consequent.refer(asm);
 		if (this.alternate) this.alternate.refer(asm);
 	}
 	public willReturnAfter() {
@@ -50,13 +50,29 @@ export class IfStatement extends Statement {
 		const hBegin = asm.blockBegin();
 		this.condition.compile(asm);
 		asm.prim(TTI.IF).deleted(1);
-		this.consequent.compile(asm);
+		if (this.consequent) {
+			this.consequent.compile(asm);
+		}
 		if (this.alternate) {
 			asm.prim(TTI.ELSE);
 			this.alternate.compile(asm);
 		}
 		asm.prim(TTI.EIF);
 		asm.blockEnd(hBegin);
+	}
+	public then(consequence: () => Iterable<Statement>) {
+		return new IfStatement(
+			this.condition,
+			new AlternativeStatement(consequence()),
+			this.alternate
+		);
+	}
+	public else(alternate: () => Iterable<Statement>) {
+		return new IfStatement(
+			this.condition,
+			this.consequent,
+			new AlternativeStatement(alternate())
+		);
 	}
 }
 
