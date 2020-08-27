@@ -1,6 +1,6 @@
 {
 	"name": "@chlorophytum/final-hint-format-hltt",
-	"version": "0.10.2",
+	"version": "0.10.3",
 	"description": "",
 	"main": "lib/index.js",
 	"typings": "lib/index.d.ts",
@@ -12,8 +12,8 @@
 	"author": "Renzhi Li (aka. Belleve Invis)",
 	"license": "MIT",
 	"dependencies": {
-		"@chlorophytum/arch": "^0.10.2",
-		"@chlorophytum/hltt": "^0.10.2",
+		"@chlorophytum/arch": "^0.10.3",
+		"@chlorophytum/hltt": "^0.10.3",
 		"tslib": "^2.0.1",
 		"typable": "^1.0.0"
 	},
