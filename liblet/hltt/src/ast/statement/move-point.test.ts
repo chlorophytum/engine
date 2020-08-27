@@ -7,11 +7,11 @@ import { compileProgram } from "../test-util";
 import { AlternativeStatement } from "./branch";
 import { LIp, LMdap, LMdrp } from "./move-point";
 
-test("Statement: Long MDAP", t => {
-	const asm = compileProgram(function*(gs, ls) {
-		yield new AlternativeStatement([
+test("Statement: Long MDAP", (t) => {
+	const asm = compileProgram(function* (gs, ls) {
+		yield AlternativeStatement.from(
 			new LMdap(ls, true, new VolatileExpression(new ConstantExpression(1)))
-		]);
+		);
 	});
 	t.deepEqual(
 		asm.codeGen(new TextInstrSink()),
@@ -35,8 +35,8 @@ test("Statement: Long MDAP", t => {
 	);
 });
 
-test("Statement: MDRP", t => {
-	const asm = compileProgram(function*(gs, ls) {
+test("Statement: MDRP", (t) => {
+	const asm = compileProgram(function* (gs, ls) {
 		yield new LMdap(ls, true, ~1);
 		yield new LMdrp(ls, false, false, false, 0, ~1, 2);
 		yield new LMdrp(ls, true, false, false, 0, 2, 3);
@@ -59,8 +59,8 @@ test("Statement: MDRP", t => {
 	t.is(asm.getRegister("rp2"), 4);
 });
 
-test("Statement: IP", t => {
-	const asm = compileProgram(function*(gs, ls) {
+test("Statement: IP", (t) => {
+	const asm = compileProgram(function* (gs, ls) {
 		yield new LIp(ls, 1, 2, [3, ~4, ~5, new VolatileExpression(new ConstantExpression(6))]);
 	});
 	t.deepEqual(

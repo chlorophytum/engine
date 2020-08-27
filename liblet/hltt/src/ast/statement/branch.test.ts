@@ -10,8 +10,8 @@ test("Statement: If", (t) => {
 	const asm = compileFdef(function* (gs, ls) {
 		yield new IfStatement(
 			1,
-			new AlternativeStatement([BinaryExpression.Add(1, 2)]),
-			new AlternativeStatement([BinaryExpression.Add(3, 4)])
+			AlternativeStatement.from(BinaryExpression.Add(1, 2)),
+			AlternativeStatement.from(BinaryExpression.Add(3, 4))
 		);
 	});
 	t.deepEqual(
@@ -54,7 +54,7 @@ test("Statement: If EDSL", (t) => {
 
 test("Statement: While", (t) => {
 	const asm = compileFdef(function* (gs, ls) {
-		yield new WhileStatement(1, new AlternativeStatement([BinaryExpression.Add(1, 2)]));
+		yield new WhileStatement(1, AlternativeStatement.from(BinaryExpression.Add(1, 2)));
 	});
 	t.deepEqual(
 		asm.codeGen(new TextInstrSink(true)),
@@ -72,7 +72,7 @@ test("Statement: While", (t) => {
 
 test("Statement: Do-while", (t) => {
 	const asm = compileFdef(function* (gs, ls) {
-		yield new DoWhileStatement(new AlternativeStatement([BinaryExpression.Add(1, 2)]), 1);
+		yield new DoWhileStatement(AlternativeStatement.from(BinaryExpression.Add(1, 2)), 1);
 	});
 	t.deepEqual(
 		asm.codeGen(new TextInstrSink(true)),

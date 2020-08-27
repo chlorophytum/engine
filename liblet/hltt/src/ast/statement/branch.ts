@@ -3,9 +3,11 @@ import Assembler from "../../ir";
 import { cExpr } from "../expression/constant";
 import { Expression, Statement } from "../interface";
 
+export type StatementBody = Statement | (() => Iterable<Statement>);
+
 export class AlternativeStatement extends Statement {
 	private readonly parts: Statement[];
-	constructor(_parts: Iterable<Statement>) {
+	private constructor(_parts: Iterable<Statement>) {
 		super();
 		this.parts = [..._parts];
 	}
@@ -20,6 +22,11 @@ export class AlternativeStatement extends Statement {
 		const hBegin = asm.blockBegin();
 		for (const part of this.parts) part.compile(asm);
 		asm.blockEnd(hBegin);
+	}
+
+	public static from(body: StatementBody) {
+		if (body instanceof Function) return new AlternativeStatement(body());
+		else return new AlternativeStatement([body]);
 	}
 }
 
@@ -60,18 +67,18 @@ export class IfStatement extends Statement {
 		asm.prim(TTI.EIF);
 		asm.blockEnd(hBegin);
 	}
-	public then(consequence: () => Iterable<Statement>) {
+	public then(consequence: StatementBody) {
 		return new IfStatement(
 			this.condition,
-			new AlternativeStatement(consequence()),
+			AlternativeStatement.from(consequence),
 			this.alternate
 		);
 	}
-	public else(alternate: () => Iterable<Statement>) {
+	public else(alternate: StatementBody) {
 		return new IfStatement(
 			this.condition,
 			this.consequent,
-			new AlternativeStatement(alternate())
+			AlternativeStatement.from(alternate)
 		);
 	}
 }

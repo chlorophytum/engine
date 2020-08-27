@@ -21,6 +21,7 @@ import {
 	AlternativeStatement,
 	DoWhileStatement,
 	IfStatement,
+	StatementBody,
 	WhileStatement,
 } from "../ast/statement/branch";
 import { GCExpression, SCFSStatement } from "../ast/statement/coord";
@@ -247,21 +248,21 @@ export class EdslProgram {
 	}
 	public if(
 		condition: number | Expression,
-		FConsequence?: () => Iterable<Statement>,
-		FAlternate?: () => Iterable<Statement>
+		FConsequence?: StatementBody,
+		FAlternate?: StatementBody
 	) {
-		const consequence = FConsequence ? new AlternativeStatement(FConsequence()) : null;
-		const alternate = FAlternate ? new AlternativeStatement(FAlternate()) : null;
+		const consequence = FConsequence ? AlternativeStatement.from(FConsequence) : null;
+		const alternate = FAlternate ? AlternativeStatement.from(FAlternate) : null;
 
 		return new IfStatement(condition, consequence, alternate);
 	}
-	public while(condition: number | Expression, consequent: () => Iterable<Statement>) {
-		return new WhileStatement(condition, new AlternativeStatement(consequent()));
+	public while(condition: number | Expression, consequent: StatementBody) {
+		return new WhileStatement(condition, AlternativeStatement.from(consequent));
 	}
-	public do(consequent: () => Iterable<Statement>) {
+	public do(consequent: StatementBody) {
 		return {
 			while(condition: number | Expression) {
-				return new DoWhileStatement(new AlternativeStatement(consequent()), condition);
+				return new DoWhileStatement(AlternativeStatement.from(consequent), condition);
 			},
 		};
 	}
