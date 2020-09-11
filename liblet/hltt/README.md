@@ -1,4 +1,4 @@
-# Chlorophytum/HlTT ![](https://img.shields.io/circleci/project/github/chlorophytum/HlTT/master.svg)
+# Chlorophytum/HlTT
 
 HlTT is an embedded DSL for TrueType Instructions written in TypeScript.
 
@@ -17,8 +17,8 @@ CALL
 HlTT defines a convenient way to write those binaries by using an embedded DSL in TypeScript (as well as JavaScript):
 
 ```typescript
-import createHlTT, { TextInstr } from "@chlorophytum/HlTT"
-const eg = createDSL()
+import CreateDSL, { TextInstr } from "@chlorophytum/HlTT"
+const eg = CreateDSL()
 
 // Define a function
 const inc = eg.declareFunction("increase", function*(e) {
@@ -52,7 +52,7 @@ console.log(eg.compileProgram(glyph, TextInstr))
 
 ## Global DSL
 
-`createDSL()` crates a global DSL (type `GlobalDsl`) that you can declare functions and programs (for glyphs, FPGM or PREP).
+`CreateDSL()` crates a global DSL (type `Edsl.GlobalDsl`) that you can declare functions and programs (for glyphs, FPGM or PREP).
 
 - `GlobalDsl::createFunction(f: string, b: () => Iterable<Statement>): Variable`
   - Define a function.
@@ -65,7 +65,7 @@ console.log(eg.compileProgram(glyph, TextInstr))
 
 ## Program/Function DSL
 
-Program/Function DSL (type `ProgramDsl`) is used to define the body of a function or a program.
+Program/Function DSL (type `Edsl.ProgramDsl`) is used to define the body of a function or a program.
 
 - Variables
   - `ProgramDsl::args(qty: number): Variable[]`

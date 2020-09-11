@@ -1,5 +1,5 @@
 import { IFinalHintSession, Variation } from "@chlorophytum/arch";
-import { Ast, Edsl, InstrFormat, TtStat } from "@chlorophytum/hltt";
+import { Edsl, InstrFormat, TtStat } from "@chlorophytum/hltt";
 import { implDynamicCast, Typable, TypeRep } from "typable";
 import {
 	CvtGenerator,
@@ -9,12 +9,9 @@ import {
 } from "./program-sink";
 
 export class SharedGlyphPrograms {
-	public fpgm: Map<Ast.Variable<Ast.FunctionAccessor>, Edsl.EdslProgramRecord> = new Map();
-	public programs: Map<string, Edsl.EdslProgramRecord> = new Map();
-	public controlValues: [
-		Ast.Variable<Ast.ControlValueAccessor>,
-		Variation.Variance<number>[]
-	][] = [];
+	public fpgm: Map<Edsl.Variable<Edsl.VkFpgm>, Edsl.ProgramRecord> = new Map();
+	public programs: Map<string, Edsl.ProgramRecord> = new Map();
+	public controlValues: [Edsl.Variable<Edsl.VkCvt>, Variation.Variance<number>[]][] = [];
 }
 
 export interface HlttFinalHintStoreRep<F> {
@@ -41,7 +38,7 @@ export interface HlttSession extends IFinalHintSession {
 export class HlttSessionImpl implements Typable<HlttSession> {
 	public readonly format = "hltt";
 	constructor(
-		private readonly edsl: Edsl.EdslGlobal,
+		private readonly edsl: Edsl.GlobalDsl,
 		private readonly shared: SharedGlyphPrograms
 	) {}
 
@@ -50,9 +47,9 @@ export class HlttSessionImpl implements Typable<HlttSession> {
 	}
 
 	private readonly cacheKeyMaps: Map<string, string> = new Map();
-	private glyphPrograms: Map<string, Edsl.EdslProgramRecord> = new Map();
+	private glyphPrograms: Map<string, Edsl.ProgramRecord> = new Map();
 	private preProgramSegments: ProgramGenerator[] = [];
-	private preProgram: Edsl.EdslProgramRecord | null = null;
+	private preProgram: Edsl.ProgramRecord | null = null;
 
 	public async createGlyphProgramSink(
 		gid: string,

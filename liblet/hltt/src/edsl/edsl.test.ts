@@ -3,13 +3,13 @@ import test from "ava";
 import { compileProgram } from "../ast/test-util";
 import { TextInstr } from "../instr";
 
-import { EdslGlobal, EdslProgram } from ".";
+import { GlobalDsl, ProgramDsl } from ".";
 import { TtStat } from "./stat";
 
 test("EDSL flags test", t => {
-	const asm = compileProgram(function*(gs, ls) {
+	const asm = compileProgram(function* (gs, ls) {
 		const ps = { fpgm: new Map() };
-		const edsl = new EdslProgram(new EdslGlobal(ps), ls);
+		const edsl = new ProgramDsl(new GlobalDsl(ps), ls);
 		const t0 = edsl.twilight();
 		const t1 = edsl.twilight();
 		yield edsl.mdap.round(t1); // Bitwise negating a point means referring a twilight
@@ -34,9 +34,9 @@ test("EDSL flags test", t => {
 	t.is(asm.getRegister("rp2"), 4);
 });
 test("EDSL coercion test", t => {
-	const asm = compileProgram(function*(gs, ls) {
+	const asm = compileProgram(function* (gs, ls) {
 		const ps = { fpgm: new Map() };
-		const edsl = new EdslProgram(new EdslGlobal(ps), ls);
+		const edsl = new ProgramDsl(new GlobalDsl(ps), ls);
 		yield edsl.miap(0, edsl.coerce.fromIndex.cvt(edsl.add(2, 3)).index);
 	});
 	t.deepEqual(
@@ -51,32 +51,32 @@ test("EDSL coercion test", t => {
 test("EDSL function linking", t => {
 	const ps = { fpgm: new Map() };
 	const stat: TtStat = {};
-	const eg = new EdslGlobal(ps, stat);
+	const eg = new GlobalDsl(ps, stat);
 	// Functions
-	const inc = eg.defineFunction("increase", function*(e) {
+	const inc = eg.defineFunction("increase", function* (e) {
 		const [x] = e.args(1);
 		yield e.return(e.add(x, 1));
 	});
-	const inc1 = eg.defineFunction("increase", function*(e) {
+	const inc1 = eg.defineFunction("increase", function* (e) {
 		const [x] = e.args(1);
 		yield e.return(e.add(x, 2));
 	});
 	t.is(inc, inc1);
-	const double = eg.defineFunction("double", function*(e) {
+	const double = eg.defineFunction("double", function* (e) {
 		const [x] = e.args(1);
 		yield e.return(x, x);
 	});
-	const plus = eg.defineFunction("plus", function*(e) {
+	const plus = eg.defineFunction("plus", function* (e) {
 		const [x, y] = e.args(2);
 		yield e.return(e.add(x, y));
 	});
-	const plus3 = eg.defineFunction("plus3", function*(e) {
+	const plus3 = eg.defineFunction("plus3", function* (e) {
 		const [x, y, z] = e.args(3);
 		yield e.return(e.call(plus, x, e.call(plus, y, z)));
 	});
 
 	// Glyph program
-	const glyph = eg.program(function*(e) {
+	const glyph = eg.program(function* (e) {
 		yield e.call(inc, e.call(inc, 1));
 		yield e.call(plus, e.call(double, 3));
 	});
@@ -129,17 +129,17 @@ test("EDSL function linking", t => {
 test("EDSL stat -- recursive", t => {
 	const ps = { fpgm: new Map() };
 	const stat: TtStat = {};
-	const eg = new EdslGlobal(ps, stat);
+	const eg = new GlobalDsl(ps, stat);
 	const add = eg.declareFunction("add");
 
-	eg.defineFunction(add, function*(e) {
+	eg.defineFunction(add, function* (e) {
 		const [x, y] = e.args(2);
 		yield e.if(
 			e.lteq(x, 0),
-			function*() {
+			function* () {
 				yield e.return(y);
 			},
-			function*() {
+			function* () {
 				yield e.return(e.call(add, e.sub(x, 1), e.add(y, 1)));
 			}
 		);

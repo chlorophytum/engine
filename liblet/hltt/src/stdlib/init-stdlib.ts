@@ -1,9 +1,9 @@
 import Assembler from "../asm";
 import { TtGlobalScope } from "../ast/scope";
-import { EdslGlobal } from "../edsl";
+import { GlobalDsl } from "../edsl";
 import { TTI } from "../instr";
 
-export function initStdLib(edsl: EdslGlobal) {
+export function initStdLib(edsl: GlobalDsl) {
 	edsl.scope.useStdLib = true;
 	// Long point standard libraries
 	StdLib.setZoneLp.zp0.register(edsl);
@@ -20,7 +20,7 @@ export class Inliner {
 		private Asm: (a: Assembler, gs: TtGlobalScope) => void
 	) {}
 
-	public register(edsl: EdslGlobal) {
+	public register(edsl: GlobalDsl) {
 		edsl.defineAssemblyFunction(this.name, this.argsArity, this.returnArity, a =>
 			this.Asm(a, edsl.scope)
 		);

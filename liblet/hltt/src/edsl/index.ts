@@ -37,9 +37,11 @@ import { TtGlobalScopeT, TtSymbol } from "../scope";
 import { mxapFunctionSys, mxrpFunctionSys } from "./flags";
 import { TtStat } from "./stat";
 
+export * from "../ast";
+
 type NumExpr = number | Expression;
 
-function createFuncScopeSolver(store: EdslProgramStore): TtFunctionScopeSolver {
+function createFuncScopeSolver(store: ProgramStore): TtFunctionScopeSolver {
 	return {
 		resolve(v: TtSymbol) {
 			const fr = store.fpgm.get(v as Variable<VkFpgm>);
@@ -49,9 +51,9 @@ function createFuncScopeSolver(store: EdslProgramStore): TtFunctionScopeSolver {
 	};
 }
 
-export class EdslGlobal {
+export class GlobalDsl {
 	public readonly scope: TtGlobalScope;
-	constructor(private readonly store: EdslProgramStore, private readonly stat: TtStat = {}) {
+	constructor(private readonly store: ProgramStore, private readonly stat: TtStat = {}) {
 		this.scope = new TtGlobalScopeT(VariableFactory);
 		this.scope.funcScopeSolver = createFuncScopeSolver(this.store);
 		if (stat) {
@@ -68,7 +70,7 @@ export class EdslGlobal {
 
 	public defineFunction(
 		name: string | Variable<VkFpgm>,
-		G: (f: EdslProgram) => Iterable<Statement>
+		G: (f: ProgramDsl) => Iterable<Statement>
 	) {
 		const vFunc: Variable<VkFpgm> =
 			typeof name === "string" ? this.declareFunction(name) : name;
@@ -76,7 +78,7 @@ export class EdslGlobal {
 		if (existing) return vFunc;
 
 		const ls = this.scope.createFunctionScope(vFunc);
-		const edsl = new EdslProgram(this, ls);
+		const edsl = new ProgramDsl(this, ls);
 		const block = new SequenceStatement(G(edsl));
 		block.addLastReturn(ls);
 		this.store.fpgm.set(vFunc, { scope: ls, program: block });
@@ -102,9 +104,9 @@ export class EdslGlobal {
 		return vFunc;
 	}
 
-	public program(G: (f: EdslProgram) => Iterable<Statement>): EdslProgramRecord {
+	public program(G: (f: ProgramDsl) => Iterable<Statement>): ProgramRecord {
 		const ls = this.scope.createProgramScope();
-		const edsl = new EdslProgram(this, ls);
+		const edsl = new ProgramDsl(this, ls);
 		const block = new SequenceStatement([new ProgramBeginStatement(ls), ...G(edsl)]);
 		return { scope: ls, program: block };
 	}
@@ -152,7 +154,7 @@ export class EdslGlobal {
 		return m;
 	}
 
-	public compileProgram<R>(p: EdslProgramRecord, format: InstrFormat<R>): R {
+	public compileProgram<R>(p: ProgramRecord, format: InstrFormat<R>): R {
 		p.scope.assignID();
 		const asm = new Assembler();
 		p.program.compile(asm);
@@ -188,7 +190,7 @@ export class EdslGlobal {
 		return this.stat;
 	}
 
-	public convertSymbol<A extends VarKind>(T: Variable<A> | EdslSymbol<A>) {
+	public convertSymbol<A extends VarKind>(T: Variable<A> | Symbol<A>) {
 		if (T instanceof Function) {
 			return T(this);
 		} else {
@@ -197,17 +199,17 @@ export class EdslGlobal {
 	}
 }
 
-export interface EdslProgramStore {
-	fpgm: Map<Variable<VkFpgm>, EdslProgramRecord>;
+export interface ProgramStore {
+	fpgm: Map<Variable<VkFpgm>, ProgramRecord>;
 }
 
-export interface EdslProgramRecord {
+export interface ProgramRecord {
 	scope: TtProgramScope;
 	program: Statement;
 }
 
-export class EdslProgram {
-	constructor(private readonly globalDsl: EdslGlobal, readonly scope: TtProgramScope) {}
+export class ProgramDsl {
+	constructor(private readonly globalDsl: GlobalDsl, readonly scope: TtProgramScope) {}
 	public args(n: number) {
 		if (!this.scope.isFunction) throw new TypeError("Cannot declare arguments for programs");
 		let a: Variable<VkArgument>[] = [];
@@ -357,14 +359,14 @@ export class EdslProgram {
 	public apply(fn: Variable<VkFpgm>, parts: Iterable<NumExpr>) {
 		return new InvokeExpression(this.scope, fn, parts);
 	}
-	public symbol<A extends VarKind>(T: Variable<A> | EdslSymbol<A>) {
+	public symbol<A extends VarKind>(T: Variable<A> | Symbol<A>) {
 		if (T instanceof Function) {
 			return T(this.globalDsl);
 		} else {
 			return T;
 		}
 	}
-	public call(T: Variable<VkFpgm> | EdslSymbol<VkFpgm>, ...parts: NumExpr[]) {
+	public call(T: Variable<VkFpgm> | Symbol<VkFpgm>, ...parts: NumExpr[]) {
 		if (T instanceof Function) {
 			return new InvokeExpression(this.scope, T(this.globalDsl), parts);
 		} else {
@@ -470,12 +472,12 @@ export class EdslProgram {
 	};
 }
 
-export type EdslTemplate<Ax extends VarKind, A extends any[]> = (
+export type Template<Ax extends VarKind, A extends any[]> = (
 	...args: A
-) => (dsl: EdslGlobal) => Variable<Ax>;
-export type EdslSymbol<Ax extends VarKind> = (dsl: EdslGlobal) => Variable<Ax>;
+) => (dsl: GlobalDsl) => Variable<Ax>;
+export type Symbol<Ax extends VarKind> = (dsl: GlobalDsl) => Variable<Ax>;
 
-export class EdslLibrary {
+export class Library {
 	private fid = 0;
 	constructor(private readonly namePrefix: string) {}
 
@@ -483,53 +485,53 @@ export class EdslLibrary {
 		return this.namePrefix + `::` + this.fid++;
 	}
 
-	public Func(G: (e: EdslProgram) => Iterable<Statement>): EdslSymbol<VkFpgm> {
+	public Func(G: (e: ProgramDsl) => Iterable<Statement>): Symbol<VkFpgm> {
 		const name = this.generateFunctionName();
-		return (dsl: EdslGlobal) =>
-			dsl.defineFunction(dsl.mangleTemplateName(name), (e: EdslProgram) => G(e));
+		return (dsl: GlobalDsl) =>
+			dsl.defineFunction(dsl.mangleTemplateName(name), (e: ProgramDsl) => G(e));
 	}
 
 	public Template<A extends any[]>(
-		G: (e: EdslProgram, ...args: A) => Iterable<Statement>
-	): EdslTemplate<VkFpgm, A> {
+		G: (e: ProgramDsl, ...args: A) => Iterable<Statement>
+	): Template<VkFpgm, A> {
 		const fName = this.generateFunctionName();
-		return (...args: A) => (dsl: EdslGlobal) =>
-			dsl.defineFunction(dsl.mangleTemplateName(fName, ...args), (e: EdslProgram) =>
+		return (...args: A) => (dsl: GlobalDsl) =>
+			dsl.defineFunction(dsl.mangleTemplateName(fName, ...args), (e: ProgramDsl) =>
 				G(e, ...args)
 			);
 	}
 
 	public TemplateEx<A extends any[]>(
 		Identity: (...from: A) => any,
-		G: (e: EdslProgram, ...args: A) => Iterable<Statement>
-	): EdslTemplate<VkFpgm, A> {
+		G: (e: ProgramDsl, ...args: A) => Iterable<Statement>
+	): Template<VkFpgm, A> {
 		const name = this.generateFunctionName();
 		return (...args: A) => {
 			const mangleArgs = Identity(...args);
-			return (dsl: EdslGlobal) =>
-				dsl.defineFunction(dsl.mangleTemplateName(name, ...mangleArgs), (e: EdslProgram) =>
+			return (dsl: GlobalDsl) =>
+				dsl.defineFunction(dsl.mangleTemplateName(name, ...mangleArgs), (e: ProgramDsl) =>
 					G(e, ...args)
 				);
 		};
 	}
 
-	public Twilight(size: number = 1): EdslSymbol<VkTwilight> {
+	public Twilight(size: number = 1): Symbol<VkTwilight> {
 		const name = this.generateFunctionName();
-		return (dsl: EdslGlobal) => dsl.scope.twilights.declare(name, size);
+		return (dsl: GlobalDsl) => dsl.scope.twilights.declare(name, size);
 	}
-	public TwilightTemplate<A extends any[]>(size: number = 1): EdslTemplate<VkTwilight, A> {
+	public TwilightTemplate<A extends any[]>(size: number = 1): Template<VkTwilight, A> {
 		const name = this.generateFunctionName();
-		return (...args: A) => (dsl: EdslGlobal) =>
+		return (...args: A) => (dsl: GlobalDsl) =>
 			dsl.scope.twilights.declare(dsl.mangleTemplateName(name, ...args), size);
 	}
 
-	public ControlValue(size: number = 1): EdslSymbol<VkCvt> {
+	public ControlValue(size: number = 1): Symbol<VkCvt> {
 		const name = this.generateFunctionName();
-		return (dsl: EdslGlobal) => dsl.scope.cvt.declare(name, size);
+		return (dsl: GlobalDsl) => dsl.scope.cvt.declare(name, size);
 	}
-	public ControlValueTemplate<A extends any[]>(size: number = 1): EdslTemplate<VkCvt, A> {
+	public ControlValueTemplate<A extends any[]>(size: number = 1): Template<VkCvt, A> {
 		const name = this.generateFunctionName();
-		return (...args: A) => (dsl: EdslGlobal) =>
+		return (...args: A) => (dsl: GlobalDsl) =>
 			dsl.scope.cvt.declare(dsl.mangleTemplateName(name, ...args), size);
 	}
 }
