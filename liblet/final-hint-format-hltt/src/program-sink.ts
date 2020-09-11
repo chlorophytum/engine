@@ -4,11 +4,13 @@ import {
 	Variation,
 	WellKnownGeometryKind
 } from "@chlorophytum/arch";
-import { EdslSymbol, GlobalDsl, ProgramDsl, Statement, Variable } from "@chlorophytum/hltt";
+import { Ast, Edsl } from "@chlorophytum/hltt";
 import { implDynamicCast, Typable, TypeRep } from "typable";
 
-export type ProgramGenerator = ($: ProgramDsl) => Iterable<Statement>;
-export type CvtGenerator = ($: GlobalDsl) => Iterable<[Variable, Variation.Variance<number>[]]>;
+export type ProgramGenerator = ($: Edsl.EdslProgram) => Iterable<Ast.Statement>;
+export type CvtGenerator = (
+	$: Edsl.EdslGlobal
+) => Iterable<[Ast.Variable<Ast.ControlValueAccessor>, Variation.Variance<number>[]]>;
 
 export const HlttProgramSink = new TypeRep<HlttProgramSink>(
 	"Chlorophytum::HlttFinalHintPlugin::HlttProgramSink"
@@ -16,7 +18,7 @@ export const HlttProgramSink = new TypeRep<HlttProgramSink>(
 export interface HlttProgramSink extends IFinalHintProgramSink {
 	addSegment(gen: ProgramGenerator): void;
 	setDefaultControlValue(
-		symbol: EdslSymbol,
+		symbol: Edsl.EdslSymbol<Ast.ControlValueAccessor>,
 		...values: (number | Variation.Variance<number>)[]
 	): void;
 	resolveGlyphPoint(from: Geometry.PointReference): number;
@@ -25,7 +27,10 @@ export interface HlttProgramSink extends IFinalHintProgramSink {
 export class HlttProgramSinkImpl implements Typable<HlttProgramSink> {
 	public readonly format = "hltt";
 	private readonly generators: ProgramGenerator[] = [];
-	private readonly pendingCvtSets: [EdslSymbol, Variation.Variance<number>[]][] = [];
+	private readonly pendingCvtSets: [
+		Edsl.EdslSymbol<Ast.ControlValueAccessor>,
+		Variation.Variance<number>[]
+	][] = [];
 
 	constructor(private fSave: (gen: ProgramGenerator, genCvt: CvtGenerator) => void) {}
 
@@ -37,7 +42,7 @@ export class HlttProgramSinkImpl implements Typable<HlttProgramSink> {
 		this.generators.push(gen);
 	}
 	public setDefaultControlValue(
-		symbol: EdslSymbol,
+		symbol: Edsl.EdslSymbol<Ast.ControlValueAccessor>,
 		...values: (number | Variation.Variance<number>)[]
 	) {
 		let results: Variation.Variance<number>[] = [];
@@ -48,12 +53,17 @@ export class HlttProgramSinkImpl implements Typable<HlttProgramSink> {
 		this.pendingCvtSets.push([symbol, results]);
 	}
 	public save() {
-		this.fSave($ => this.buildProgram($), $ => this.buildCvt($));
+		this.fSave(
+			$ => this.buildProgram($),
+			$ => this.buildCvt($)
+		);
 	}
-	private *buildProgram($: ProgramDsl) {
+	private *buildProgram($: Edsl.EdslProgram) {
 		for (const gen of this.generators) yield* gen($);
 	}
-	private *buildCvt($: GlobalDsl): IterableIterator<[Variable, Variation.Variance<number>[]]> {
+	private *buildCvt(
+		$: Edsl.EdslGlobal
+	): IterableIterator<[Ast.Variable<Ast.ControlValueAccessor>, Variation.Variance<number>[]]> {
 		for (const [symbol, value] of this.pendingCvtSets) {
 			yield [$.convertSymbol(symbol), value];
 		}

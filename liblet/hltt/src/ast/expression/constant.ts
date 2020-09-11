@@ -1,5 +1,5 @@
-import Assembler from "../../ir";
-import { PushValue } from "../../ir/ir";
+import Assembler from "../../asm";
+import { PushValue } from "../../asm/asm-instr";
 import { Expression } from "../interface";
 
 export class ConstantExpression extends Expression {
@@ -11,8 +11,7 @@ export class ConstantExpression extends Expression {
 		if (typeof this.x !== "number") asm.refValue(this.x);
 		asm.intro(this.x);
 	}
-	public refer() {}
-	public constant() {
+	public isConstant() {
 		if (typeof this.x === "number") return this.x;
 		else return this.x.resolve();
 	}
@@ -24,9 +23,6 @@ export class VolatileExpression extends Expression {
 	}
 	get arity() {
 		return this.x.arity;
-	}
-	public refer(asm: Assembler) {
-		this.x.refer(asm);
 	}
 	public compile(asm: Assembler) {
 		this.x.compile(asm);

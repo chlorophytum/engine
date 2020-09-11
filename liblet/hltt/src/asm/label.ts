@@ -1,6 +1,6 @@
-import { CPushValue, TtIR } from "./ir";
+import { CPushValue, TtAsmInstr } from "./asm-instr";
 
-export class TtLabel implements TtIR {
+export class TtLabel implements TtAsmInstr {
 	offset: number = 0;
 	allowByte: boolean = true;
 	codeGen() {}
@@ -22,7 +22,7 @@ export class TtLabelDifference implements CPushValue {
 	}
 }
 
-export class TtCPushValueRef implements TtIR {
+export class TtCPushValueRef implements TtAsmInstr {
 	constructor(private cpv: CPushValue) {}
 	last: number | undefined = undefined;
 	codeGen() {

@@ -1,9 +1,8 @@
+import Assembler from "../../asm";
 import { TTI } from "../../instr";
-import Assembler from "../../ir";
-import { ProgramScope } from "../../scope";
 import { cExpr1 } from "../expression/constant";
-import { Expression, Statement, Variable } from "../interface";
-
+import { Expression, Statement } from "../interface";
+import { TtProgramScope } from "../scope";
 import { addLongPointNumber } from "./long-point";
 
 export class GCExpression extends Expression {
@@ -11,16 +10,13 @@ export class GCExpression extends Expression {
 	constructor(
 		_z: number | Expression,
 		private readonly op: TTI,
-		private readonly ls: ProgramScope<Variable>
+		private readonly ls: TtProgramScope
 	) {
 		super();
 		this.z = cExpr1(_z);
 	}
 	get arity() {
 		return 1;
-	}
-	public refer(asm: Assembler) {
-		this.z.refer(asm);
 	}
 	public compile(asm: Assembler) {
 		addLongPointNumber(this.ls, asm, this.z, "zp2");
@@ -34,15 +30,11 @@ export class SCFSStatement extends Statement {
 	constructor(
 		_z: number | Expression,
 		_d: number | Expression,
-		private readonly ls: ProgramScope<Variable>
+		private readonly ls: TtProgramScope
 	) {
 		super();
 		this.z = cExpr1(_z);
 		this.d = cExpr1(_d);
-	}
-	public refer(asm: Assembler) {
-		this.z.refer(asm);
-		this.d.refer(asm);
 	}
 	public compile(asm: Assembler) {
 		this.d.compile(asm);

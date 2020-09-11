@@ -1,15 +1,15 @@
+import Assembler from "../../asm";
 import { TTI } from "../../instr";
-import Assembler from "../../ir";
-import { ProgramScope } from "../../scope";
 import { Expression, Variable } from "../interface";
-
+import { TtProgramScope } from "../scope";
+import { VkFpgm } from "../variable-kinds";
 import { cExpr } from "./constant";
 
 export class InvokeExpression extends Expression {
 	private readonly parts: Expression[];
 	constructor(
-		private readonly scope: ProgramScope<Variable>,
-		private readonly pFunction: Variable,
+		private readonly scope: TtProgramScope,
+		private readonly pFunction: Variable<VkFpgm>,
 		_parts: Iterable<number | Expression>
 	) {
 		super();
@@ -19,9 +19,6 @@ export class InvokeExpression extends Expression {
 		const fn = this.scope.globals.funcScopeSolver.resolve(this.pFunction);
 		if (!fn) return 0;
 		else return fn.returnArity || 0;
-	}
-	public refer(asm: Assembler) {
-		for (const part of this.parts) part.refer(asm);
 	}
 	public compile(asm: Assembler) {
 		let argArity = 1; // Function # is the last arg
@@ -33,8 +30,9 @@ export class InvokeExpression extends Expression {
 		const fnArgArity = fn ? fn.arguments.size : 0;
 		if (fn && argArity !== fnArgArity + 1) {
 			throw new TypeError(
-				`Function arity for ${this.pFunction} mismatch: Given ${argArity -
-					1}, Required ${fnArgArity}`
+				`Function arity for ${this.pFunction} mismatch: Given ${
+					argArity - 1
+				}, Required ${fnArgArity}`
 			);
 		}
 		this.pFunction.compilePtr(asm);

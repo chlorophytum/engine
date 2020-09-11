@@ -2,12 +2,12 @@ import { __values } from "tslib";
 
 import { BinaryInstrSink, InstrSink, TTI } from "../instr";
 
-import { PushValue, TtIR } from "./ir";
+import { PushValue, TtAsmInstr } from "./asm-instr";
 
-export class PushSequence implements TtIR {
-	values: (PushValue)[] = [];
+export class PushSequence implements TtAsmInstr {
+	values: PushValue[] = [];
 
-	add(...xs: (PushValue)[]) {
+	add(...xs: PushValue[]) {
 		for (const x of xs) this.values.push(x);
 	}
 

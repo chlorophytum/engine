@@ -1,7 +1,6 @@
-import Assembler from "../../ir";
-import { ProgramScope } from "../../scope";
-import { Statement, Variable } from "../interface";
-
+import Assembler from "../../asm";
+import { Statement } from "../interface";
+import { TtProgramScope } from "../scope";
 import { BeginStatement } from "./begin";
 import { LastReturnStatement } from "./return";
 
@@ -11,9 +10,6 @@ export class SequenceStatement extends Statement {
 		super();
 		this.parts = [..._parts];
 	}
-	public refer(asm: Assembler) {
-		for (const part of this.parts) part.refer(asm);
-	}
 	public compile(asm: Assembler) {
 		for (const st of this.parts) st.compile(asm);
 	}
@@ -21,7 +17,7 @@ export class SequenceStatement extends Statement {
 		const last = this.parts[this.parts.length - 1];
 		return last && last.willReturnAfter();
 	}
-	public addLastReturn(scope: ProgramScope<Variable>) {
+	public addLastReturn(scope: TtProgramScope) {
 		const last = this.parts[this.parts.length - 1];
 		if (last && last instanceof LastReturnStatement) {
 			this.parts[this.parts.length - 1] = new LastReturnStatement(scope, last.parts);

@@ -1,6 +1,6 @@
 import { InstrSink, TTI } from "../instr";
 
-import { CPushValue, PushValue, TtIR } from "./ir";
+import { CPushValue, PushValue, TtAsmInstr } from "./asm-instr";
 import { TtCPushValueRef, TtLabel, TtLabelDifference } from "./label";
 import { PrimIR, PseudoPrimIR } from "./prim";
 import { PushSequence } from "./push";
@@ -25,7 +25,7 @@ export default class Assembler {
 	private rises: Rise[];
 	private stackHeight = 0;
 
-	private irs: TtIR[] = [];
+	private irs: TtAsmInstr[] = [];
 	public maxStackHeight = 0;
 	private registers: Registers = {};
 
@@ -36,7 +36,7 @@ export default class Assembler {
 	private updateMaxStackHeight() {
 		if (this.stackHeight > this.maxStackHeight) this.maxStackHeight = this.stackHeight;
 	}
-	public ir(ir: TtIR) {
+	public ir(ir: TtAsmInstr) {
 		this.irs.push(ir);
 		return this;
 	}
@@ -146,9 +146,7 @@ export default class Assembler {
 		if (offset === 1) {
 			this.prim(TTI.DUP, 0, 1);
 		} else {
-			this.pseudoPrim(0, 1, 2)
-				.push(offset)
-				.prim(TTI.CINDEX);
+			this.pseudoPrim(0, 1, 2).push(offset).prim(TTI.CINDEX);
 		}
 	}
 

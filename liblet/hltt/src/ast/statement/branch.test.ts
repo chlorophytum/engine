@@ -6,7 +6,7 @@ import { compileFdef } from "../test-util";
 
 import { AlternativeStatement, DoWhileStatement, IfStatement, WhileStatement } from "./branch";
 
-test("Statement: If", (t) => {
+test("Statement: If", t => {
 	const asm = compileFdef(function* (gs, ls) {
 		yield new IfStatement(
 			1,
@@ -30,7 +30,7 @@ test("Statement: If", (t) => {
 	);
 });
 
-test("Statement: If EDSL", (t) => {
+test("Statement: If EDSL", t => {
 	const asm = compileFdef(function* (gs, ls) {
 		yield new IfStatement(1)
 			.then(() => [BinaryExpression.Add(1, 2)])
@@ -52,7 +52,7 @@ test("Statement: If EDSL", (t) => {
 	);
 });
 
-test("Statement: While", (t) => {
+test("Statement: While", t => {
 	const asm = compileFdef(function* (gs, ls) {
 		yield new WhileStatement(1, AlternativeStatement.from(BinaryExpression.Add(1, 2)));
 	});
@@ -70,7 +70,7 @@ test("Statement: While", (t) => {
 	);
 });
 
-test("Statement: Do-while", (t) => {
+test("Statement: Do-while", t => {
 	const asm = compileFdef(function* (gs, ls) {
 		yield new DoWhileStatement(AlternativeStatement.from(BinaryExpression.Add(1, 2)), 1);
 	});

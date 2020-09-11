@@ -1,14 +1,6 @@
 import { IFinalHintCollector, Variation } from "@chlorophytum/arch";
-import {
-	CreateDSL,
-	GlobalDsl,
-	initStdLib,
-	InstrFormat,
-	TtStat,
-	Variable
-} from "@chlorophytum/hltt";
+import { Ast, CreateDSL, Edsl, initStdLib, InstrFormat, TtStat } from "@chlorophytum/hltt";
 import { implDynamicCast, Typable, TypeRep } from "typable";
-
 import { HlttPreStatSink } from "./pre-stat-sink";
 import { HlttSession, HlttSessionImpl, SharedGlyphPrograms } from "./session";
 
@@ -17,14 +9,14 @@ export const HlttCollector = new TypeRep<HlttCollector>(
 );
 export interface HlttCollector extends IFinalHintCollector {
 	createSession(): HlttSession;
-	getFunctionDefs<F>(format: InstrFormat<F>): Map<Variable, F>;
+	getFunctionDefs<F>(format: InstrFormat<F>): Map<Ast.Variable<Ast.FunctionAccessor>, F>;
 	getControlValueDefs(): (undefined | Variation.Variance<number>)[];
 	getStats(): TtStat;
 }
 
 export class HlttCollectorImpl implements Typable<HlttCollector> {
 	public readonly format = "hltt";
-	private readonly edsl: GlobalDsl;
+	private readonly edsl: Edsl.EdslGlobal;
 	private shared = new SharedGlyphPrograms();
 
 	constructor(pss: HlttPreStatSink) {

@@ -1,15 +1,14 @@
-import Assembler from "../../ir";
-import { ProgramScope } from "../../scope";
-import { Statement, Variable } from "../interface";
+import Assembler from "../../asm";
+import { Statement } from "../interface";
+import { TtProgramScope } from "../scope";
 
 export class AssemblyStatement extends Statement {
 	constructor(
-		protected readonly scope: ProgramScope<Variable>,
+		protected readonly scope: TtProgramScope,
 		protected readonly Asm: (a: Assembler) => void
 	) {
 		super();
 	}
-	public refer(asm: Assembler) {}
 	public compile(asm: Assembler) {
 		this.Asm(asm);
 	}

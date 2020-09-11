@@ -1,5 +1,5 @@
 import { TTI } from "../../instr";
-import Assembler from "../../ir";
+import Assembler from "../../asm";
 import { Expression } from "../interface";
 
 import { cExpr1 } from "./constant";
@@ -18,22 +18,16 @@ export class BinaryExpression extends Expression {
 		this.b = cExpr1(_b);
 	}
 	public readonly arity = 1;
-	public constant() {
-		const ca = this.a.constant();
-		const cb = this.b.constant();
+	public isConstant() {
+		const ca = this.a.isConstant();
+		const cb = this.b.isConstant();
 		if (!this.fold || ca === undefined || cb === undefined) return undefined;
 		else return this.fold(ca, cb);
-	}
-	public refer(asm: Assembler) {
-		this.a.refer(asm);
-		this.b.refer(asm);
 	}
 	public compile(asm: Assembler) {
 		this.a.compile(asm);
 		this.b.compile(asm);
-		asm.prim(this.op)
-			.deleted(2)
-			.added(1);
+		asm.prim(this.op).deleted(2).added(1);
 	}
 
 	public static Add(_a: number | Expression, _b: number | Expression) {
@@ -91,19 +85,14 @@ export class UnaryExpression extends Expression {
 		this.a = cExpr1(_a);
 	}
 	public readonly arity = 1;
-	public constant() {
-		const ca = this.a.constant();
+	public isConstant() {
+		const ca = this.a.isConstant();
 		if (!this.fold || ca === undefined) return undefined;
 		else return this.fold(ca);
 	}
-	public refer(asm: Assembler) {
-		this.a.refer(asm);
-	}
 	public compile(asm: Assembler) {
 		this.a.compile(asm);
-		asm.prim(this.op)
-			.deleted(1)
-			.added(1);
+		asm.prim(this.op).deleted(1).added(1);
 	}
 }
 
@@ -112,10 +101,9 @@ export class NullaryExpression extends Expression {
 		super();
 	}
 	public readonly arity = 1;
-	public constant() {
+	public isConstant() {
 		return undefined;
 	}
-	public refer(asm: Assembler) {}
 	public compile(asm: Assembler) {
 		asm.prim(this.op).added(1);
 	}

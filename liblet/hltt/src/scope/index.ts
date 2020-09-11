@@ -1,35 +1,61 @@
-import { CPushValue } from "../ir/ir";
-import { TtLabel } from "../ir/label";
+import { CPushValue } from "../asm/asm-instr";
+import { TtLabel } from "../asm/label";
 
 export interface TtSymbol extends CPushValue {
 	variableIndex: number | undefined;
 	readonly size: number;
 }
-export interface TtScopeVariableFactory<T extends TtSymbol> {
-	readonly storage: TtVariableFactory<T>;
-	readonly fpgm: TtVariableFactory<T>;
-	readonly cvt: TtVariableFactory<T>;
-	readonly twilight: TtVariableFactory<T>;
-	local: (s: ProgramScope<T>) => TtLocalScopeVariableFactory<T>;
+export interface TtScopeVariableFactoryT<
+	Va extends TtSymbol,
+	Ar extends TtSymbol,
+	Fu extends TtSymbol,
+	Cv extends TtSymbol,
+	Tw extends TtSymbol
+> {
+	readonly storage: TtVariableFactory<Va>;
+	readonly fpgm: TtVariableFactory<Fu>;
+	readonly cvt: TtVariableFactory<Cv>;
+	readonly twilight: TtVariableFactory<Tw>;
+	local: (
+		s: TtProgramScopeT<Va, Ar, Fu, Cv, Tw>
+	) => TtLocalScopeVariableFactoryT<Va, Ar, Fu, Cv, Tw>;
 }
-export interface TtLocalScopeVariableFactory<T extends TtSymbol> {
-	readonly local: TtVariableFactory<T>;
-	readonly argument: TtVariableFactory<T>;
-	readonly localTwilight: TtVariableFactory<T>;
+export interface TtLocalScopeVariableFactoryT<
+	Va extends TtSymbol,
+	Ar extends TtSymbol,
+	Fu extends TtSymbol,
+	Cv extends TtSymbol,
+	Tw extends TtSymbol
+> {
+	readonly local: TtVariableFactory<Va>;
+	readonly argument: TtVariableFactory<Ar>;
+	readonly localTwilight: TtVariableFactory<Tw>;
 }
-export interface TtFunctionScopeSolver<T extends TtSymbol> {
-	resolve(v: T): ProgramScope<T> | undefined;
+export interface TtFunctionScopeSolverT<
+	Va extends TtSymbol,
+	Ar extends TtSymbol,
+	Fu extends TtSymbol,
+	Cv extends TtSymbol,
+	Tw extends TtSymbol
+> {
+	resolve(v: TtSymbol): TtProgramScopeT<Va, Ar, Fu, Cv, Tw> | undefined;
 }
 
-export class GlobalScope<T extends TtSymbol> {
+export class TtGlobalScopeT<
+	Va extends TtSymbol,
+	Ar extends TtSymbol,
+	Fu extends TtSymbol,
+	Cv extends TtSymbol,
+	Tw extends TtSymbol
+> {
 	public useStdLib: boolean = false;
-	public sp: T; // #SP storage, used for recursion
-	public storages: TtNamedSymbolTable<T>; // Storage
-	public fpgm: TtNamedSymbolTable<T>; // FPGM
-	public cvt: TtNamedSymbolTable<T>; // CVT
-	public twilights: TtNamedSymbolTable<T>; // Twilight points
+	public sp: Va; // #SP storage, used for recursion
+	public storages: TtNamedSymbolTable<Va>; // Storage
+	public fpgm: TtNamedSymbolTable<Fu>; // FPGM
+	public cvt: TtNamedSymbolTable<Cv>; // CVT
+	public twilights: TtNamedSymbolTable<Tw>; // Twilight points
 
-	constructor(private readonly svf: TtScopeVariableFactory<T>) {
+	constructor(private readonly svf: TtScopeVariableFactoryT<Va, Ar, Fu, Cv, Tw>) {
 		this.storages = new TtNamedSymbolTable(svf.storage);
 		this.fpgm = new TtNamedSymbolTable(svf.fpgm);
 		this.cvt = new TtNamedSymbolTable(svf.cvt);
@@ -37,16 +63,14 @@ export class GlobalScope<T extends TtSymbol> {
 		this.sp = this.storages.declare("#SP");
 	}
 
-	public funcScopeSolver: TtFunctionScopeSolver<T> = {
+	public funcScopeSolver: TtFunctionScopeSolverT<Va, Ar, Fu, Cv, Tw> = {
 		resolve: () => undefined
 	};
 	public createProgramScope() {
-		const ls = new ProgramScope<T>(this, false, this.svf.local);
-		return ls;
+		return new TtProgramScopeT<Va, Ar, Fu, Cv, Tw>(this, false, this.svf.local);
 	}
-	public createFunctionScope(s: T) {
-		const ls = new ProgramScope<T>(this, true, this.svf.local);
-		return ls;
+	public createFunctionScope(s: Fu) {
+		return new TtProgramScopeT<Va, Ar, Fu, Cv, Tw>(this, true, this.svf.local);
 	}
 
 	public assignID() {
@@ -56,11 +80,19 @@ export class GlobalScope<T extends TtSymbol> {
 		this.twilights.assignID();
 	}
 }
-export class ProgramScope<T extends TtSymbol> {
+export class TtProgramScopeT<
+	Va extends TtSymbol,
+	Ar extends TtSymbol,
+	Fu extends TtSymbol,
+	Cv extends TtSymbol,
+	Tw extends TtSymbol
+> {
 	constructor(
-		public readonly globals: GlobalScope<T>,
+		public readonly globals: TtGlobalScopeT<Va, Ar, Fu, Cv, Tw>,
 		readonly isFunction: boolean,
-		SVF: (s: ProgramScope<T>) => TtLocalScopeVariableFactory<T>
+		SVF: (
+			s: TtProgramScopeT<Va, Ar, Fu, Cv, Tw>
+		) => TtLocalScopeVariableFactoryT<Va, Ar, Fu, Cv, Tw>
 	) {
 		const svf = SVF(this);
 		this.locals = new TtSimpleSymbolTable(svf.local);
@@ -68,15 +100,15 @@ export class ProgramScope<T extends TtSymbol> {
 		this.twilights = new TtSimpleSymbolTable(svf.localTwilight); // local twilight points
 	}
 
-	public locals: TtSimpleSymbolTable<T>;
-	public arguments: TtSimpleSymbolTable<T>;
-	public twilights: TtSimpleSymbolTable<T>;
+	public locals: TtSimpleSymbolTable<Va>;
+	public arguments: TtSimpleSymbolTable<Ar>;
+	public twilights: TtSimpleSymbolTable<Tw>;
 	public returnArity: number | undefined = undefined;
 	public maxStack = 0;
 	public return?: TtLabel;
 	public assignID() {
+		// Entry point
 		if (!this.isFunction) {
-			// Entry point
 			this.locals.base = this.globals.storages.base + this.globals.storages.size;
 		}
 		this.locals.assignID();

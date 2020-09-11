@@ -1,16 +1,15 @@
+import Assembler from "../../asm";
 import { TTI } from "../../instr";
-import Assembler from "../../ir";
-import { ProgramScope } from "../../scope";
 import { cExpr1 } from "../expression/constant";
-import { Expression, Statement, Variable } from "../interface";
-
+import { Expression, Statement } from "../interface";
+import { TtProgramScope } from "../scope";
 import { addLongPointNumberD, addLongPointNumberUD, decideTwilight, setZone } from "./long-point";
 
 export class DeltaStatement extends Statement {
 	public readonly targets: Expression[];
 	public readonly arguments: Expression[];
 	constructor(
-		private readonly ls: ProgramScope<Variable>,
+		private readonly ls: TtProgramScope,
 
 		readonly op: TTI,
 		private readonly allowTwilight: boolean,
@@ -20,10 +19,6 @@ export class DeltaStatement extends Statement {
 		super();
 		this.targets = [..._targets].map(cExpr1);
 		this.arguments = [..._arguments].map(cExpr1);
-	}
-	public refer(asm: Assembler) {
-		for (const x of this.targets) x.refer(asm);
-		for (const x of this.arguments) x.refer(asm);
 	}
 	public compile(asm: Assembler) {
 		const run = new TwilightRun(this.ls, this.op, asm);
@@ -38,7 +33,7 @@ export class DeltaStatement extends Statement {
 
 class TwilightRun {
 	constructor(
-		private readonly ls: ProgramScope<Variable>,
+		private readonly ls: TtProgramScope,
 		readonly op: TTI,
 		private readonly asm: Assembler
 	) {}

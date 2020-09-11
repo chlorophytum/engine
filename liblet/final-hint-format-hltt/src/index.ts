@@ -21,5 +21,5 @@ export class CHlttFinalHintFormat implements IFinalHintFormat {
 export const FinalHintFormatPlugin: Plugins.IFinalHintFormatPlugin = {
 	async load() {
 		return new CHlttFinalHintFormat();
-	},
+	}
 };

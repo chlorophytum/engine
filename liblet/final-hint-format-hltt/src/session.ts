@@ -1,7 +1,6 @@
 import { IFinalHintSession, Variation } from "@chlorophytum/arch";
-import { GlobalDsl, InstrFormat, ProgramRecord, TtStat, Variable } from "@chlorophytum/hltt";
+import { Ast, Edsl, InstrFormat, TtStat } from "@chlorophytum/hltt";
 import { implDynamicCast, Typable, TypeRep } from "typable";
-
 import {
 	CvtGenerator,
 	HlttProgramSink,
@@ -10,9 +9,12 @@ import {
 } from "./program-sink";
 
 export class SharedGlyphPrograms {
-	public fpgm: Map<Variable, ProgramRecord> = new Map();
-	public programs: Map<string, ProgramRecord> = new Map();
-	public controlValues: [Variable, Variation.Variance<number>[]][] = [];
+	public fpgm: Map<Ast.Variable<Ast.FunctionAccessor>, Edsl.EdslProgramRecord> = new Map();
+	public programs: Map<string, Edsl.EdslProgramRecord> = new Map();
+	public controlValues: [
+		Ast.Variable<Ast.ControlValueAccessor>,
+		Variation.Variance<number>[]
+	][] = [];
 }
 
 export interface HlttFinalHintStoreRep<F> {
@@ -38,16 +40,19 @@ export interface HlttSession extends IFinalHintSession {
 
 export class HlttSessionImpl implements Typable<HlttSession> {
 	public readonly format = "hltt";
-	constructor(private readonly edsl: GlobalDsl, private readonly shared: SharedGlyphPrograms) {}
+	constructor(
+		private readonly edsl: Edsl.EdslGlobal,
+		private readonly shared: SharedGlyphPrograms
+	) {}
 
 	public dynamicCast<U>(tr: TypeRep<U>): undefined | U {
 		return implDynamicCast(tr, this, HlttSession);
 	}
 
 	private readonly cacheKeyMaps: Map<string, string> = new Map();
-	private glyphPrograms: Map<string, ProgramRecord> = new Map();
+	private glyphPrograms: Map<string, Edsl.EdslProgramRecord> = new Map();
 	private preProgramSegments: ProgramGenerator[] = [];
-	private preProgram: ProgramRecord | null = null;
+	private preProgram: Edsl.EdslProgramRecord | null = null;
 
 	public async createGlyphProgramSink(
 		gid: string,
@@ -78,7 +83,7 @@ export class HlttSessionImpl implements Typable<HlttSession> {
 	}
 	public consolidatePreProgram() {
 		const preSegments = this.preProgramSegments;
-		this.preProgram = this.edsl.program(function*($) {
+		this.preProgram = this.edsl.program(function* ($) {
 			for (const gen of preSegments) yield* gen($);
 		});
 		this.preProgramSegments = [];

@@ -1,8 +1,7 @@
-import { Variable } from "../ast/interface";
+import Assembler from "../asm";
+import { TtGlobalScope } from "../ast/scope";
 import { EdslGlobal } from "../edsl";
 import { TTI } from "../instr";
-import Assembler from "../ir";
-import { GlobalScope } from "../scope";
 
 export function initStdLib(edsl: EdslGlobal) {
 	edsl.scope.useStdLib = true;
@@ -18,7 +17,7 @@ export class Inliner {
 		private readonly name: string,
 		private readonly argsArity: number,
 		private readonly returnArity: number,
-		private Asm: <V extends Variable>(a: Assembler, gs: GlobalScope<V>) => void
+		private Asm: (a: Assembler, gs: TtGlobalScope) => void
 	) {}
 
 	public register(edsl: EdslGlobal) {
@@ -26,7 +25,7 @@ export class Inliner {
 			this.Asm(a, edsl.scope)
 		);
 	}
-	public inline<V extends Variable>(gs: GlobalScope<V>, asm: Assembler) {
+	public inline(gs: TtGlobalScope, asm: Assembler) {
 		if (gs.useStdLib) {
 			gs.fpgm.declare(this.name).compilePtr(asm);
 			asm.prim(TTI.CALL, 1 + this.argsArity, this.returnArity);
@@ -38,7 +37,7 @@ export class Inliner {
 
 export const StdLib = {
 	setZoneLp: {
-		zp0: new Inliner(`stdlib::set-zone-lp-zp0`, 1, 1, function(asm, gs) {
+		zp0: new Inliner(`stdlib::set-zone-lp-zp0`, 1, 1, function (asm, gs) {
 			asm.pseudoPrim(1, 1, 3)
 				.prim(TTI.DUP)
 				.push(0)
@@ -54,7 +53,7 @@ export const StdLib = {
 				.prim(TTI.SZP0)
 				.prim(TTI.EIF);
 		}),
-		zp1: new Inliner(`stdlib::set-zone-lp-zp1`, 1, 1, function(asm, gs) {
+		zp1: new Inliner(`stdlib::set-zone-lp-zp1`, 1, 1, function (asm, gs) {
 			asm.pseudoPrim(1, 1, 3)
 				.prim(TTI.DUP)
 				.push(0)
@@ -70,7 +69,7 @@ export const StdLib = {
 				.prim(TTI.SZP1)
 				.prim(TTI.EIF);
 		}),
-		zp2: new Inliner(`stdlib::set-zone-lp-zp2`, 1, 1, function(asm, gs) {
+		zp2: new Inliner(`stdlib::set-zone-lp-zp2`, 1, 1, function (asm, gs) {
 			asm.pseudoPrim(1, 1, 3)
 				.prim(TTI.DUP)
 				.push(0)
@@ -87,7 +86,7 @@ export const StdLib = {
 				.prim(TTI.EIF);
 		})
 	},
-	getLocalVariable: new Inliner(`stdlib::local-variable-ptr`, 1, 1, function(asm, gs) {
+	getLocalVariable: new Inliner(`stdlib::local-variable-ptr`, 1, 1, function (asm, gs) {
 		asm.intro(gs.sp)
 			.prim(TTI.RS)
 			.deleted(1)

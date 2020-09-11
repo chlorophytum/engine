@@ -1,14 +1,14 @@
+import LongPoint from "../../asm";
 import { TTI } from "../../instr";
-import Assembler from "../../ir";
-import { ProgramScope } from "../../scope";
 import { StdLib } from "../../stdlib/init-stdlib";
-import { Expression, Variable } from "../interface";
+import { Expression } from "../interface";
+import { TtProgramScope } from "../scope";
 
 export function zoneSetInstr(zone: "zp0" | "zp1" | "zp2") {
 	return zone === "zp0" ? TTI.SZP0 : zone === "zp1" ? TTI.SZP1 : TTI.SZP2;
 }
 
-export function setZone(asm: Assembler, zone: "zp0" | "zp1" | "zp2", twilight: boolean) {
+export function setZone(asm: LongPoint, zone: "zp0" | "zp1" | "zp2", twilight: boolean) {
 	if (asm.getRegister(zone) !== (twilight ? 0 : 1)) {
 		asm.setRegister(zone, twilight ? 0 : 1);
 		asm.intro(twilight ? 0 : 1)
@@ -17,13 +17,13 @@ export function setZone(asm: Assembler, zone: "zp0" | "zp1" | "zp2", twilight: b
 	}
 }
 
-export function setRP(asm: Assembler, zone: "rp0" | "rp1" | "rp2", point: Expression) {
+export function setRP(asm: LongPoint, zone: "rp0" | "rp1" | "rp2", point: Expression) {
 	asm.prim(zone === "rp0" ? TTI.SRP0 : zone === "rp1" ? TTI.SRP1 : TTI.SRP2).deleted(1);
 	asm.setRegister(zone, longPointRegisterNumber(point));
 }
 
 export function longPointRegisterNumber(point: Expression) {
-	const cPoint = point.constant();
+	const cPoint = point.isConstant();
 	if (cPoint !== undefined) {
 		if (cPoint >= 0) {
 			return cPoint;
@@ -36,7 +36,7 @@ export function longPointRegisterNumber(point: Expression) {
 }
 
 export function decideTwilight(point: Expression) {
-	const cPoint = point.constant();
+	const cPoint = point.isConstant();
 	if (cPoint !== undefined) {
 		return cPoint < 0;
 	} else {
@@ -44,12 +44,8 @@ export function decideTwilight(point: Expression) {
 	}
 }
 
-export function addLongPointNumberD<V extends Variable>(
-	ls: ProgramScope<V>,
-	asm: Assembler,
-	point: Expression
-) {
-	const cPoint = point.constant() || 0;
+export function addLongPointNumberD(ls: TtProgramScope, asm: LongPoint, point: Expression) {
+	const cPoint = point.isConstant() || 0;
 	if (cPoint >= 0) {
 		asm.intro(cPoint);
 	} else {
@@ -57,9 +53,9 @@ export function addLongPointNumberD<V extends Variable>(
 		asm.intro(pPoint);
 	}
 }
-export function addLongPointNumberUD<V extends Variable>(
-	ls: ProgramScope<V>,
-	asm: Assembler,
+export function addLongPointNumberUD(
+	ls: TtProgramScope,
+	asm: LongPoint,
 	point: Expression,
 	zone: "zp0" | "zp1" | "zp2",
 	omit?: (x: number) => boolean
@@ -70,14 +66,14 @@ export function addLongPointNumberUD<V extends Variable>(
 	return false;
 }
 
-export function addLongPointNumber<V extends Variable>(
-	ls: ProgramScope<V>,
-	asm: Assembler,
+export function addLongPointNumber(
+	ls: TtProgramScope,
+	asm: LongPoint,
 	point: Expression,
 	zone: "zp0" | "zp1" | "zp2",
 	omit?: (x: number) => boolean
 ) {
-	const cPoint = point.constant();
+	const cPoint = point.isConstant();
 	if (cPoint !== undefined) {
 		let om = false;
 		if (cPoint >= 0) {

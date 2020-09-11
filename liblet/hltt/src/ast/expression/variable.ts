@@ -1,144 +1,100 @@
+import Assembler from "../../asm";
 import { TTI } from "../../instr";
-import Assembler from "../../ir";
-import { ProgramScope, TtScopeVariableFactory } from "../../scope";
 import { StdLib } from "../../stdlib/init-stdlib";
-import { Expression, ReadOnly, Statement, Variable } from "../interface";
-
+import { VarKind, Expression, Statement, Variable } from "../interface";
+import { TtProgramScope, TtScopeVariableFactory, TtProgramScopeTy } from "../scope";
+import { VkCvt, VkFpgm, VkArgument, VkTwilight, VkStorage } from "../variable-kinds";
 import { cExpr } from "./constant";
 
-export class StaticStorage extends Variable {
+export const ReadOnly = {
+	compileSet(asm: Assembler) {
+		throw new TypeError("Variable is readonly");
+	}
+};
+
+export class StaticStorage extends Variable<VkStorage> {
 	constructor(readonly size: number) {
 		super();
 		if (size <= 0) throw new RangeError("Array must have size > 0");
 	}
-	public constantPtr() {
+	public isConstantPtr() {
 		return this.variableIndex;
 	}
 	public compilePtr(asm: Assembler) {
 		asm.intro(this);
 	}
-	public readonly accessor = VariableAccessor;
+	public readonly accessor = new VkStorage();
 }
 
-export class LocalVariable extends Variable {
-	constructor(private scope: ProgramScope<Variable>, readonly size: number) {
+export class LocalVariable extends Variable<VkStorage> {
+	constructor(private scope: TtProgramScope, readonly size: number) {
 		super();
 		if (size <= 0) throw new RangeError("Array must have size > 0");
 	}
-	public readonly accessor = VariableAccessor;
+	public readonly accessor = new VkStorage();
 	public compilePtr(asm: Assembler) {
 		const idx = (this.variableIndex || 0) + this.size - 1;
 		if (idx) {
 			asm.intro(idx);
 			StdLib.getLocalVariable.inline(this.scope.globals, asm);
 		} else {
-			asm.intro(this.scope.globals.sp)
-				.prim(TTI.RS)
-				.deleted(1)
-				.added(1);
+			asm.intro(this.scope.globals.sp).prim(TTI.RS).deleted(1).added(1);
 		}
 	}
 }
 
-export const VariableAccessor = {
-	compileRead(asm: Assembler) {
-		asm.prim(TTI.RS)
-			.deleted(1)
-			.added(1);
-	},
-	compileSet(asm: Assembler) {
-		asm.prim(TTI.WS).deleted(2);
-	}
-};
-
-export class LocalArgument extends Variable {
+export class LocalArgument extends Variable<VkArgument> {
 	public compilePtr(asm: Assembler) {
 		throw new Error("Cannot reference pointer of local argument");
 	}
-	public readonly accessor = LocalArgumentAccessor;
+	public readonly accessor = new VkArgument();
 	public compile(asm: Assembler) {
 		asm.nthFromBottom(this.variableIndex || 0);
 	}
 }
 
-export const LocalArgumentAccessor = {
-	...ReadOnly,
-	compileRead(asm: Assembler) {
-		throw new Error("Cannot reference pointer of local argument");
-	}
-};
-
-export class FunctionVariable extends Variable {
-	public constantPtr() {
+export class FunctionVariable extends Variable<VkFpgm> {
+	public isConstantPtr() {
 		return this.variableIndex;
 	}
 	public compilePtr(asm: Assembler) {
 		asm.intro(this);
 	}
-	public readonly accessor = FunctionVariableAccessor;
+	public readonly accessor = new VkFpgm();
 }
 
-export const FunctionVariableAccessor = {
-	...ReadOnly,
-	compileRead(asm: Assembler) {
-		throw new Error("Cannot reference value of FDEF");
-	}
-};
-
-export class TwilightVariable extends Variable {
-	public readonly accessor = TwilightVariableAccessor;
+export class TwilightVariable extends Variable<VkTwilight> {
+	public readonly accessor = new VkTwilight();
 	public compilePtr(asm: Assembler) {
 		throw new Error("Cannot reference pointer of twilight point index");
 	}
 	public compile(asm: Assembler) {
 		asm.intro(~this.resolve());
 	}
-	public constant() {
+	public isConstant() {
 		return this.variableIndex !== undefined ? ~this.variableIndex : undefined;
 	}
 }
 
-export const TwilightVariableAccessor = {
-	...ReadOnly,
-	compileRead(asm: Assembler) {
-		throw new Error("Cannot reference pointer of twilight point index");
-	}
-};
-
-export class ControlValue extends Variable {
+export class ControlValue extends Variable<VkCvt> {
 	constructor(readonly size: number) {
 		super();
 		if (size <= 0) throw new RangeError("Array must have size > 0");
 	}
-	public constantPtr() {
+	public isConstantPtr() {
 		return this.variableIndex;
 	}
 	public compilePtr(asm: Assembler) {
 		asm.intro(this);
 	}
-	public readonly accessor = ControlValueAccessor;
+	public readonly accessor = new VkCvt();
 }
 
-export const ControlValueAccessor = {
-	compileRead(asm: Assembler) {
-		asm.prim(TTI.RCVT)
-			.deleted(1)
-			.added(1);
-	},
-	compileSet(asm: Assembler) {
-		asm.prim(TTI.WCVTP).deleted(2);
-	}
-};
-
-export class VariableSet extends Statement {
+export class VariableSet<A extends VarKind> extends Statement {
 	private readonly b: Expression;
-	constructor(private readonly v: Variable, _b: number | Expression) {
+	constructor(private readonly v: Variable<A>, _b: number | Expression) {
 		super();
 		this.b = cExpr(_b);
-	}
-	public refer(asm: Assembler) {
-		this.v.refer(asm);
-		this.b.refer(asm);
 	}
 	public compile(asm: Assembler) {
 		if (this.b.arity !== 1) throw new TypeError("RHS arity > 1");
@@ -148,13 +104,14 @@ export class VariableSet extends Statement {
 	}
 }
 
-export const VariableFactory: TtScopeVariableFactory<Variable> = {
-	storage: size => new StaticStorage(size),
+export const VariableFactory: TtScopeVariableFactory = {
+	storage: (size: number) => new StaticStorage(size),
 	fpgm: () => new FunctionVariable(),
-	cvt: size => new ControlValue(size),
+	cvt: (size: number) => new ControlValue(size),
 	twilight: () => new TwilightVariable(),
-	local: s => ({
-		local: size => (s.isFunction ? new LocalVariable(s, size) : new StaticStorage(size)),
+	local: (s: TtProgramScopeTy) => ({
+		local: (size: number) =>
+			s.isFunction ? new LocalVariable(s, size) : new StaticStorage(size),
 		argument: () => new LocalArgument(),
 		localTwilight: () => new TwilightVariable()
 	})

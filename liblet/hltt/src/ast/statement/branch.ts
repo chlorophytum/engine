@@ -1,5 +1,5 @@
 import { TTI } from "../../instr";
-import Assembler from "../../ir";
+import Assembler from "../../asm";
 import { cExpr } from "../expression/constant";
 import { Expression, Statement } from "../interface";
 
@@ -10,9 +10,6 @@ export class AlternativeStatement extends Statement {
 	private constructor(_parts: Iterable<Statement>) {
 		super();
 		this.parts = [..._parts];
-	}
-	public refer(asm: Assembler) {
-		for (const part of this.parts) part.refer(asm);
 	}
 	public willReturnAfter() {
 		const last = this.parts[this.parts.length - 1];
@@ -39,11 +36,6 @@ export class IfStatement extends Statement {
 	) {
 		super();
 		this.condition = cExpr(_condition);
-	}
-	public refer(asm: Assembler) {
-		this.condition.refer(asm);
-		if (this.consequent) this.consequent.refer(asm);
-		if (this.alternate) this.alternate.refer(asm);
 	}
 	public willReturnAfter() {
 		return !!(
@@ -92,10 +84,6 @@ export class WhileStatement extends Statement {
 		super();
 		this.condition = cExpr(_condition);
 	}
-	public refer(asm: Assembler) {
-		this.condition.refer(asm);
-		this.consequent.refer(asm);
-	}
 	public compile(asm: Assembler) {
 		const lBeforeLoop = asm.createLabel();
 		const lBeforeBody = asm.createLabel();
@@ -129,10 +117,6 @@ export class DoWhileStatement extends Statement {
 	) {
 		super();
 		this.condition = cExpr(_condition);
-	}
-	public refer(asm: Assembler) {
-		this.condition.refer(asm);
-		this.consequent.refer(asm);
 	}
 	public compile(asm: Assembler) {
 		const lBeforeLoop = asm.createLabel();

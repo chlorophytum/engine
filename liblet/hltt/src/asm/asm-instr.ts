@@ -1,6 +1,6 @@
 import { InstrSink } from "../instr";
 
-export interface TtIR {
+export interface TtAsmInstr {
 	codeGen<R>(sink: InstrSink<R>, round: number): void | undefined | boolean;
 	setOffset?(x: number, round: number): void | undefined | boolean;
 }

@@ -1,15 +1,12 @@
+import Assembler from "../../asm";
 import { TTI } from "../../instr";
-import Assembler from "../../ir";
-import { ProgramScope } from "../../scope";
 import { cExpr } from "../expression/constant";
-import { Expression, Statement, Variable } from "../interface";
+import { Expression, Statement } from "../interface";
+import { TtProgramScope } from "../scope";
 
 export class LastReturnStatement extends Statement {
 	public readonly parts: Expression[];
-	constructor(
-		protected readonly scope: ProgramScope<Variable>,
-		_parts: Iterable<number | Expression>
-	) {
+	constructor(protected readonly scope: TtProgramScope, _parts: Iterable<number | Expression>) {
 		super();
 		this.parts = [..._parts].map(cExpr);
 	}
@@ -19,9 +16,6 @@ export class LastReturnStatement extends Statement {
 			argArity += st.arity;
 		}
 		return argArity;
-	}
-	public refer(asm: Assembler) {
-		for (const part of this.parts) part.refer(asm);
 	}
 	public willReturnAfter() {
 		return true;
@@ -36,15 +30,8 @@ export class LastReturnStatement extends Statement {
 		asm.funcReturnKeepDelete(this.parts.length);
 		if (this.scope.locals.size) {
 			asm.intro(this.scope.globals.sp);
-			asm.prim(TTI.DUP)
-				.added(1)
-				.prim(TTI.RS)
-				.deleted(1)
-				.added(1);
-			asm.intro(this.scope.locals.size)
-				.prim(TTI.SUB)
-				.deleted(2)
-				.added(1);
+			asm.prim(TTI.DUP).added(1).prim(TTI.RS).deleted(1).added(1);
+			asm.intro(this.scope.locals.size).prim(TTI.SUB).deleted(2).added(1);
 			asm.prim(TTI.WS).deleted(2);
 		}
 	}

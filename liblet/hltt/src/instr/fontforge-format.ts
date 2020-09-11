@@ -1,4 +1,4 @@
-import { InstrSink, TTI } from ".";
+import { InstrSink, TTI } from "./index";
 
 const FF_INSTR_NAMES = [
 	"SVTCA[y-axis]",
