@@ -1,14 +1,12 @@
 import test from "ava";
-
 import { TextInstrSink } from "../../instr";
 import { compileFdef, compileProgram } from "../test-util";
-
 import { BinaryExpression } from "./arith";
-import { VolatileExpression } from "./constant";
-import { ArrayIndex, ArrayInit, TupleExpression, ArrayInitGetVariation } from "./pointer";
+import { cExpr, VolatileExpression } from "./constant";
+import { ArrayIndex, ArrayInit, ArrayInitGetVariation, TupleExpression } from "./pointer";
 import { VariableSet } from "./variable";
 
-test("Expression: Local variable (entry)", (t) => {
+test("Expression: Local variable (entry)", t => {
 	const asm = compileProgram(function* (gs, ls) {
 		const a = ls.locals.declare(2);
 		const b = ls.locals.declare();
@@ -25,11 +23,11 @@ test("Expression: Local variable (entry)", (t) => {
 	);
 });
 
-test("Expression: Local variable arguments (fn)", (t) => {
+test("Expression: Local variable arguments (fn)", t => {
 	const asm = compileFdef(function* (gs, ls) {
 		const x = ls.arguments.declare();
 		const a = ls.locals.declare();
-		yield new VariableSet(a, BinaryExpression.Add(BinaryExpression.Sub(1, 2), x));
+		yield new VariableSet(a, BinaryExpression.Add(BinaryExpression.Sub(cExpr(1), cExpr(2)), x));
 	});
 
 	t.deepEqual(
@@ -58,7 +56,7 @@ test("Expression: Local variable arguments (fn)", (t) => {
 	);
 });
 
-test("Expression: Local array", (t) => {
+test("Expression: Local array", t => {
 	const asm = compileProgram(function* (gs, ls) {
 		const a = ls.locals.declare(10);
 		const b = ls.locals.declare();
@@ -75,14 +73,14 @@ test("Expression: Local array", (t) => {
 	);
 });
 
-test("Expression: CVT array", (t) => {
+test("Expression: CVT array", t => {
 	const asm = compileProgram(function* (gs, ls) {
 		const a = gs.cvt.declare("a", 10);
 		const b = ls.locals.declare();
 		yield new VariableSet(b, new ArrayIndex(a, 5));
 		yield new VariableSet(
 			b,
-			new ArrayIndex(a, new VolatileExpression(BinaryExpression.Add(3, 3)))
+			new ArrayIndex(a, new VolatileExpression(BinaryExpression.Add(cExpr(3), cExpr(3))))
 		);
 	});
 
@@ -100,7 +98,7 @@ test("Expression: CVT array", (t) => {
 	);
 });
 
-test("Expression: CVT array init", (t) => {
+test("Expression: CVT array init", t => {
 	const asm = compileProgram(function* (gs, ls) {
 		const a = gs.cvt.declare("a", 5);
 		yield new ArrayInit(a.index, [1, 2, 3, 4, 5], true);
@@ -140,7 +138,7 @@ test("Expression: CVT array init", (t) => {
 	);
 });
 
-test("Expression: CVT array init 2", (t) => {
+test("Expression: CVT array init 2", t => {
 	const asm = compileProgram(function* (gs, ls) {
 		const a = gs.cvt.declare("a", 5);
 		yield new ArrayInit(a.index, [1, 2, 3, 4, 5]);
@@ -158,7 +156,7 @@ test("Expression: CVT array init 2", (t) => {
 	);
 });
 
-test("Expression: CVT array init 3", (t) => {
+test("Expression: CVT array init 3", t => {
 	const asm = compileProgram(function* (gs, ls) {
 		const a = gs.cvt.declare("a", 5);
 		yield new ArrayInit(a.index, [new TupleExpression([1, 2, 3, 4, 5])], true);
@@ -198,7 +196,7 @@ test("Expression: CVT array init 3", (t) => {
 	);
 });
 
-test("Expression: GETVARIATION array init", (t) => {
+test("Expression: GETVARIATION array init", t => {
 	const asm = compileProgram(function* (gs, ls) {
 		const a = gs.cvt.declare("a", 3);
 		yield new ArrayInitGetVariation(a.index, 3);

@@ -1,30 +1,22 @@
 import Assembler from "../../asm";
 import { TTI } from "../../instr";
-import { cExpr1 } from "../expression/constant";
-import { Expression, Statement } from "../interface";
-import { TtProgramScope } from "../scope";
+import { EdslProgramScope, Expression, Statement } from "../interface";
 import { addLongPointNumberD, addLongPointNumberUD, decideTwilight, setZone } from "./long-point";
 
 export class DeltaStatement extends Statement {
-	public readonly targets: Expression[];
-	public readonly arguments: Expression[];
 	constructor(
-		private readonly ls: TtProgramScope,
-
 		readonly op: TTI,
 		private readonly allowTwilight: boolean,
-		_targets: Iterable<number | Expression>,
-		_arguments: Iterable<number | Expression>
+		private readonly targets: Expression[],
+		private readonly args: Expression[]
 	) {
 		super();
-		this.targets = [..._targets].map(cExpr1);
-		this.arguments = [..._arguments].map(cExpr1);
 	}
-	public compile(asm: Assembler) {
-		const run = new TwilightRun(this.ls, this.op, asm);
+	public compile(asm: Assembler, ps: EdslProgramScope) {
+		const run = new TwilightRun(ps, this.op, asm);
 		for (let j = 0; j < this.targets.length; j++) {
-			if (this.targets[j] && this.arguments[j]) {
-				run.intro(this.targets[j], this.arguments[j], this.allowTwilight);
+			if (this.targets[j] && this.args[j]) {
+				run.intro(this.targets[j], this.args[j], this.allowTwilight);
 			}
 		}
 		run.flushDecidable();
@@ -33,7 +25,7 @@ export class DeltaStatement extends Statement {
 
 class TwilightRun {
 	constructor(
-		private readonly ls: TtProgramScope,
+		private readonly ps: EdslProgramScope,
 		readonly op: TTI,
 		private readonly asm: Assembler
 	) {}
@@ -49,11 +41,14 @@ class TwilightRun {
 	}
 
 	public intro(target: Expression, arg: Expression, allowTwilight: boolean) {
+		if (target.getArity(this.ps) !== 1) throw new TypeError("Argument arith != 1");
+		if (arg.getArity(this.ps) !== 1) throw new TypeError("Argument arith != 1");
+
 		const dt = allowTwilight ? decideTwilight(target) : false;
 		if (dt === undefined) {
 			this.flushDecidable();
-			arg.compile(this.asm);
-			addLongPointNumberUD(this.ls, this.asm, target, "zp0");
+			arg.compile(this.asm, this.ps);
+			addLongPointNumberUD(this.ps, this.asm, target, "zp0");
 			this.asm.intro(1);
 			this.asm.prim(this.op, 3, 0);
 		} else {
@@ -62,8 +57,8 @@ class TwilightRun {
 				this.twilight = dt;
 			}
 
-			arg.compile(this.asm);
-			addLongPointNumberD(this.ls, this.asm, target);
+			arg.compile(this.asm, this.ps);
+			addLongPointNumberD(this.ps, this.asm, target);
 			//target.compile(this.asm);
 			this.arity++;
 		}

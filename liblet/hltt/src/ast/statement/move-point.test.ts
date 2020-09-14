@@ -1,16 +1,14 @@
 import test from "ava";
-
 import { TextInstrSink } from "../../instr";
-import { ConstantExpression, VolatileExpression } from "../expression/constant";
+import { cExpr, ConstantExpression, VolatileExpression } from "../expression/constant";
 import { compileProgram } from "../test-util";
-
 import { AlternativeStatement } from "./branch";
-import { LIp, LMdap, LMdrp } from "./move-point";
+import { LIp, LMdap, LMdrp, LMiap } from "./move-point";
 
-test("Statement: Long MDAP", (t) => {
+test("Statement: Long MDAP", t => {
 	const asm = compileProgram(function* (gs, ls) {
 		yield AlternativeStatement.from(
-			new LMdap(ls, true, new VolatileExpression(new ConstantExpression(1)))
+			new LMdap(true, new VolatileExpression(new ConstantExpression(1)))
 		);
 	});
 	t.deepEqual(
@@ -35,12 +33,27 @@ test("Statement: Long MDAP", (t) => {
 	);
 });
 
-test("Statement: MDRP", (t) => {
+test("Statement: MIAP", t => {
 	const asm = compileProgram(function* (gs, ls) {
-		yield new LMdap(ls, true, ~1);
-		yield new LMdrp(ls, false, false, false, 0, ~1, 2);
-		yield new LMdrp(ls, true, false, false, 0, 2, 3);
-		yield new LMdrp(ls, true, false, false, 0, 3, 4);
+		const cvYBaseline = gs.cvt.declare("yBaseline", 1);
+		yield AlternativeStatement.from(new LMiap(true, cExpr(2), cvYBaseline.ptr));
+	});
+	t.deepEqual(
+		asm.codeGen(new TextInstrSink()),
+		TextInstrSink.rectify(`
+			PUSHB_3 2 0 1
+			SZP0
+			MIAP_rnd
+			`)
+	);
+});
+
+test("Statement: MDRP", t => {
+	const asm = compileProgram(function* (gs, ls) {
+		yield new LMdap(true, cExpr(~1));
+		yield new LMdrp(false, false, false, 0, cExpr(~1), cExpr(2));
+		yield new LMdrp(true, false, false, 0, cExpr(2), cExpr(3));
+		yield new LMdrp(true, false, false, 0, cExpr(3), cExpr(4));
 	});
 	t.deepEqual(
 		asm.codeGen(new TextInstrSink()),
@@ -59,9 +72,14 @@ test("Statement: MDRP", (t) => {
 	t.is(asm.getRegister("rp2"), 4);
 });
 
-test("Statement: IP", (t) => {
+test("Statement: IP", t => {
 	const asm = compileProgram(function* (gs, ls) {
-		yield new LIp(ls, 1, 2, [3, ~4, ~5, new VolatileExpression(new ConstantExpression(6))]);
+		yield new LIp(cExpr(1), cExpr(2), [
+			cExpr(3),
+			cExpr(~4),
+			cExpr(~5),
+			new VolatileExpression(new ConstantExpression(6))
+		]);
 	});
 	t.deepEqual(
 		asm.codeGen(new TextInstrSink()),

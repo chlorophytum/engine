@@ -1,23 +1,15 @@
 import Assembler from "../../asm";
 import { TTI } from "../../instr";
-import { cExpr1 } from "../expression/constant";
-import { Expression, PointerExpression, Statement } from "../interface";
-import { TtProgramScope } from "../scope";
-import { VkCvt } from "../variable-kinds";
+import { EdslProgramScope, Expression, PtrExpression, Statement, VkCvt } from "../interface";
 import * as LongPoint from "./long-point";
 
 export class LMdap extends Statement {
-	private readonly point: Expression;
-	constructor(
-		private readonly ls: TtProgramScope,
-		private round: boolean,
-		_point: number | Expression
-	) {
+	constructor(private round: boolean, private readonly point: Expression) {
 		super();
-		this.point = cExpr1(_point);
 	}
-	public compile(asm: Assembler) {
-		LongPoint.addLongPointNumber(this.ls, asm, this.point, "zp0");
+	public compile(asm: Assembler, ps: EdslProgramScope) {
+		if (this.point.getArity(ps) !== 1) throw new TypeError("Point Id arity mismatch.");
+		LongPoint.addLongPointNumber(ps, asm, this.point, "zp0");
 		asm.prim(this.round ? TTI.MDAP_rnd : TTI.MDAP_noRnd);
 		asm.deleted(1);
 		asm.setRegister("rp0", LongPoint.longPointRegisterNumber(this.point));
@@ -26,22 +18,18 @@ export class LMdap extends Statement {
 }
 
 export class LMiap extends Statement {
-	private readonly point: Expression;
-	private readonly pCV: Expression;
-
 	constructor(
-		private readonly ls: TtProgramScope,
 		private round: boolean,
-		_point: number | Expression,
-		_cv: number | PointerExpression<VkCvt>
+		private readonly point: Expression,
+		private readonly pCV: PtrExpression<VkCvt>
 	) {
 		super();
-		this.point = cExpr1(_point);
-		this.pCV = cExpr1(_cv);
 	}
-	public compile(asm: Assembler) {
-		LongPoint.addLongPointNumber(this.ls, asm, this.point, "zp0");
-		this.pCV.compile(asm);
+	public compile(asm: Assembler, ps: EdslProgramScope) {
+		if (this.point.getArity(ps) !== 1) throw new TypeError("Point Id arity mismatch.");
+		if (this.pCV.getArity(ps) !== 1) throw new TypeError("CVT Id arity mismatch.");
+		LongPoint.addLongPointNumber(ps, asm, this.point, "zp0");
+		this.pCV.compile(asm, ps);
 		asm.prim(this.round ? TTI.MIAP_rnd : TTI.MIAP_noRnd);
 		asm.deleted(2);
 		asm.setRegister("rp0", LongPoint.longPointRegisterNumber(this.point));
@@ -54,25 +42,22 @@ function mrpMask(rp0: boolean, minDist: boolean, round: boolean, distanceMode: 0
 }
 
 export class LMdrp extends Statement {
-	private readonly p0: Expression;
-	private readonly point: Expression;
 	constructor(
-		private readonly ls: TtProgramScope,
 		private rp0: boolean,
 		private minDist: boolean,
 		private round: boolean,
 		private distanceMode: 0 | 1 | 2 | 3,
-		_p0: number | Expression,
-		_point: number | Expression
+		private readonly p0: Expression,
+		private readonly point: Expression
 	) {
 		super();
-		this.p0 = cExpr1(_p0);
-		this.point = cExpr1(_point);
 	}
 
-	public compile(asm: Assembler) {
+	public compile(asm: Assembler, ps: EdslProgramScope) {
+		if (this.p0.getArity(ps) !== 1) throw new TypeError("Point Id arity mismatch.");
+		if (this.point.getArity(ps) !== 1) throw new TypeError("Point Id arity mismatch.");
 		const omitRP0 = LongPoint.addLongPointNumber(
-			this.ls,
+			ps,
 			asm,
 			this.p0,
 			"zp0",
@@ -80,7 +65,7 @@ export class LMdrp extends Statement {
 		);
 		if (!omitRP0) LongPoint.setRP(asm, "rp0", this.p0);
 
-		LongPoint.addLongPointNumber(this.ls, asm, this.point, "zp1");
+		LongPoint.addLongPointNumber(ps, asm, this.point, "zp1");
 
 		asm.prim(TTI.MDRP_grey + mrpMask(this.rp0, this.minDist, this.round, this.distanceMode));
 		asm.deleted(1);
@@ -94,29 +79,24 @@ export class LMdrp extends Statement {
 }
 
 export class LMirp extends Statement {
-	private readonly p0: Expression;
-	private readonly point: Expression;
-	private readonly pCV: Expression;
-
 	constructor(
-		private readonly ls: TtProgramScope,
 		private rp0: boolean,
 		private minDist: boolean,
 		private round: boolean,
 		private distanceMode: 0 | 1 | 2 | 3,
-		_p0: number | Expression,
-		_point: number | Expression,
-		_cv: number | PointerExpression<VkCvt>
+		private readonly p0: Expression,
+		private readonly point: Expression,
+		private readonly pCV: PtrExpression<VkCvt>
 	) {
 		super();
-		this.p0 = cExpr1(_p0);
-		this.point = cExpr1(_point);
-		this.pCV = cExpr1(_cv);
 	}
 
-	public compile(asm: Assembler) {
+	public compile(asm: Assembler, ps: EdslProgramScope) {
+		if (this.p0.getArity(ps) !== 1) throw new TypeError("Point Id arity mismatch.");
+		if (this.point.getArity(ps) !== 1) throw new TypeError("Point Id arity mismatch.");
+		if (this.pCV.getArity(ps) !== 1) throw new TypeError("CVT Id arity mismatch.");
 		const omitRP0 = LongPoint.addLongPointNumber(
-			this.ls,
+			ps,
 			asm,
 			this.p0,
 			"zp0",
@@ -124,8 +104,8 @@ export class LMirp extends Statement {
 		);
 		if (!omitRP0) LongPoint.setRP(asm, "rp0", this.p0);
 
-		LongPoint.addLongPointNumber(this.ls, asm, this.point, "zp1");
-		this.pCV.compile(asm);
+		LongPoint.addLongPointNumber(ps, asm, this.point, "zp1");
+		this.pCV.compile(asm, ps);
 
 		asm.prim(TTI.MIRP_grey + mrpMask(this.rp0, this.minDist, this.round, this.distanceMode));
 		asm.deleted(2);
@@ -139,24 +119,22 @@ export class LMirp extends Statement {
 }
 
 export class LIp extends Statement {
-	private readonly p1: Expression;
-	private readonly p2: Expression;
-	private readonly points: Expression[];
-
 	constructor(
-		private readonly ls: TtProgramScope,
-		_p1: number | Expression,
-		_p2: number | Expression,
-		_points: Iterable<number | Expression>
+		private readonly p1: Expression,
+		private readonly p2: Expression,
+		private readonly points: Expression[]
 	) {
 		super();
-		this.p1 = cExpr1(_p1);
-		this.p2 = cExpr1(_p2);
-		this.points = [..._points].map(cExpr1);
 	}
-	public compile(asm: Assembler) {
+	public compile(asm: Assembler, ps: EdslProgramScope) {
+		if (this.p1.getArity(ps) !== 1) throw new TypeError("Point Id arity mismatch.");
+		if (this.p2.getArity(ps) !== 1) throw new TypeError("Point Id arity mismatch.");
+		for (const z of this.points) {
+			if (z.getArity(ps) !== 1) throw new TypeError("Point Id arity mismatch.");
+		}
+
 		const omitRP1 = LongPoint.addLongPointNumber(
-			this.ls,
+			ps,
 			asm,
 			this.p1,
 			"zp0",
@@ -165,7 +143,7 @@ export class LIp extends Statement {
 		if (!omitRP1) LongPoint.setRP(asm, "rp1", this.p1);
 
 		const omitRP2 = LongPoint.addLongPointNumber(
-			this.ls,
+			ps,
 			asm,
 			this.p2,
 			"zp1",
@@ -173,7 +151,7 @@ export class LIp extends Statement {
 		);
 		if (!omitRP2) LongPoint.setRP(asm, "rp2", this.p2);
 
-		const run = new IpRun(this.ls, TTI.IP, asm);
+		const run = new IpRun(ps, TTI.IP, asm);
 		for (const z of this.points) run.intro(z);
 		run.flushDecidable();
 	}
@@ -181,7 +159,7 @@ export class LIp extends Statement {
 
 class IpRun {
 	constructor(
-		private readonly ls: TtProgramScope,
+		private readonly ls: EdslProgramScope,
 		readonly op: TTI,
 		private readonly asm: Assembler
 	) {}

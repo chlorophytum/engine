@@ -1,31 +1,26 @@
 import Assembler from "../../asm";
 import { TTI } from "../../instr";
-import { Statement } from "../interface";
-import { TtProgramScope } from "../scope";
+import { EdslProgramScope, Statement } from "../interface";
 
 export class BeginStatement extends Statement {
-	constructor(protected readonly scope: TtProgramScope) {
+	constructor() {
 		super();
 	}
-	public compile(asm: Assembler) {
-		asm.added(this.scope.arguments.size);
-		if (this.scope.locals.size) {
-			asm.intro(this.scope.globals.sp);
+	public compile(asm: Assembler, ps: EdslProgramScope) {
+		asm.added(ps.arguments.size);
+		if (ps.locals.size) {
+			asm.intro(ps.globals.sp);
 			asm.prim(TTI.DUP).added(1).prim(TTI.RS).deleted(1).added(1);
-			asm.intro(this.scope.locals.size).prim(TTI.ADD).deleted(2).added(1);
+			asm.intro(ps.locals.size).prim(TTI.ADD).deleted(2).added(1);
 			asm.prim(TTI.WS).deleted(2);
 		}
 	}
 }
 export class ProgramBeginStatement extends Statement {
-	constructor(protected readonly scope: TtProgramScope) {
+	constructor() {
 		super();
 	}
-	public compile(asm: Assembler) {
-		asm.push(this.scope.globals.sp, this.scope.locals.base + this.scope.locals.size).prim(
-			TTI.WS,
-			2,
-			0
-		);
+	public compile(asm: Assembler, ps: EdslProgramScope) {
+		asm.push(ps.globals.sp, ps.locals.base + ps.locals.size).prim(TTI.WS, 2, 0);
 	}
 }

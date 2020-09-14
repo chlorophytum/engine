@@ -1,52 +1,57 @@
 import { CPushValue } from "../asm/asm-instr";
 import { TtLabel } from "../asm/label";
 
-export interface TtSymbol extends CPushValue {
-	variableIndex: number | undefined;
+export interface TtBinding extends CPushValue {
 	readonly size: number;
 }
+
+export interface TtSymbolSupportT<T extends TtBinding> {
+	create(size: number, name?: string): T;
+	assignID(s: T, id: number): void;
+}
+
 export interface TtScopeVariableFactoryT<
-	Va extends TtSymbol,
-	Ar extends TtSymbol,
-	Fu extends TtSymbol,
-	Cv extends TtSymbol,
-	Tw extends TtSymbol
+	Va extends TtBinding,
+	Ar extends TtBinding,
+	Fu extends TtBinding,
+	Cv extends TtBinding,
+	Tw extends TtBinding
 > {
-	readonly storage: TtVariableFactory<Va>;
-	readonly fpgm: TtVariableFactory<Fu>;
-	readonly cvt: TtVariableFactory<Cv>;
-	readonly twilight: TtVariableFactory<Tw>;
+	readonly storage: TtSymbolSupportT<Va>;
+	readonly fpgm: TtSymbolSupportT<Fu>;
+	readonly cvt: TtSymbolSupportT<Cv>;
+	readonly twilight: TtSymbolSupportT<Tw>;
 	local: (
 		s: TtProgramScopeT<Va, Ar, Fu, Cv, Tw>
 	) => TtLocalScopeVariableFactoryT<Va, Ar, Fu, Cv, Tw>;
 }
 export interface TtLocalScopeVariableFactoryT<
-	Va extends TtSymbol,
-	Ar extends TtSymbol,
-	Fu extends TtSymbol,
-	Cv extends TtSymbol,
-	Tw extends TtSymbol
+	Va extends TtBinding,
+	Ar extends TtBinding,
+	Fu extends TtBinding,
+	Cv extends TtBinding,
+	Tw extends TtBinding
 > {
-	readonly local: TtVariableFactory<Va>;
-	readonly argument: TtVariableFactory<Ar>;
-	readonly localTwilight: TtVariableFactory<Tw>;
+	readonly local: TtSymbolSupportT<Va>;
+	readonly argument: TtSymbolSupportT<Ar>;
+	readonly localTwilight: TtSymbolSupportT<Tw>;
 }
 export interface TtFunctionScopeSolverT<
-	Va extends TtSymbol,
-	Ar extends TtSymbol,
-	Fu extends TtSymbol,
-	Cv extends TtSymbol,
-	Tw extends TtSymbol
+	Va extends TtBinding,
+	Ar extends TtBinding,
+	Fu extends TtBinding,
+	Cv extends TtBinding,
+	Tw extends TtBinding
 > {
-	resolve(v: TtSymbol): TtProgramScopeT<Va, Ar, Fu, Cv, Tw> | undefined;
+	resolve(v: Fu): TtProgramScopeT<Va, Ar, Fu, Cv, Tw> | undefined;
 }
 
 export class TtGlobalScopeT<
-	Va extends TtSymbol,
-	Ar extends TtSymbol,
-	Fu extends TtSymbol,
-	Cv extends TtSymbol,
-	Tw extends TtSymbol
+	Va extends TtBinding,
+	Ar extends TtBinding,
+	Fu extends TtBinding,
+	Cv extends TtBinding,
+	Tw extends TtBinding
 > {
 	public useStdLib: boolean = false;
 	public sp: Va; // #SP storage, used for recursion
@@ -55,17 +60,16 @@ export class TtGlobalScopeT<
 	public cvt: TtNamedSymbolTable<Cv>; // CVT
 	public twilights: TtNamedSymbolTable<Tw>; // Twilight points
 
-	constructor(private readonly svf: TtScopeVariableFactoryT<Va, Ar, Fu, Cv, Tw>) {
+	constructor(
+		private readonly svf: TtScopeVariableFactoryT<Va, Ar, Fu, Cv, Tw>,
+		public readonly funcScopeSolver: TtFunctionScopeSolverT<Va, Ar, Fu, Cv, Tw>
+	) {
 		this.storages = new TtNamedSymbolTable(svf.storage);
 		this.fpgm = new TtNamedSymbolTable(svf.fpgm);
 		this.cvt = new TtNamedSymbolTable(svf.cvt);
 		this.twilights = new TtNamedSymbolTable(svf.twilight);
 		this.sp = this.storages.declare("#SP");
 	}
-
-	public funcScopeSolver: TtFunctionScopeSolverT<Va, Ar, Fu, Cv, Tw> = {
-		resolve: () => undefined
-	};
 	public createProgramScope() {
 		return new TtProgramScopeT<Va, Ar, Fu, Cv, Tw>(this, false, this.svf.local);
 	}
@@ -81,11 +85,11 @@ export class TtGlobalScopeT<
 	}
 }
 export class TtProgramScopeT<
-	Va extends TtSymbol,
-	Ar extends TtSymbol,
-	Fu extends TtSymbol,
-	Cv extends TtSymbol,
-	Tw extends TtSymbol
+	Va extends TtBinding,
+	Ar extends TtBinding,
+	Fu extends TtBinding,
+	Cv extends TtBinding,
+	Tw extends TtBinding
 > {
 	constructor(
 		public readonly globals: TtGlobalScopeT<Va, Ar, Fu, Cv, Tw>,
@@ -118,21 +122,19 @@ export class TtProgramScopeT<
 	}
 }
 
-export type TtVariableFactory<T extends TtSymbol> = (size: number, name?: string) => T;
-
-export class TtNamedSymbolTable<T extends TtSymbol> {
+export class TtNamedSymbolTable<T extends TtBinding> {
 	public base: number = 0;
 	private variableSize: number = 0;
 	private items = new Map<string, T>();
 	private locked: boolean = false;
-	constructor(private readonly factory: TtVariableFactory<T>) {}
+	constructor(private readonly factory: TtSymbolSupportT<T>) {}
 	public lock() {
 		this.locked = true;
 	}
 	public declare(name: string, size: number = 1) {
 		if (this.locked) throw new Error("Symbol table locked");
 		if (name && this.items.has(name)) return this.items.get(name)!;
-		const s = this.factory(size, name);
+		const s = this.factory.create(size, name);
 		this.items.set(name, s);
 		this.variableSize += s.size;
 		return s;
@@ -143,24 +145,24 @@ export class TtNamedSymbolTable<T extends TtSymbol> {
 	public assignID() {
 		let j = 0;
 		for (const item of this.items.values()) {
-			item.variableIndex = this.base + j;
+			this.factory.assignID(item, this.base + j);
 			j += item.size;
 		}
 	}
 }
-export class TtSimpleSymbolTable<T extends TtSymbol> {
+export class TtSimpleSymbolTable<T extends TtBinding> {
 	public base: number = 0;
 	private variableSize: number = 0;
 	private items = new Set<T>();
 	private locked: boolean = false;
-	constructor(private readonly factory: TtVariableFactory<T>) {}
+	constructor(private readonly factory: TtSymbolSupportT<T>) {}
 	public lock() {
 		this.locked = true;
 	}
 
 	public declare(size: number = 1) {
 		if (this.locked) throw new Error("Symbol table locked");
-		const s = this.factory(size);
+		const s = this.factory.create(size);
 		this.items.add(s);
 		this.variableSize += s.size;
 		return s;
@@ -171,7 +173,7 @@ export class TtSimpleSymbolTable<T extends TtSymbol> {
 	public assignID() {
 		let j = 0;
 		for (const item of this.items) {
-			item.variableIndex = this.base + j;
+			this.factory.assignID(item, this.base + j);
 			j += item.size;
 		}
 	}

@@ -1,10 +1,9 @@
 import Assembler from "../../asm";
-import { Statement } from "../interface";
-import { TtProgramScope } from "../scope";
+import { EdslProgramScope, Statement } from "../interface";
 
-export class AssemblyStatement extends Statement {
+export class AsmStatement extends Statement {
 	constructor(
-		protected readonly scope: TtProgramScope,
+		protected readonly scope: EdslProgramScope,
 		protected readonly Asm: (a: Assembler) => void
 	) {
 		super();

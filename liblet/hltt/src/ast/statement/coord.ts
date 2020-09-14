@@ -1,44 +1,28 @@
 import Assembler from "../../asm";
 import { TTI } from "../../instr";
-import { cExpr1 } from "../expression/constant";
-import { Expression, Statement } from "../interface";
-import { TtProgramScope } from "../scope";
+import { EdslProgramScope, Expression, Statement } from "../interface";
 import { addLongPointNumber } from "./long-point";
 
 export class GCExpression extends Expression {
-	private readonly z: Expression;
-	constructor(
-		_z: number | Expression,
-		private readonly op: TTI,
-		private readonly ls: TtProgramScope
-	) {
+	constructor(private readonly z: Expression, private readonly op: TTI) {
 		super();
-		this.z = cExpr1(_z);
 	}
-	get arity() {
+	getArity() {
 		return 1;
 	}
-	public compile(asm: Assembler) {
-		addLongPointNumber(this.ls, asm, this.z, "zp2");
+	public compile(asm: Assembler, ps: EdslProgramScope) {
+		addLongPointNumber(ps, asm, this.z, "zp2");
 		asm.prim(this.op, 1, 1);
 	}
 }
 
 export class SCFSStatement extends Statement {
-	private readonly z: Expression;
-	private readonly d: Expression;
-	constructor(
-		_z: number | Expression,
-		_d: number | Expression,
-		private readonly ls: TtProgramScope
-	) {
+	constructor(private readonly z: Expression, private readonly d: Expression) {
 		super();
-		this.z = cExpr1(_z);
-		this.d = cExpr1(_d);
 	}
-	public compile(asm: Assembler) {
-		this.d.compile(asm);
-		addLongPointNumber(this.ls, asm, this.z, "zp2");
+	public compile(asm: Assembler, ps: EdslProgramScope) {
+		this.d.compile(asm, ps);
+		addLongPointNumber(ps, asm, this.z, "zp2");
 		asm.prim(TTI.SWAP, 2, 2);
 		asm.prim(TTI.SCFS, 2, 0);
 	}

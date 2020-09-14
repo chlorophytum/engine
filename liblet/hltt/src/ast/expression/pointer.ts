@@ -1,8 +1,15 @@
 import { TTI } from "../../instr";
 import Assembler from "../../asm";
-import { VarKind, Expression, PointerExpression, Statement, Variable } from "../interface";
+import {
+	VarKind,
+	Expression,
+	PtrExpression,
+	Statement,
+	Variable,
+	EdslProgramScope
+} from "../interface";
 
-import { cExpr, cExpr1 } from "./constant";
+import { cExpr } from "./constant";
 
 export class CoercedVariable<A extends VarKind> extends Variable<A> {
 	constructor(readonly behind: Expression, readonly accessor: A, readonly size: number = 1) {
@@ -11,8 +18,8 @@ export class CoercedVariable<A extends VarKind> extends Variable<A> {
 	public isConstantPtr() {
 		return this.behind.isConstant();
 	}
-	public compilePtr(asm: Assembler) {
-		this.behind.compile(asm);
+	public compilePtr(asm: Assembler, ps: EdslProgramScope) {
+		this.behind.compile(asm, ps);
 	}
 }
 
@@ -21,64 +28,67 @@ export class ArrayIndex<A extends VarKind> extends Variable<A> {
 	public readonly accessor: A;
 	constructor(readonly arr: Variable<A>, _subscript: number | Expression) {
 		super();
-		this.subscript = cExpr1(_subscript);
+		this.subscript = cExpr(_subscript);
 		this.accessor = arr.accessor;
 	}
-	public compilePtr(asm: Assembler) {
+	public compilePtr(asm: Assembler, ps: EdslProgramScope) {
+		if (this.subscript.getArity(ps) !== 1) throw new TypeError("Subscript arity != 1");
+
 		const cSub = this.subscript.isConstant();
 		const cPtr = this.arr.isConstantPtr();
 		if (cPtr !== undefined && cSub !== undefined) {
 			asm.intro(cPtr + cSub);
 		} else if (cSub !== undefined) {
-			this.subscript.compile(asm);
-			this.arr.compilePtr(asm);
+			this.subscript.compile(asm, ps);
+			this.arr.compilePtr(asm, ps);
 			asm.prim(TTI.ADD).deleted(2).added(1);
 		} else {
-			this.arr.compilePtr(asm);
-			this.subscript.compile(asm);
+			this.arr.compilePtr(asm, ps);
+			this.subscript.compile(asm, ps);
 			asm.prim(TTI.ADD).deleted(2).added(1);
 		}
 	}
 }
 export class TupleExpression extends Expression {
 	private readonly parts: Expression[];
-	public readonly arity: number;
 	constructor(_parts: Iterable<number | Expression>) {
 		super();
 		this.parts = [..._parts].map(cExpr);
-		let arity = 0;
-		for (const part of this.parts) arity += part.arity;
-		this.arity = arity;
 	}
-	public compile(asm: Assembler) {
-		for (const part of this.parts) part.compile(asm);
+	getArity(ps: EdslProgramScope) {
+		let arity = 0;
+		for (let part of this.parts) arity += part.getArity(ps);
+		return arity;
+	}
+	public compile(asm: Assembler, ps: EdslProgramScope) {
+		for (const part of this.parts) part.compile(asm, ps);
 	}
 }
 export class ArrayInit<A extends VarKind> extends Statement {
 	private readonly parts: Expression[];
 	constructor(
-		readonly arr: PointerExpression<A>,
+		readonly arr: PtrExpression<A>,
 		_parts: Iterable<number | Expression>,
 		private complex?: boolean
 	) {
 		super();
 		this.parts = [..._parts].map(cExpr);
 	}
-	private compileVerySimple(cPtr: number, asm: Assembler) {
+	private compileVerySimple(cPtr: number, asm: Assembler, ps: EdslProgramScope) {
 		for (let j = 0; j < this.parts.length; j++) {
 			const cur = this.parts[j];
-			if (cur.arity !== 1) throw new TypeError("Array initializer arity mismatch");
+			if (cur.getArity(ps) !== 1) throw new TypeError("Array initializer arity mismatch");
 			asm.intro(cPtr + j);
-			cur.compile(asm);
+			cur.compile(asm, ps);
 			this.arr.dereference.accessor.compileSet(asm);
 		}
 	}
-	private compileComplex(asm: Assembler) {
-		this.arr.dereference.compilePtr(asm);
+	private compileComplex(asm: Assembler, ps: EdslProgramScope) {
+		this.arr.dereference.compilePtr(asm, ps);
 		let items = 0;
 		for (let j = 0; j < this.parts.length; j++) {
-			const arity = this.parts[j].arity;
-			this.parts[j].compile(asm);
+			const arity = this.parts[j].getArity(ps);
+			this.parts[j].compile(asm, ps);
 			items += arity;
 		}
 		if (items !== this.arr.dereference.size) {
@@ -98,25 +108,25 @@ export class ArrayInit<A extends VarKind> extends Statement {
 		}
 		asm.prim(TTI.POP).deleted(1);
 	}
-	public compile(asm: Assembler) {
+	public compile(asm: Assembler, ps: EdslProgramScope) {
 		if (!this.complex && this.parts.length === this.arr.dereference.size) {
 			const cPtr = this.arr.dereference.isConstantPtr();
 			if (cPtr !== undefined) {
-				this.compileVerySimple(cPtr, asm);
+				this.compileVerySimple(cPtr, asm, ps);
 			} else {
-				this.compileComplex(asm);
+				this.compileComplex(asm, ps);
 			}
 		} else {
-			this.compileComplex(asm);
+			this.compileComplex(asm, ps);
 		}
 	}
 }
 export class ArrayInitGetVariation<A extends VarKind> extends Statement {
-	constructor(readonly arr: PointerExpression<A>, private readonly arity: number) {
+	constructor(readonly arr: PtrExpression<A>, private readonly arity: number) {
 		super();
 	}
-	public compile(asm: Assembler) {
-		this.arr.dereference.compilePtr(asm);
+	public compile(asm: Assembler, ps: EdslProgramScope) {
+		this.arr.dereference.compilePtr(asm, ps);
 		asm.prim(TTI.GETVARIATION).added(this.arity);
 
 		if (this.arity !== this.arr.dereference.size) {

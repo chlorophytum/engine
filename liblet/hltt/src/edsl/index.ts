@@ -1,18 +1,22 @@
 import * as stringify from "json-stable-stringify";
 import Assembler from "../asm";
-import { BinaryExpression, NullaryExpression, UnaryExpression } from "../ast/expression/arith";
-import { cExpr } from "../ast/expression/constant";
-import { InvokeExpression } from "../ast/expression/invoke";
+import { cExprArr } from "../ast/expression/constant";
+import { ArrayIndex, ArrayInitGetVariation } from "../ast/expression/pointer";
+import { VariableFactory } from "../ast/expression/variable";
 import {
-	ArrayIndex,
-	ArrayInit,
-	ArrayInitGetVariation,
-	CoercedVariable
-} from "../ast/expression/pointer";
-import { VariableFactory, VariableSet } from "../ast/expression/variable";
-import { Expression, PointerExpression, Statement, Variable, VarKind } from "../ast/interface";
-import { TtFunctionScopeSolver, TtGlobalScope, TtProgramScope } from "../ast/scope";
-import { AssemblyStatement } from "../ast/statement/assembly";
+	EdslFunctionScopeSolver,
+	EdslGlobalScope,
+	EdslProgramScope,
+	Expression,
+	Statement,
+	Variable,
+	VarKind,
+	VkArgument,
+	VkCvt,
+	VkFpgm,
+	VkTwilight
+} from "../ast/interface";
+import { AsmStatement } from "../ast/statement/assembly";
 import { ProgramBeginStatement } from "../ast/statement/begin";
 import {
 	AlternativeStatement,
@@ -21,47 +25,44 @@ import {
 	StatementBody,
 	WhileStatement
 } from "../ast/statement/branch";
-import { GCExpression, SCFSStatement } from "../ast/statement/coord";
-import { DeltaStatement } from "../ast/statement/deltas";
-import {
-	GraphStateStatement,
-	GraphStateStatement1,
-	IupStatement
-} from "../ast/statement/graph-state";
-import { LIp, LMdap, LMdrp, LMiap, LMirp } from "../ast/statement/move-point";
 import { ReturnStatement } from "../ast/statement/return";
 import { SequenceStatement } from "../ast/statement/sequence";
-import { VkArgument, VkCvt, VkFpgm, VkStorage, VkTwilight } from "../ast/variable-kinds";
 import { InstrFormat, InstrSink, TTI } from "../instr";
-import { TtGlobalScopeT, TtSymbol } from "../scope";
-import { mxapFunctionSys, mxrpFunctionSys } from "./flags";
+import { TtGlobalScopeT } from "../scope";
+import { DslConstructor, NExpr } from "./expr-ctor";
 import { TtStat } from "./stat";
 
 export * from "../ast";
 
-type NumExpr = number | Expression;
+export interface ProgramStore {
+	fpgm: Map<Variable<VkFpgm>, ProgramRecord>;
+}
 
-function createFuncScopeSolver(store: ProgramStore): TtFunctionScopeSolver {
-	return {
-		resolve(v: TtSymbol) {
-			const fr = store.fpgm.get(v as Variable<VkFpgm>);
-			if (fr) return fr.scope;
-			else return undefined;
-		}
-	};
+export interface ProgramRecord {
+	scope: EdslProgramScope;
+	program: Statement;
+}
+
+class CProgramStoreScopeResolver implements EdslFunctionScopeSolver {
+	constructor(private readonly store: ProgramStore) {}
+	resolve(v: Variable<VkFpgm>) {
+		const fr = this.store.fpgm.get(v);
+		if (fr) return fr.scope;
+		else return undefined;
+	}
 }
 
 export class GlobalDsl {
-	public readonly scope: TtGlobalScope;
+	public readonly scope: EdslGlobalScope;
 	constructor(private readonly store: ProgramStore, private readonly stat: TtStat = {}) {
-		this.scope = new TtGlobalScopeT(VariableFactory);
-		this.scope.funcScopeSolver = createFuncScopeSolver(this.store);
-		if (stat) {
-			this.scope.fpgm.base = stat.maxFunctionDefs || 0;
-			this.scope.twilights.base = stat.maxTwilightPoints || 0;
-			this.scope.storages.base = stat.maxStorage || 0;
-			this.scope.cvt.base = stat.cvtSize || 0;
-		}
+		this.scope = new TtGlobalScopeT(
+			VariableFactory,
+			new CProgramStoreScopeResolver(this.store)
+		);
+		this.scope.fpgm.base = stat.maxFunctionDefs || 0;
+		this.scope.twilights.base = stat.maxTwilightPoints || 0;
+		this.scope.storages.base = stat.maxStorage || 0;
+		this.scope.cvt.base = stat.cvtSize || 0;
 	}
 
 	public declareFunction(name: string) {
@@ -99,7 +100,7 @@ export class GlobalDsl {
 		const ls = this.scope.createFunctionScope(vFunc);
 		ls.returnArity = returnArity;
 		for (let j = 0; j < argsArity; j++) ls.arguments.declare();
-		const block = new AssemblyStatement(ls, asm);
+		const block = new AsmStatement(ls, asm);
 		this.store.fpgm.set(vFunc, { scope: ls, program: block });
 		return vFunc;
 	}
@@ -107,7 +108,7 @@ export class GlobalDsl {
 	public program(G: (f: ProgramDsl) => Iterable<Statement>): ProgramRecord {
 		const ls = this.scope.createProgramScope();
 		const edsl = new ProgramDsl(this, ls);
-		const block = new SequenceStatement([new ProgramBeginStatement(ls), ...G(edsl)]);
+		const block = new SequenceStatement([new ProgramBeginStatement(), ...G(edsl)]);
 		return { scope: ls, program: block };
 	}
 
@@ -126,13 +127,13 @@ export class GlobalDsl {
 		ls.assignID();
 		const asm = new Assembler();
 		asm.push(v).prim(TTI.FDEF).deleted(1);
-		if (funcProgram instanceof AssemblyStatement) {
+		if (funcProgram instanceof AsmStatement) {
 			asm.added(ls.arguments.size);
 			funcProgram.compile(asm);
 		} else {
 			ls.return = asm.createLabel();
 			const h0 = asm.blockBegin();
-			funcProgram.compile(asm);
+			funcProgram.compile(asm, ls);
 			asm.blockEnd(h0 + (ls.returnArity || 0));
 			asm.blockEnd(h0 + (ls.returnArity || 0), ls.return);
 		}
@@ -157,13 +158,13 @@ export class GlobalDsl {
 	public compileProgram<R>(p: ProgramRecord, format: InstrFormat<R>): R {
 		p.scope.assignID();
 		const asm = new Assembler();
-		p.program.compile(asm);
+		p.program.compile(asm, p.scope);
 		p.scope.maxStack = asm.maxStackHeight;
 		this.updateStat(p.scope);
 		return asm.codeGen(format.createSink());
 	}
 
-	private updateStat(ls: TtProgramScope) {
+	private updateStat(ls: EdslProgramScope) {
 		this.stat.maxFunctionDefs = Math.max(
 			this.stat.maxFunctionDefs || 0,
 			this.scope.fpgm.base + this.scope.fpgm.size
@@ -199,17 +200,10 @@ export class GlobalDsl {
 	}
 }
 
-export interface ProgramStore {
-	fpgm: Map<Variable<VkFpgm>, ProgramRecord>;
-}
-
-export interface ProgramRecord {
-	scope: TtProgramScope;
-	program: Statement;
-}
-
-export class ProgramDsl {
-	constructor(private readonly globalDsl: GlobalDsl, readonly scope: TtProgramScope) {}
+export class ProgramDsl extends DslConstructor {
+	constructor(private readonly globalDsl: GlobalDsl, readonly scope: EdslProgramScope) {
+		super();
+	}
 	public args(n: number) {
 		if (!this.scope.isFunction) throw new TypeError("Cannot declare arguments for programs");
 		let a: Variable<VkArgument>[] = [];
@@ -234,247 +228,65 @@ export class ProgramDsl {
 		return this.globalDsl.scope.twilights.declare(name);
 	}
 
-	public part<A extends VarKind>(a: Variable<A>, b: NumExpr) {
+	public part<A extends VarKind>(a: Variable<A>, b: NExpr) {
 		return new ArrayIndex(a, b);
 	}
 
+	// Non-inheritable EDSL constructors (mostly scope-dependent)
 	// Flow control
-	public return(...expr: NumExpr[]) {
-		const ret = new ReturnStatement(this.scope, expr);
+	public return(...expr: NExpr[]) {
+		const ret = new ReturnStatement(expr);
 		if (this.scope.returnArity === undefined) {
-			this.scope.returnArity = ret.getArgsArity();
+			this.scope.returnArity = ret.getArgsArity(this.scope);
 		}
 		return ret;
 	}
 	public begin(...statements: Statement[]) {
 		return () => statements;
 	}
-	public if(condition: NumExpr, FConsequence?: StatementBody, FAlternate?: StatementBody) {
+	public if(condition: NExpr, FConsequence?: StatementBody, FAlternate?: StatementBody) {
 		const consequence = FConsequence ? AlternativeStatement.from(FConsequence) : null;
 		const alternate = FAlternate ? AlternativeStatement.from(FAlternate) : null;
 
 		return new IfStatement(condition, consequence, alternate);
 	}
-	public while(condition: NumExpr, consequent: StatementBody) {
+	public while(condition: NExpr, consequent: StatementBody) {
 		return new WhileStatement(condition, AlternativeStatement.from(consequent));
 	}
 	public do(consequent: StatementBody) {
 		return {
-			while(condition: NumExpr) {
+			while(condition: NExpr) {
 				return new DoWhileStatement(AlternativeStatement.from(consequent), condition);
 			}
 		};
 	}
 
-	// Assignments
-	public set = <A extends VarKind>(a: Variable<A>, x: NumExpr) => new VariableSet(a, x);
-	public setArr = <A extends VarKind>(a: Variable<A>, x: Iterable<NumExpr>) =>
-		new ArrayInit(a.ptr, x);
-
-	// Graphics
-	public mdap = mxapFunctionSys((r: boolean, x: NumExpr) => new LMdap(this.scope, r, x));
-	public miap = mxapFunctionSys(
-		(r: boolean, x: NumExpr, cv: number | PointerExpression<VkCvt>) =>
-			new LMiap(this.scope, r, x, cv)
-	);
-	public mdrp = mxrpFunctionSys(
-		(
-			rp0: boolean,
-			minDist: boolean,
-			round: boolean,
-			distanceMode: 0 | 1 | 2 | 3,
-			p0: NumExpr,
-			p1: NumExpr
-		) => new LMdrp(this.scope, rp0, minDist, round, distanceMode, p0, p1)
-	);
-	public mirp = mxrpFunctionSys(
-		(
-			rp0: boolean,
-			minDist: boolean,
-			round: boolean,
-			distanceMode: 0 | 1 | 2 | 3,
-			p0: NumExpr,
-			p1: NumExpr,
-			cv: number | PointerExpression<VkCvt>
-		) => new LMirp(this.scope, rp0, minDist, round, distanceMode, p0, p1, cv)
-	);
-	public ip = (p1: NumExpr, p2: NumExpr, ...p: NumExpr[]) => new LIp(this.scope, p1, p2, p);
-
-	// Binary
-	public add = (a: NumExpr, b: NumExpr) => BinaryExpression.Add(a, b);
-	public sub = (a: NumExpr, b: NumExpr) => BinaryExpression.Sub(a, b);
-	public mul = (a: NumExpr, b: NumExpr) => BinaryExpression.Mul(a, b);
-	public div = (a: NumExpr, b: NumExpr) => BinaryExpression.Div(a, b);
-	public max = (a: NumExpr, b: NumExpr) => BinaryExpression.Max(a, b);
-	public min = (a: NumExpr, b: NumExpr) => BinaryExpression.Min(a, b);
-	public lt = (a: NumExpr, b: NumExpr) => BinaryExpression.Lt(a, b);
-	public lteq = (a: NumExpr, b: NumExpr) => BinaryExpression.Lteq(a, b);
-	public gt = (a: NumExpr, b: NumExpr) => BinaryExpression.Gt(a, b);
-	public gteq = (a: NumExpr, b: NumExpr) => BinaryExpression.Gteq(a, b);
-	public eq = (a: NumExpr, b: NumExpr) => BinaryExpression.Eq(a, b);
-	public neq = (a: NumExpr, b: NumExpr) => BinaryExpression.Neq(a, b);
-	public and = (a: NumExpr, b: NumExpr) => BinaryExpression.And(a, b);
-	public or = (a: NumExpr, b: NumExpr) => BinaryExpression.Or(a, b);
-
-	public addSet = <A extends VarKind>(a: Variable<A>, x: NumExpr) =>
-		new VariableSet(a, BinaryExpression.Add(a, x));
-	public subSet = <A extends VarKind>(a: Variable<A>, x: NumExpr) =>
-		new VariableSet(a, BinaryExpression.Sub(a, x));
-	public mulSet = <A extends VarKind>(a: Variable<A>, x: NumExpr) =>
-		new VariableSet(a, BinaryExpression.Mul(a, x));
-	public divSet = <A extends VarKind>(a: Variable<A>, x: NumExpr) =>
-		new VariableSet(a, BinaryExpression.Div(a, x));
-
-	// Unary
-	public abs = (a: NumExpr) => new UnaryExpression(TTI.ABS, a, a => Math.abs(a));
-	public neg = (a: NumExpr) => new UnaryExpression(TTI.NEG, a, a => -a);
-	public floor = (a: NumExpr) => new UnaryExpression(TTI.FLOOR, a, a => Math.floor(a / 64) * 64);
-	public ceiling = (a: NumExpr) =>
-		new UnaryExpression(TTI.CEILING, a, a => Math.ceil(a / 64) * 64);
-	public even = (a: NumExpr) => new UnaryExpression(TTI.EVEN, a);
-	public odd = (a: NumExpr) => new UnaryExpression(TTI.ODD, a);
-	public not = (a: NumExpr) => new UnaryExpression(TTI.NOT, a, a => (a ? 0 : 1));
-	public round = {
-		gray: (a: NumExpr) => new UnaryExpression(TTI.ROUND_Grey, a),
-		black: (a: NumExpr) => new UnaryExpression(TTI.ROUND_Black, a),
-		white: (a: NumExpr) => new UnaryExpression(TTI.ROUND_White, a),
-		mode3: (a: NumExpr) => new UnaryExpression(TTI.ROUND_Undef4, a)
-	};
-	public nRound = {
-		gray: (a: NumExpr) => new UnaryExpression(TTI.NROUND_Grey, a),
-		black: (a: NumExpr) => new UnaryExpression(TTI.NROUND_Black, a),
-		white: (a: NumExpr) => new UnaryExpression(TTI.NROUND_White, a),
-		mode3: (a: NumExpr) => new UnaryExpression(TTI.NROUND_Undef4, a)
-	};
-	public getInfo = (a: NumExpr) => new UnaryExpression(TTI.GETINFO, a);
-	public gc = {
-		cur: (a: NumExpr) => new GCExpression(a, TTI.GC_cur, this.scope),
-		orig: (a: NumExpr) => new GCExpression(a, TTI.GC_orig, this.scope)
-	};
-
-	//
-	public scfs = (a: NumExpr, b: NumExpr) => new SCFSStatement(a, b, this.scope);
-
-	// Calls
-	public apply(fn: Variable<VkFpgm>, parts: Iterable<NumExpr>) {
-		return new InvokeExpression(this.scope, fn, parts);
-	}
-	public symbol<A extends VarKind>(T: Variable<A> | Symbol<A>) {
+	// Symbol resolution and call
+	public symbol<A extends VarKind>(T: Variable<A> | Symbol<A>): Variable<A> {
 		if (T instanceof Function) {
 			return T(this.globalDsl);
 		} else {
 			return T;
 		}
 	}
-	public call(T: Variable<VkFpgm> | Symbol<VkFpgm>, ...parts: NumExpr[]) {
+	public call(T: Variable<VkFpgm> | Symbol<VkFpgm>, ...parts: NExpr[]): Expression {
 		if (T instanceof Function) {
-			return new InvokeExpression(this.scope, T(this.globalDsl), parts);
+			return this.apply(T(this.globalDsl), cExprArr(parts));
 		} else {
-			return new InvokeExpression(this.scope, T, parts);
+			return this.apply(T, cExprArr(parts));
 		}
 	}
 
-	public rawState = {
-		szp0: (a: NumExpr) => new GraphStateStatement1(TTI.SZP0, a),
-		szp1: (a: NumExpr) => new GraphStateStatement1(TTI.SZP1, a),
-		szp2: (a: NumExpr) => new GraphStateStatement1(TTI.SZP2, a)
-	};
-
-	// Deltas
-	public delta = {
-		p1: (...a: [NumExpr, NumExpr][]) =>
-			new DeltaStatement(
-				this.scope,
-				TTI.DELTAP1,
-				true,
-				a.map(x => x[0]),
-				a.map(x => x[1])
-			),
-		p2: (...a: [NumExpr, NumExpr][]) =>
-			new DeltaStatement(
-				this.scope,
-				TTI.DELTAP2,
-				true,
-				a.map(x => x[0]),
-				a.map(x => x[1])
-			),
-		p3: (...a: [NumExpr, NumExpr][]) =>
-			new DeltaStatement(
-				this.scope,
-				TTI.DELTAP3,
-				true,
-				a.map(x => x[0]),
-				a.map(x => x[1])
-			),
-		c1: (...a: [number | PointerExpression<VkCvt>, NumExpr][]) =>
-			new DeltaStatement(
-				this.scope,
-				TTI.DELTAC1,
-				false,
-				a.map(x => x[0]),
-				a.map(x => x[1])
-			),
-		c2: (...a: [number | PointerExpression<VkCvt>, NumExpr][]) =>
-			new DeltaStatement(
-				this.scope,
-				TTI.DELTAC2,
-				false,
-				a.map(x => x[0]),
-				a.map(x => x[1])
-			),
-		c3: (...a: [number | PointerExpression<VkCvt>, NumExpr][]) =>
-			new DeltaStatement(
-				this.scope,
-				TTI.DELTAC3,
-				false,
-				a.map(x => x[0]),
-				a.map(x => x[1])
-			)
-	};
-
-	// Measure
-	public mppem = () => new NullaryExpression(TTI.MPPEM);
-	public mps = () => new NullaryExpression(TTI.MPS);
-
-	public toFloat = (a: NumExpr) => BinaryExpression.Mul(64 * 64, a);
-
-	// GS
-	public svtca = {
-		x: () => new GraphStateStatement(TTI.SVTCA_x),
-		y: () => new GraphStateStatement(TTI.SVTCA_y)
-	};
-	public iup = {
-		x: () => new IupStatement(TTI.IUP_x),
-		y: () => new IupStatement(TTI.IUP_y)
-	};
-
-	// GetVariation
+	// Variation
 	public getVariationDimensionCount() {
 		return this.globalDsl.getStats().varDimensionCount || 0;
 	}
-	public getVariation<A extends VarKind>(a: Variable<A>) {
+	public getVariation<A extends VarKind>(a: Variable<A>): Statement {
 		return new ArrayInitGetVariation(a.ptr, this.getVariationDimensionCount());
 	}
-
-	// NOP
-	public emptyBlock = () => function* (): Iterable<Statement> {};
-
-	// Coercions
-	public coerce = {
-		fromIndex: {
-			cvt: (e: NumExpr) => new CoercedVariable<VkCvt>(cExpr(e), new VkCvt()),
-			variable: (e: NumExpr, size = 1) =>
-				new CoercedVariable<VkStorage>(cExpr(e), new VkStorage(), size)
-		},
-		toF26D6(x: number) {
-			return Math.round(x * 64);
-		}
-	};
 }
 
-export type Template<Ax extends VarKind, A extends any[]> = (
-	...args: A
-) => (dsl: GlobalDsl) => Variable<Ax>;
+export type Template<Ax extends VarKind, A extends any[]> = (...args: A) => Symbol<Ax>;
 export type Symbol<Ax extends VarKind> = (dsl: GlobalDsl) => Variable<Ax>;
 
 export class Library {

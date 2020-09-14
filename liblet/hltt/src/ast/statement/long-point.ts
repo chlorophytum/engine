@@ -1,8 +1,7 @@
 import LongPoint from "../../asm";
 import { TTI } from "../../instr";
 import { StdLib } from "../../stdlib/init-stdlib";
-import { Expression } from "../interface";
-import { TtProgramScope } from "../scope";
+import { EdslProgramScope, Expression } from "../interface";
 
 export function zoneSetInstr(zone: "zp0" | "zp1" | "zp2") {
 	return zone === "zp0" ? TTI.SZP0 : zone === "zp1" ? TTI.SZP1 : TTI.SZP2;
@@ -44,7 +43,7 @@ export function decideTwilight(point: Expression) {
 	}
 }
 
-export function addLongPointNumberD(ls: TtProgramScope, asm: LongPoint, point: Expression) {
+export function addLongPointNumberD(ls: EdslProgramScope, asm: LongPoint, point: Expression) {
 	const cPoint = point.isConstant() || 0;
 	if (cPoint >= 0) {
 		asm.intro(cPoint);
@@ -54,20 +53,20 @@ export function addLongPointNumberD(ls: TtProgramScope, asm: LongPoint, point: E
 	}
 }
 export function addLongPointNumberUD(
-	ls: TtProgramScope,
+	ps: EdslProgramScope,
 	asm: LongPoint,
 	point: Expression,
 	zone: "zp0" | "zp1" | "zp2",
 	omit?: (x: number) => boolean
 ) {
-	point.compile(asm);
-	StdLib.setZoneLp[zone].inline(ls.globals, asm);
+	point.compile(asm, ps);
+	StdLib.setZoneLp[zone].inline(ps, asm);
 	asm.forgetRegister(zone);
 	return false;
 }
 
 export function addLongPointNumber(
-	ls: TtProgramScope,
+	ps: EdslProgramScope,
 	asm: LongPoint,
 	point: Expression,
 	zone: "zp0" | "zp1" | "zp2",
@@ -87,8 +86,8 @@ export function addLongPointNumber(
 		setZone(asm, zone, cPoint < 0);
 		return om;
 	} else {
-		point.compile(asm);
-		StdLib.setZoneLp[zone].inline(ls.globals, asm);
+		point.compile(asm, ps);
+		StdLib.setZoneLp[zone].inline(ps, asm);
 		asm.forgetRegister(zone);
 		return false;
 	}

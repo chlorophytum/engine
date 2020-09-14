@@ -1,9 +1,21 @@
 import Assembler from "../../asm";
 import { TTI } from "../../instr";
+import { TtSymbolSupportT } from "../../scope";
 import { StdLib } from "../../stdlib/init-stdlib";
-import { VarKind, Expression, Statement, Variable } from "../interface";
-import { TtProgramScope, TtScopeVariableFactory, TtProgramScopeTy } from "../scope";
-import { VkCvt, VkFpgm, VkArgument, VkTwilight, VkStorage } from "../variable-kinds";
+import {
+	EdslProgramScope,
+	EdslProgramScopeTy,
+	EdslScopeVariableFactory,
+	Expression,
+	Statement,
+	Variable,
+	VarKind,
+	VkArgument,
+	VkCvt,
+	VkFpgm,
+	VkStorage,
+	VkTwilight
+} from "../interface";
 import { cExpr } from "./constant";
 
 export const ReadOnly = {
@@ -27,7 +39,7 @@ export class StaticStorage extends Variable<VkStorage> {
 }
 
 export class LocalVariable extends Variable<VkStorage> {
-	constructor(private scope: TtProgramScope, readonly size: number) {
+	constructor(private scope: EdslProgramScope, readonly size: number) {
 		super();
 		if (size <= 0) throw new RangeError("Array must have size > 0");
 	}
@@ -36,7 +48,7 @@ export class LocalVariable extends Variable<VkStorage> {
 		const idx = (this.variableIndex || 0) + this.size - 1;
 		if (idx) {
 			asm.intro(idx);
-			StdLib.getLocalVariable.inline(this.scope.globals, asm);
+			StdLib.getLocalVariable.inline(this.scope, asm);
 		} else {
 			asm.intro(this.scope.globals.sp).prim(TTI.RS).deleted(1).added(1);
 		}
@@ -96,23 +108,34 @@ export class VariableSet<A extends VarKind> extends Statement {
 		super();
 		this.b = cExpr(_b);
 	}
-	public compile(asm: Assembler) {
-		if (this.b.arity !== 1) throw new TypeError("RHS arity > 1");
-		this.v.compilePtr(asm);
-		this.b.compile(asm);
+	public compile(asm: Assembler, ps: EdslProgramScope) {
+		if (this.b.getArity(ps) !== 1) throw new TypeError("RHS arity > 1");
+		this.v.compilePtr(asm, ps);
+		this.b.compile(asm, ps);
 		this.v.accessor.compileSet(asm);
 	}
 }
 
-export const VariableFactory: TtScopeVariableFactory = {
-	storage: (size: number) => new StaticStorage(size),
-	fpgm: () => new FunctionVariable(),
-	cvt: (size: number) => new ControlValue(size),
-	twilight: () => new TwilightVariable(),
-	local: (s: TtProgramScopeTy) => ({
-		local: (size: number) =>
-			s.isFunction ? new LocalVariable(s, size) : new StaticStorage(size),
-		argument: () => new LocalArgument(),
-		localTwilight: () => new TwilightVariable()
+export class CVariableSupport<A extends VarKind> implements TtSymbolSupportT<Variable<A>> {
+	constructor(private readonly mk: (size: number, name?: string) => Variable<A>) {}
+	create(size: number, name?: string) {
+		return this.mk(size, name);
+	}
+	assignID(s: Variable<A>, id: number) {
+		s.variableIndex = id;
+	}
+}
+
+export const VariableFactory: EdslScopeVariableFactory = {
+	storage: new CVariableSupport((size: number) => new StaticStorage(size)),
+	fpgm: new CVariableSupport(() => new FunctionVariable()),
+	cvt: new CVariableSupport((size: number) => new ControlValue(size)),
+	twilight: new CVariableSupport(() => new TwilightVariable()),
+	local: (s: EdslProgramScopeTy) => ({
+		local: s.isFunction
+			? new CVariableSupport((size: number) => new LocalVariable(s, size))
+			: new CVariableSupport((size: number) => new StaticStorage(size)),
+		argument: new CVariableSupport(() => new LocalArgument()),
+		localTwilight: new CVariableSupport(() => new TwilightVariable())
 	})
 };

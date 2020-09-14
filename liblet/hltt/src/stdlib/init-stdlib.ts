@@ -1,5 +1,5 @@
 import Assembler from "../asm";
-import { TtGlobalScope } from "../ast/scope";
+import { EdslGlobalScope, EdslProgramScope } from "../ast/interface";
 import { GlobalDsl } from "../edsl";
 import { TTI } from "../instr";
 
@@ -17,7 +17,7 @@ export class Inliner {
 		private readonly name: string,
 		private readonly argsArity: number,
 		private readonly returnArity: number,
-		private Asm: (a: Assembler, gs: TtGlobalScope) => void
+		private Asm: (a: Assembler, gs: EdslGlobalScope) => void
 	) {}
 
 	public register(edsl: GlobalDsl) {
@@ -25,12 +25,12 @@ export class Inliner {
 			this.Asm(a, edsl.scope)
 		);
 	}
-	public inline(gs: TtGlobalScope, asm: Assembler) {
-		if (gs.useStdLib) {
-			gs.fpgm.declare(this.name).compilePtr(asm);
+	public inline(ps: EdslProgramScope, asm: Assembler) {
+		if (ps.globals.useStdLib) {
+			ps.globals.fpgm.declare(this.name).compilePtr(asm, ps);
 			asm.prim(TTI.CALL, 1 + this.argsArity, this.returnArity);
 		} else {
-			this.Asm(asm, gs);
+			this.Asm(asm, ps.globals);
 		}
 	}
 }

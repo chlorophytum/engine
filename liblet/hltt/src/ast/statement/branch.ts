@@ -1,7 +1,7 @@
 import { TTI } from "../../instr";
 import Assembler from "../../asm";
 import { cExpr } from "../expression/constant";
-import { Expression, Statement } from "../interface";
+import { EdslProgramScope, Expression, Statement } from "../interface";
 
 export type StatementBody = Statement | (() => Iterable<Statement>);
 
@@ -15,9 +15,9 @@ export class AlternativeStatement extends Statement {
 		const last = this.parts[this.parts.length - 1];
 		return last && last.willReturnAfter();
 	}
-	public compile(asm: Assembler) {
+	public compile(asm: Assembler, ps: EdslProgramScope) {
 		const hBegin = asm.blockBegin();
-		for (const part of this.parts) part.compile(asm);
+		for (const part of this.parts) part.compile(asm, ps);
 		asm.blockEnd(hBegin);
 	}
 
@@ -45,16 +45,16 @@ export class IfStatement extends Statement {
 			this.alternate.willReturnAfter()
 		);
 	}
-	public compile(asm: Assembler) {
+	public compile(asm: Assembler, ps: EdslProgramScope) {
 		const hBegin = asm.blockBegin();
-		this.condition.compile(asm);
+		this.condition.compile(asm, ps);
 		asm.prim(TTI.IF).deleted(1);
 		if (this.consequent) {
-			this.consequent.compile(asm);
+			this.consequent.compile(asm, ps);
 		}
 		if (this.alternate) {
 			asm.prim(TTI.ELSE);
-			this.alternate.compile(asm);
+			this.alternate.compile(asm, ps);
 		}
 		asm.prim(TTI.EIF);
 		asm.blockEnd(hBegin);
@@ -84,7 +84,7 @@ export class WhileStatement extends Statement {
 		super();
 		this.condition = cExpr(_condition);
 	}
-	public compile(asm: Assembler) {
+	public compile(asm: Assembler, ps: EdslProgramScope) {
 		const lBeforeLoop = asm.createLabel();
 		const lBeforeBody = asm.createLabel();
 		const lAfterBody = asm.createLabel();
@@ -94,12 +94,12 @@ export class WhileStatement extends Statement {
 		{
 			{
 				asm.intro(asm.createLabelDifference(lBeforeBody, lAfterLoop));
-				this.condition.compile(asm);
+				this.condition.compile(asm, ps);
 				asm.blockBegin(lBeforeBody);
 				asm.prim(TTI.JROF).deleted(2);
 			}
 			{
-				this.consequent.compile(asm);
+				this.consequent.compile(asm, ps);
 				asm.intro(asm.createLabelDifference(lAfterBody, lBeforeLoop));
 				asm.label(lAfterBody);
 				asm.prim(TTI.JMPR).deleted(1);
@@ -118,19 +118,19 @@ export class DoWhileStatement extends Statement {
 		super();
 		this.condition = cExpr(_condition);
 	}
-	public compile(asm: Assembler) {
+	public compile(asm: Assembler, ps: EdslProgramScope) {
 		const lBeforeLoop = asm.createLabel();
 		const lAfterLoop = asm.createLabel();
 
 		const hBegin = asm.blockBegin(lBeforeLoop);
 		{
 			{
-				this.consequent.compile(asm);
+				this.consequent.compile(asm, ps);
 			}
 			{
 				const lBeforeJump = asm.createLabel();
 				asm.intro(asm.createLabelDifference(lBeforeJump, lBeforeLoop));
-				this.condition.compile(asm);
+				this.condition.compile(asm, ps);
 				asm.blockBegin(lBeforeJump);
 				asm.prim(TTI.JROT).deleted(2);
 			}

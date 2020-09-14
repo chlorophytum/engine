@@ -1,15 +1,23 @@
 import Assembler from "../asm";
-import { TtSymbol } from "../scope";
+import { TTI } from "../instr";
+import {
+	TtFunctionScopeSolverT,
+	TtGlobalScopeT,
+	TtLocalScopeVariableFactoryT,
+	TtProgramScopeT,
+	TtScopeVariableFactoryT,
+	TtBinding
+} from "../scope";
 
 export abstract class Statement {
-	public abstract compile(asm: Assembler): void;
+	public abstract compile(asm: Assembler, ps: EdslProgramScope): void;
 	public willReturnAfter(): boolean {
 		return false;
 	}
 }
 
 export abstract class Expression extends Statement {
-	public abstract readonly arity: number;
+	public abstract getArity(ps: EdslProgramScope): number;
 	// Return the number if the value is a constant, undefined otherwise
 	public isConstant(): number | undefined {
 		return undefined;
@@ -21,7 +29,58 @@ export interface VarKind {
 	compileSet(asm: Assembler): void;
 }
 
-export abstract class Variable<Vk extends VarKind> extends Expression implements TtSymbol {
+export class VkStorage implements VarKind {
+	private readonly m_accessorTypeVariable = true;
+	compileRead(asm: Assembler) {
+		asm.prim(TTI.RS).deleted(1).added(1);
+	}
+	compileSet(asm: Assembler) {
+		asm.prim(TTI.WS).deleted(2);
+	}
+}
+
+export class VkArgument {
+	private readonly m_accessorTypeArgument = true;
+	compileRead(asm: Assembler) {
+		throw new Error("Cannot reference pointer of local argument");
+	}
+	compileSet(asm: Assembler) {
+		throw new TypeError("Variable is readonly");
+	}
+}
+
+export class VkFpgm implements VarKind {
+	private readonly m_accessorTypeFunction = true;
+	compileRead(asm: Assembler) {
+		throw new Error("Cannot reference value of FDEF");
+	}
+	compileSet(asm: Assembler) {
+		throw new TypeError("Variable is readonly");
+	}
+}
+
+export class VkTwilight implements VarKind {
+	private readonly m_accessorTypeTwilight = true;
+	compileRead(asm: Assembler) {
+		throw new Error("Cannot reference pointer of twilight point index");
+	}
+	compileSet(asm: Assembler) {
+		throw new TypeError("Variable is readonly");
+	}
+}
+
+export class VkCvt {
+	private readonly m_accessorTypeControlValue = true;
+
+	compileRead(asm: Assembler) {
+		asm.prim(TTI.RCVT).deleted(1).added(1);
+	}
+	compileSet(asm: Assembler) {
+		asm.prim(TTI.WCVTP).deleted(2);
+	}
+}
+
+export abstract class Variable<Vk extends VarKind> extends Expression implements TtBinding {
 	constructor() {
 		super();
 		this.index = this.ptr = new PointerExpressionImpl(this);
@@ -36,26 +95,28 @@ export abstract class Variable<Vk extends VarKind> extends Expression implements
 	}
 
 	// Expression properties
-	public readonly arity = 1;
+	public getArity() {
+		return 1;
+	}
 	public abstract readonly accessor: Vk;
 
-	public abstract compilePtr(asm: Assembler): void;
+	public abstract compilePtr(asm: Assembler, ps: EdslProgramScope): void;
 	public isConstantPtr(): number | undefined {
 		return undefined;
 	}
 
-	public compile(asm: Assembler) {
+	public compile(asm: Assembler, ps: EdslProgramScope) {
 		asm.refValue(this);
-		this.compilePtr(asm);
+		this.compilePtr(asm, ps);
 		this.accessor.compileRead(asm);
 	}
 
 	// "Pointer" expression
-	public readonly index: PointerExpression<Vk>;
-	public readonly ptr: PointerExpression<Vk>;
+	public readonly index: PtrExpression<Vk>;
+	public readonly ptr: PtrExpression<Vk>;
 }
 
-export interface PointerExpression<Vk extends VarKind> extends Expression {
+export interface PtrExpression<Vk extends VarKind> extends Expression {
 	readonly dereference: Variable<Vk>;
 }
 
@@ -63,8 +124,60 @@ class PointerExpressionImpl<Vk extends VarKind> extends Expression {
 	constructor(readonly dereference: Variable<Vk>) {
 		super();
 	}
-	public readonly arity = 1;
-	public compile(asm: Assembler) {
-		return this.dereference.compilePtr(asm);
+	public getArity() {
+		return 1;
+	}
+	public compile(asm: Assembler, ps: EdslProgramScope) {
+		return this.dereference.compilePtr(asm, ps);
 	}
 }
+
+// EDSL type aliases
+
+export type EdslScopeVariableFactory = TtScopeVariableFactoryT<
+	Variable<VkStorage>,
+	Variable<VkArgument>,
+	Variable<VkFpgm>,
+	Variable<VkCvt>,
+	Variable<VkTwilight>
+>;
+
+export type EdslFunctionScopeSolver = TtFunctionScopeSolverT<
+	Variable<VkStorage>,
+	Variable<VkArgument>,
+	Variable<VkFpgm>,
+	Variable<VkCvt>,
+	Variable<VkTwilight>
+>;
+
+export class EdslGlobalScope extends TtGlobalScopeT<
+	Variable<VkStorage>,
+	Variable<VkArgument>,
+	Variable<VkFpgm>,
+	Variable<VkCvt>,
+	Variable<VkTwilight>
+> {}
+
+export type EdslLocalScopeVariableFactory = TtLocalScopeVariableFactoryT<
+	Variable<VkStorage>,
+	Variable<VkArgument>,
+	Variable<VkFpgm>,
+	Variable<VkCvt>,
+	Variable<VkTwilight>
+>;
+
+export class EdslProgramScope extends TtProgramScopeT<
+	Variable<VkStorage>,
+	Variable<VkArgument>,
+	Variable<VkFpgm>,
+	Variable<VkCvt>,
+	Variable<VkTwilight>
+> {}
+
+export type EdslProgramScopeTy = TtProgramScopeT<
+	Variable<VkStorage>,
+	Variable<VkArgument>,
+	Variable<VkFpgm>,
+	Variable<VkCvt>,
+	Variable<VkTwilight>
+>;

@@ -1,19 +1,22 @@
 import test from "ava";
-
 import { TextInstr, TTI } from "../../instr";
-import { ConstantExpression, VolatileExpression } from "../expression/constant";
+import { cExpr, ConstantExpression, VolatileExpression } from "../expression/constant";
 import { compileProgram } from "../test-util";
-
 import { DeltaStatement } from "./deltas";
 
 test("Statement: Deltas", t => {
-	const asm = compileProgram(function*(gs, ls) {
+	const asm = compileProgram(function* (gs, ls) {
 		yield new DeltaStatement(
-			ls,
 			TTI.DELTAP1,
 			true,
-			[1, ~2, 3, 4, new VolatileExpression(new ConstantExpression(5))],
-			[1, 2, 3, 4, 5]
+			[
+				cExpr(1),
+				cExpr(~2),
+				cExpr(3),
+				cExpr(4),
+				new VolatileExpression(new ConstantExpression(5))
+			],
+			[1, 2, 3, 4, 5].map(cExpr)
 		);
 	});
 	t.deepEqual(
