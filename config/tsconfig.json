@@ -1,0 +1,19 @@
+{
+	"files": [],
+	"references": [
+		{"path": "../packages/arch"},
+		{"path": "../packages/cli"},
+		{"path": "../packages/cli-proc"},
+		{"path": "../packages/final-hint-format-hltt"},
+		{"path": "../packages/font-format-otd"},
+		{"path": "../packages/font-format-ttf"},
+		{"path": "../packages/font-opentype"},
+		{"path": "../packages/fontforge-instr"},
+		{"path": "../packages/hint-common"},
+		{"path": "../packages/hint-store-memory"},
+		{"path": "../packages/hint-store-provider-file"},
+		{"path": "../packages/hltt"},
+		{"path": "../packages/hm-combine"},
+		{"path": "../packages/util-json"}
+	]
+}
