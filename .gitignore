@@ -7,3 +7,4 @@ packages/*/lib
 tmp
 payloads
 .build-cache
+.links.json
