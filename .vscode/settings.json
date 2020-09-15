@@ -146,8 +146,8 @@
 		"**/CVS": true,
 		"**/.DS_Store": true,
 		"node_modules": true,
-		"pacakges/*/node_modules": true,
-		"pacakges/*/lib": true,
+		"packages/*/node_modules": true,
+		"packages/*/lib": true,
 		".awcache": true,
 		"dist": true,
 		"**/.build-cache": true
