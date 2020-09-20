@@ -6,7 +6,7 @@ import {
 } from "@chlorophytum/final-hint-format-hltt";
 import * as fs from "fs-extra";
 import { FontIo, Ot } from "ot-builder";
-import { Base64Instr } from "../support/binary-instr";
+import { BufferInstr } from "../support/buffer-instr";
 import { GlyphSetWrapper, VarWrapper } from "../support/otb-support";
 
 export class TtfInstrIntegrator implements IFinalHintIntegrator {
@@ -50,40 +50,34 @@ export class TtfInstrIntegrator implements IFinalHintIntegrator {
 		}
 	}
 
-	private readonly instructionCache: Map<string, string> = new Map();
-	private createHintRep(col: HlttCollector, fhs: HlttSession): HlttFinalHintStoreRep<string> {
-		const fpgm = [...col.getFunctionDefs(Base64Instr).values()];
-		const prep = [fhs.getPreProgram(Base64Instr)];
+	private readonly instructionCache: Map<string, Buffer> = new Map();
+	private createHintRep(col: HlttCollector, fhs: HlttSession): HlttFinalHintStoreRep<Buffer> {
+		const fpgm = [...col.getFunctionDefs(BufferInstr).values()];
+		const prep = [fhs.getPreProgram(BufferInstr)];
 		const cvt = col.getControlValueDefs();
-		const glyf: { [key: string]: string } = {};
+		const glyf: { [key: string]: Buffer } = {};
 		for (let gid of fhs.listGlyphNames()) {
-			glyf[gid] = fhs.getGlyphProgram(gid, Base64Instr, this.instructionCache);
+			glyf[gid] = fhs.getGlyphProgram(gid, BufferInstr, this.instructionCache);
 		}
 		return { stats: col.getStats(), fpgm, prep, glyf, cvt };
 	}
 
-	private updateSharedInstructions(ttf: Ot.Font.Ttf, store: HlttFinalHintStoreRep<string>) {
+	private updateSharedInstructions(ttf: Ot.Font.Ttf, store: HlttFinalHintStoreRep<Buffer>) {
 		ttf.fpgm = new Ot.Fpgm.Table(
-			Buffer.concat([
-				ttf.fpgm ? ttf.fpgm.instructions : Buffer.alloc(0),
-				...store.fpgm.map(Base64Instr.decode)
-			])
+			Buffer.concat([ttf.fpgm ? ttf.fpgm.instructions : Buffer.alloc(0), ...store.fpgm])
 		);
 		ttf.prep = new Ot.Fpgm.Table(
-			Buffer.concat([
-				ttf.prep ? ttf.prep.instructions : Buffer.alloc(0),
-				...store.prep.map(Base64Instr.decode)
-			])
+			Buffer.concat([ttf.prep ? ttf.prep.instructions : Buffer.alloc(0), ...store.prep])
 		);
 	}
-	private updateGlyphInstructions(ttf: Ot.Font.Ttf, store: HlttFinalHintStoreRep<string>) {
+	private updateGlyphInstructions(ttf: Ot.Font.Ttf, store: HlttFinalHintStoreRep<Buffer>) {
 		const glyphBimap = new GlyphSetWrapper(ttf);
 		for (const [gn, glyph] of glyphBimap) {
 			const hint = store.glyf[gn];
-			if (hint) glyph.hints = new Ot.Glyph.TtInstruction(Base64Instr.decode(hint));
+			if (hint) glyph.hints = new Ot.Glyph.TtInstruction(hint);
 		}
 	}
-	private updateMaxp(ttf: Ot.Font.Ttf, store: HlttFinalHintStoreRep<string>) {
+	private updateMaxp(ttf: Ot.Font.Ttf, store: HlttFinalHintStoreRep<Buffer>) {
 		ttf.maxp.maxZones = 2;
 		ttf.maxp.maxFunctionDefs = Math.min(
 			0xffff,
@@ -103,7 +97,7 @@ export class TtfInstrIntegrator implements IFinalHintIntegrator {
 		);
 	}
 
-	private updateCvt(ttf: Ot.Font.Ttf, store: HlttFinalHintStoreRep<string>) {
+	private updateCvt(ttf: Ot.Font.Ttf, store: HlttFinalHintStoreRep<Buffer>) {
 		const varWrapper = new VarWrapper(ttf);
 		const mc = new Ot.Var.ValueFactory();
 		if (!ttf.cvt) ttf.cvt = new Ot.Cvt.Table();
