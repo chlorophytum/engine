@@ -38,6 +38,20 @@ export interface IFontSource<GID> {
 	readonly metadata: IFontSourceMetadata;
 	// Get dimensions of variation
 	getVariationDimensions(): Promise<ReadonlyArray<string>>;
+	// Get range and stops of this variation dimension
+	getRangeAndStopsOfVariationDimension(
+		dim: string
+	): Promise<ReadonlyArray<readonly [number, number]> | null | undefined>;
+	// Conversion from user variation to normalized variation
+	// Input datatype is explicitly chosen to be different from normalized instance
+	convertUserInstanceToNormalized(
+		user: Variation.UserInstance
+	): Promise<Variation.Instance | null | undefined>;
+	// Conversion from user master to normalized master
+	// Input datatype is explicitly chosen to be different from normalized instance
+	convertUserMasterToNormalized(
+		user: Variation.UserMaster
+	): Promise<Variation.Master | null | undefined>;
 	// Get entry points
 	getEntries(): Promise<ReadonlyArray<IFontEntry<GID>>>;
 	// Glyph names

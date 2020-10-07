@@ -1,5 +1,11 @@
 import { Glyph, Variation } from "@chlorophytum/arch";
 
+export type OtVarMasterDR = { readonly min: number; readonly peak: number; readonly max: number };
+export type OtVarMaster = { readonly otVar: { readonly [axis: string]: OtVarMasterDR } };
+export function isOtVarMaster(m: unknown): m is OtVarMaster {
+	return m && typeof (m as any).otVar === "object";
+}
+
 export interface ISimpleGetMap<K, V> {
 	get(key: K): V | undefined;
 	[Symbol.iterator](): Iterable<[K, V]>;
@@ -23,7 +29,14 @@ export interface GsubRelation<GID> {
 
 export interface IOpenTypeFontSourceSupport<GID> {
 	readonly glyphSet: ISimpleGetBimap<string, GID>;
-	getVariationDimensions(): Promise<ReadonlyArray<string>>;
+	getVariationDimensions(): ReadonlyArray<string>;
+	getRangeAndStopsOfVariationDimension(
+		dim: string
+	): ReadonlyArray<readonly [number, number]> | null | undefined;
+	convertUserInstanceToNormalized(
+		user: Variation.UserInstance
+	): Variation.Instance | null | undefined;
+	convertUserMasterToNormalized(user: Variation.UserMaster): Variation.Master | null | undefined;
 	getGeometry(glyph: GID, instance: null | Variation.Instance): Promise<Glyph.Shape>;
 	getMetric(glyph: GID, instance: null | Variation.Instance): Promise<Glyph.Metric>;
 	getGlyphMasters(glyph: GID): Promise<Variation.MasterRep[]>;

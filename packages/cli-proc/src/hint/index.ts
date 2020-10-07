@@ -14,7 +14,7 @@ import { getFontPlugin, getHintingPasses, getHintStoreProvider, ProcOptions } fr
 import { Arbitrator } from "../tasks/arb";
 import { Progress } from "../tasks/progress";
 import { HintCache } from "./cache";
-import { Host } from "./worker-host";
+import { Host } from "./worker-host-nodejs";
 
 export type HintOptions = ProcOptions & { cacheFilePath?: null | undefined | string };
 export type HintJob = [string, string];

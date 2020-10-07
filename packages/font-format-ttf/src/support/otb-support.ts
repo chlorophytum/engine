@@ -11,10 +11,14 @@ import {
 	IOpenTypeFontSourceSupport,
 	ISimpleGetBimap,
 	ISimpleGetMap,
+	isOtVarMaster,
 	OpenTypeFontEntry,
-	OpenTypeFontSource
+	OpenTypeFontSource,
+	OtVarMaster,
+	OtVarMasterDR
 } from "@chlorophytum/font-opentype";
 import { Ot } from "ot-builder";
+import { F16D16Div, F16D16FromNumber, F16D16Mul, F16D16ToF2D14 } from "../normalization";
 
 export class OtbFontSource extends OpenTypeFontSource<Ot.Glyph> {
 	private readonly entry: OtbFontEntry;
@@ -54,8 +58,17 @@ export class OtbSupport
 		this.fvarWrapper = new VarWrapper(font);
 	}
 
-	public async getVariationDimensions() {
+	public getVariationDimensions() {
 		return Array.from(this.fvarWrapper.keys());
+	}
+	public getRangeAndStopsOfVariationDimension(dim: string) {
+		return this.fvarWrapper.getRangeAndStops(dim);
+	}
+	public convertUserInstanceToNormalized(user: Variation.UserInstance) {
+		return this.fvarWrapper.convertUserInstanceToNormalized(user);
+	}
+	public convertUserMasterToNormalized(user: Variation.UserMaster) {
+		return this.fvarWrapper.convertUserMasterToNormalized(user);
 	}
 
 	public async getGlyphMasters(glyph: Ot.Glyph) {
@@ -155,7 +168,7 @@ export class OtbSupport
 class MasterCollector {
 	constructor(private readonly fvarWrapper: VarWrapper) {}
 	private readonly masterCache = new WeakSet<Ot.Var.Master>();
-	private readonly collectedMasters = new Map<string, Variation.MasterRep>();
+	private readonly collectedMasters = new Map<string, Variation.MasterRep<OtVarMaster>>();
 
 	public processGlyph(g: Ot.Glyph) {
 		this.processValue(g.horizontal.start);
@@ -190,10 +203,10 @@ class MasterCollector {
 	}
 	private processMaster(m: Ot.Var.Master) {
 		if (this.masterCache.has(m)) return;
-		let mx: Variation.Master = {};
-		let peak: Variation.Instance = {};
+		let peak: { [axis: string]: number } = {};
+		let mx: { [axis: string]: OtVarMasterDR } = {};
 		for (const region of m.regions) {
-			const axisTag = this.fvarWrapper.coGet(region.dim);
+			const axisTag = this.fvarWrapper.coGetDim(region.dim);
 			if (!axisTag) continue;
 			mx[axisTag] = { min: region.min, peak: region.peak, max: region.max };
 			peak[axisTag] = region.peak;
@@ -202,11 +215,11 @@ class MasterCollector {
 			Array.from(Object.entries(mx)).sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))
 		);
 		if (!this.collectedMasters.has(masterKey)) {
-			this.collectedMasters.set(masterKey, { peak, master: mx });
+			this.collectedMasters.set(masterKey, { peak, master: { otVar: mx } });
 		}
 		this.masterCache.add(m);
 	}
-	public getResults(): Array<Variation.MasterRep> {
+	public getResults(): Array<Variation.MasterRep<OtVarMaster>> {
 		return Array.from(this.collectedMasters.values());
 	}
 }
@@ -283,17 +296,27 @@ class GeometryEvaluator {
 	}
 }
 
-export class VarWrapper implements ISimpleGetBimap<string, Ot.Var.Dim> {
-	public readonly forward: Map<string, Ot.Var.Dim> = new Map();
-	public readonly backward: Map<Ot.Var.Dim, string> = new Map();
+export class VarWrapper implements ISimpleGetBimap<string, Ot.Fvar.Axis> {
+	public readonly avar: Map<string, readonly (readonly [number, number])[]> = new Map();
+	public readonly forward: Map<string, Ot.Fvar.Axis> = new Map();
+	public readonly backward: Map<Ot.Fvar.Axis, string> = new Map();
+	public readonly backwardDim: Map<Ot.Var.Dim, string> = new Map();
 
 	constructor(font: Ot.Font) {
 		if (font.fvar) {
 			for (let aid = 0; aid < font.fvar.axes.length; aid++) {
-				const dim = font.fvar.axes[aid].dim;
-				const dimName = `${dim.tag}#${aid}`;
-				this.forward.set(dimName, dim);
-				this.backward.set(dim, dimName);
+				const axis = font.fvar.axes[aid];
+				const dimName = `${axis.dim.tag}#${aid}`;
+				this.forward.set(dimName, axis);
+				this.backward.set(axis, dimName);
+				this.backwardDim.set(axis.dim, dimName);
+			}
+		}
+		if (font.avar) {
+			for (const [dim, segMap] of font.avar.segmentMaps) {
+				const b = this.backwardDim.get(dim);
+				if (!b) continue;
+				this.avar.set(b, segMap);
 			}
 		}
 	}
@@ -301,10 +324,13 @@ export class VarWrapper implements ISimpleGetBimap<string, Ot.Var.Dim> {
 	public get(key: string) {
 		return this.forward.get(key);
 	}
-	public coGet(key: Ot.Var.Dim) {
+	public coGet(key: Ot.Fvar.Axis) {
 		return this.backward.get(key);
 	}
-	public *[Symbol.iterator](): Iterable<[string, Ot.Var.Dim]> {
+	public coGetDim(key: Ot.Var.Dim) {
+		return this.backwardDim.get(key);
+	}
+	public *[Symbol.iterator](): Iterable<[string, Ot.Fvar.Axis]> {
 		yield* this.forward;
 	}
 	public keys() {
@@ -314,13 +340,85 @@ export class VarWrapper implements ISimpleGetBimap<string, Ot.Var.Dim> {
 		return this.forward.values();
 	}
 
+	public getRangeAndStops(key: string): null | readonly (readonly [number, number])[] {
+		const axis = this.get(key);
+		if (!axis) return null;
+		let a: (readonly [number, number])[] = [];
+		if (axis.dim.min < axis.dim.default) a.push([axis.dim.min, -1]);
+		a.push([axis.dim.default, 0]);
+		if (axis.dim.max > axis.dim.default) a.push([axis.dim.max, +1]);
+		return a;
+	}
+
+	// User to CH
+	private calcDefaultNormalizationValue(key: string, userValue: number) {
+		const axis = this.get(key);
+		if (!axis) return 0;
+		const nUser = F16D16FromNumber(userValue),
+			nMin = F16D16FromNumber(axis.dim.min),
+			nDefault = F16D16FromNumber(axis.dim.default),
+			nMax = F16D16FromNumber(axis.dim.max);
+		if (nUser < nDefault) {
+			return Math.max(-1, F16D16ToF2D14(F16D16Div(-(nDefault - nUser), nDefault - nMin)));
+		} else if (nUser > nDefault) {
+			return Math.max(-1, F16D16ToF2D14(F16D16Div(nUser - nDefault, nMax - nDefault)));
+		}
+		return 0;
+	}
+	private normalizeUserAxisValue(key: string, userValue: number) {
+		const axis = this.get(key);
+		if (!axis) return 0;
+		let normalized = this.calcDefaultNormalizationValue(key, userValue);
+		const segMap = this.avar.get(key);
+		if (segMap) {
+			const nNormalized = F16D16FromNumber(normalized);
+			for (let k = 1; k < segMap.length; k++) {
+				const nOrigK = F16D16FromNumber(segMap[k][0]);
+				if (nOrigK === nNormalized) return normalized;
+				if (nOrigK > nNormalized) {
+					const nOrigKm1 = F16D16FromNumber(segMap[k - 1][0]);
+					const nAfterKm1 = F16D16FromNumber(segMap[k - 1][1]);
+					const nAfterK = F16D16FromNumber(segMap[k][1]);
+					const p = F16D16Div(nNormalized - nOrigKm1, nOrigK - nOrigKm1);
+					const nAfter = nAfterKm1 + F16D16Mul(nAfterK - nAfterKm1, p);
+					return F16D16ToF2D14(nAfter);
+				}
+			}
+		}
+		return normalized;
+	}
+	public convertUserInstanceToNormalized(user: Variation.UserInstance): Variation.Instance {
+		const normalized: { [axis: string]: number } = {};
+		for (const k in user.user) {
+			normalized[k] = this.normalizeUserAxisValue(k, user.user[k]);
+		}
+		return normalized;
+	}
+	public convertUserMasterToNormalized(user: Variation.UserMaster): null | OtVarMaster {
+		if (!isOtVarMaster(user.user)) {
+			return null;
+		}
+		const normalized: { [axis: string]: OtVarMasterDR } = {};
+		for (const k in user.user.otVar) {
+			const d = user.user.otVar[k];
+			normalized[k] = {
+				min: this.normalizeUserAxisValue(k, d.min),
+				peak: this.normalizeUserAxisValue(k, d.peak),
+				max: this.normalizeUserAxisValue(k, d.max)
+			};
+		}
+		return { otVar: normalized };
+	}
+
+	// CH to underlying
 	public convertMaster(masterCh: Variation.Master) {
+		if (!isOtVarMaster(masterCh)) return null;
 		let masterRep: Ot.Var.MasterDim[] = [];
-		for (const dimKey in masterCh) {
-			const dim = this.get(dimKey);
-			if (!dim) continue;
-			const val = masterCh[dimKey];
-			masterRep.push({ dim, min: val.min, peak: val.peak, max: val.max });
+		for (const dimKey in masterCh.otVar) {
+			const axis = this.get(dimKey);
+			if (!axis) continue;
+			const val = masterCh.otVar[dimKey];
+			masterRep.push({ dim: axis.dim, min: val.min, peak: val.peak, max: val.max });
 		}
 		return new Ot.Var.Master(masterRep);
 	}
@@ -328,8 +426,8 @@ export class VarWrapper implements ISimpleGetBimap<string, Ot.Var.Dim> {
 		if (instCh == null) return instCh;
 		const inst = new Map<Ot.Var.Dim, number>();
 		for (const an in instCh) {
-			const dim = this.get(an);
-			if (dim) inst.set(dim, instCh[an]);
+			const axis = this.get(an);
+			if (axis) inst.set(axis.dim, instCh[an]);
 		}
 		return inst;
 	}
@@ -339,7 +437,8 @@ export class VarWrapper implements ISimpleGetBimap<string, Ot.Var.Dim> {
 			if (!masterCh) {
 				x = Ot.Var.Ops.add(x, delta);
 			} else {
-				x = Ot.Var.Ops.add(x, mc.make([this.convertMaster(masterCh), delta]));
+				const m = this.convertMaster(masterCh);
+				if (m) x = Ot.Var.Ops.add(x, mc.make([m, delta]));
 			}
 		}
 		return x;

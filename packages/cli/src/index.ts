@@ -13,7 +13,9 @@ program.version(packageJson.version);
 
 function readProcOptions(from: null | undefined | string) {
 	if (!from) throw new TypeError("Configuration file is mandatory");
-	const ho: CliProc.ProcOptions = json5.parse(fs.readFileSync(from, "utf-8"));
+	const cfgPath = path.resolve(from);
+	const ho: CliProc.ProcOptions = json5.parse(fs.readFileSync(cfgPath, "utf-8"));
+	ho.resolutionBase = cfgPath;
 	return ho;
 }
 

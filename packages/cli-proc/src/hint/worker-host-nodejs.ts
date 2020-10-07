@@ -41,9 +41,7 @@ export class Host implements IWorkerHostMain {
 	private tid: null | NodeJS.Timeout = null;
 	private initWorkers() {
 		for (let j = 0; j < this.capacity; j++) {
-			if (!this.workers[j]) {
-				startWorker(j, this, this.options);
-			}
+			if (!this.workers[j]) startWorker(j, this, this.options);
 		}
 		this.tid = null;
 	}
@@ -51,7 +49,7 @@ export class Host implements IWorkerHostMain {
 
 function startWorker(id: number, host: Host, options: ProcOptions) {
 	const workerData: HintWorkData = { options };
-	const worker = new Worker(__dirname + "/worker.js", {
+	const worker = new Worker(__dirname + "/worker-nodejs.js", {
 		workerData,
 		stdout: true,
 		stderr: true

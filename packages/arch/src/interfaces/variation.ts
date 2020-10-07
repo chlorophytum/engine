@@ -1,6 +1,10 @@
 export namespace Variation {
-	export type Instance = { [axis: string]: number };
-	export type Master = { [axis: string]: { min: number; peak: number; max: number } };
+	// Datatype of "master" is format-dependent
+	export type Master = unknown;
+	export type Instance = { readonly [axis: string]: number };
 	export type Variance<T> = [null | Master, T][];
-	export type MasterRep = { peak: Instance; master: Master };
+	export type MasterRep<T = unknown> = { peak: Instance; master: T };
+
+	export type UserInstance = { readonly user: Instance };
+	export type UserMaster = { readonly user: Master };
 }

@@ -15,8 +15,17 @@ export abstract class OpenTypeFontSource<GID> implements IFontSource<GID> {
 	public abstract readonly metadata: IFontSourceMetadata;
 
 	public abstract getEntries(): Promise<ReadonlyArray<OpenTypeFontEntry<GID>>>;
-	public getVariationDimensions() {
+	public async getVariationDimensions() {
 		return this.support.getVariationDimensions();
+	}
+	public async getRangeAndStopsOfVariationDimension(dim: string) {
+		return this.support.getRangeAndStopsOfVariationDimension(dim);
+	}
+	public async convertUserInstanceToNormalized(user: Variation.UserInstance) {
+		return this.support.convertUserInstanceToNormalized(user);
+	}
+	public async convertUserMasterToNormalized(user: Variation.UserMaster) {
+		return this.support.convertUserMasterToNormalized(user);
 	}
 	public async getGlyphFromName(name: string) {
 		return this.support.glyphSet.get(name);

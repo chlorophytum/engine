@@ -109,10 +109,18 @@ export class OtdSupport
 		}
 	}
 
-	public async getVariationDimensions() {
+	public getVariationDimensions() {
 		return [];
 	}
-
+	public getRangeAndStopsOfVariationDimension(dim: string) {
+		return undefined;
+	}
+	public convertUserInstanceToNormalized(user: Variation.UserInstance) {
+		return undefined;
+	}
+	public convertUserMasterToNormalized(user: Variation.UserMaster) {
+		return undefined;
+	}
 	private getGlyphContours(gid: string, instance: null | Variation.Instance): Glyph.Geom {
 		const g = this.otd.glyf[gid];
 		if (!g) return [];
