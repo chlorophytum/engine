@@ -1,4 +1,4 @@
-import { IFinalHintFormat, IFinalHintPreStatSink, Plugins } from "@chlorophytum/arch";
+import { IFinalHintFormat, IFinalHintPreStatSink } from "@chlorophytum/arch";
 import { HlttCollectorImpl } from "./collector";
 import { createPreStatSink, HlttPreStatSink } from "./pre-stat-sink";
 
@@ -17,9 +17,3 @@ export class CHlttFinalHintFormat implements IFinalHintFormat {
 		return createPreStatSink();
 	}
 }
-
-export const FinalHintFormatPlugin: Plugins.IFinalHintFormatPlugin = {
-	async load() {
-		return new CHlttFinalHintFormat();
-	}
-};

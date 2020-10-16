@@ -5,10 +5,17 @@ export namespace Geometry {
 		readonly x: number;
 		readonly y: number;
 	};
+	export enum GlyphPointType {
+		Corner = 0x000,
+		CubicStart = 0x001,
+		CubicEnd = 0x002,
+		Quadratic = 0x003,
+		OnCurvePhantom = 0x100
+	}
 	export type GlyphPoint = {
 		readonly x: number;
 		readonly y: number;
-		readonly on: boolean;
+		readonly type: number;
 		readonly references: null | PointReference[];
 	};
 	export type PointReference = { readonly kind: string; readonly id: number };

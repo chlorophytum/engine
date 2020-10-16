@@ -6,15 +6,9 @@ import {
 	IFontFormat,
 	IHintingPass,
 	IHintStoreProvider,
-	ILogger,
+	ILogger
 } from "@chlorophytum/arch";
-import {
-	getFinalHintPlugin,
-	getFontPlugin,
-	getHintingPasses,
-	getHintStoreProvider,
-	ProcOptions,
-} from "../env";
+import { getFontPlugin, getHintingPasses, getHintStoreProvider, ProcOptions } from "../env";
 import { mainMidHint } from "./procs";
 
 interface ExportPlan {
@@ -26,7 +20,7 @@ export type InstructJob = [string, string, string];
 export async function doInstruct(options: ProcOptions, jobs: InstructJob[]) {
 	const FontFormat = await getFontPlugin(options);
 	const HintStoreProvider = await getHintStoreProvider(options);
-	const FinalHintPlugin = await getFinalHintPlugin(options);
+	const FinalHintFormat = await FontFormat.getFinalHintFormat();
 	const pass = await getHintingPasses(options);
 
 	const logger = new ConsoleLogger();
@@ -40,10 +34,10 @@ export async function doInstruct(options: ProcOptions, jobs: InstructJob[]) {
 	}
 
 	// Pre-stat
-	const preStatSink = await doPreStat(logger.bullet(" + "), FontFormat, FinalHintPlugin, jobs);
+	const preStatSink = await doPreStat(logger.bullet(" + "), FontFormat, FinalHintFormat, jobs);
 
 	// Instruct
-	const ttCol = await FinalHintPlugin.createFinalHintCollector(preStatSink);
+	const ttCol = await FinalHintFormat.createFinalHintCollector(preStatSink);
 	const exportPlans = await doInstructImpl(
 		logger.bullet(" + "),
 		HintStoreProvider,

@@ -1,10 +1,15 @@
 import {
 	IFinalHintCollector,
+	IFinalHintFormat,
 	IFinalHintPreStatSink,
 	IFontFormat,
 	Plugins
 } from "@chlorophytum/arch";
-import { HlttCollector, HlttPreStatSink } from "@chlorophytum/final-hint-format-hltt";
+import {
+	CHlttFinalHintFormat,
+	HlttCollector,
+	HlttPreStatSink
+} from "@chlorophytum/final-hint-format-hltt";
 import { TtfFontLoader } from "./plugin-impl/font-loader";
 import { TtfInstrIntegrator } from "./plugin-impl/instruction-integrator";
 import { TtfPreStatAnalyzer } from "./plugin-impl/pre-stat";
@@ -28,6 +33,9 @@ export class TtfFontFormat implements IFontFormat {
 	}
 	public async createFinalHintIntegrator(fontPath: string) {
 		return new TtfInstrIntegrator(fontPath);
+	}
+	public async getFinalHintFormat(): Promise<IFinalHintFormat> {
+		return new CHlttFinalHintFormat();
 	}
 }
 

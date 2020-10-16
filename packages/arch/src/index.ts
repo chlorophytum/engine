@@ -1,5 +1,5 @@
 import * as _BuiltInCombinators from "./combinators";
-import { IFinalHintFormat, IFontFormat, IHintingPass, IHintStoreProvider } from "./interfaces";
+import { IFontFormat, IHintingPass, IHintStoreProvider } from "./interfaces";
 import * as _Support from "./support/index";
 export * from "./interfaces/index";
 export * from "./logger";
@@ -29,10 +29,5 @@ export namespace Plugins {
 	export type IHintingModelPlugin = IPlugin<IHintingPass>;
 	export interface HintingModelModule {
 		readonly HintingModelPlugin: IHintingModelPlugin;
-	}
-
-	export type IFinalHintFormatPlugin = IPlugin<IFinalHintFormat>;
-	export interface FinalHintModule {
-		readonly FinalHintFormatPlugin: IFinalHintFormatPlugin;
 	}
 }

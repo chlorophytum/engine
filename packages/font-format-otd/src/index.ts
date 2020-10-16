@@ -1,5 +1,6 @@
 import {
 	IFinalHintCollector,
+	IFinalHintFormat,
 	IFinalHintIntegrator,
 	IFinalHintPreStatAnalyzer,
 	IFinalHintPreStatSink,
@@ -10,6 +11,7 @@ import {
 	Variation
 } from "@chlorophytum/arch";
 import {
+	CHlttFinalHintFormat,
 	HlttCollector,
 	HlttFinalHintStoreRep,
 	HlttPreStatSink,
@@ -40,6 +42,9 @@ class OtdFontFormat implements IFontFormat {
 	}
 	public async createFinalHintIntegrator(fontPath: string) {
 		return new OtdHlttIntegrator(fontPath);
+	}
+	public async getFinalHintFormat(): Promise<IFinalHintFormat> {
+		return new CHlttFinalHintFormat();
 	}
 }
 

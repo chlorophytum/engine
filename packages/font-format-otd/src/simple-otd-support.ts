@@ -134,7 +134,9 @@ export class OtdSupport
 					contour.push({
 						x: z.x,
 						y: z.y,
-						on: z.on,
+						type: z.on
+							? Geometry.GlyphPointType.Corner
+							: Geometry.GlyphPointType.Quadratic,
 						references: [WellKnownGeometryKind.Identity(zid++)]
 					});
 				}

@@ -6,8 +6,6 @@ export interface ProcOptions {
 	resolutionBase: string;
 	fontFormat: string;
 	fontFormatOptions?: any;
-	finalFormat: string;
-	finalFormatOptions?: any;
 	hintStoreProvider: string;
 	hintStoreProviderOptions?: any;
 	hintPlugin: string;
@@ -28,11 +26,6 @@ export async function getFontPlugin(hOpt: ProcOptions) {
 	const loader = new NodeJsLoader(hOpt.resolutionBase);
 	const mFontFormat = await loader.import<Plugins.FontFormatModule>(hOpt.fontFormat);
 	return await mFontFormat.FontFormatPlugin.load(loader, hOpt.fontFormatOptions);
-}
-export async function getFinalHintPlugin(hOpt: ProcOptions) {
-	const loader = new NodeJsLoader(hOpt.resolutionBase);
-	const mFinalFormat = await loader.import<Plugins.FinalHintModule>(hOpt.finalFormat);
-	return await mFinalFormat.FinalHintFormatPlugin.load(loader, hOpt.finalFormatOptions);
 }
 export async function getHintStoreProvider(hOpt: ProcOptions) {
 	const loader = new NodeJsLoader(hOpt.resolutionBase);

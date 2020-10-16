@@ -20,6 +20,7 @@ export interface IFontFormat {
 		collector: IFinalHintCollector
 	): Promise<null | IFinalHintSessionConnection>;
 	createFinalHintIntegrator(fontPath: string): Promise<IFinalHintIntegrator>;
+	getFinalHintFormat(): Promise<IFinalHintFormat>;
 }
 export interface IFinalHintSessionConnection {
 	connectFont(path: string): Promise<null | IFinalHintSession>;

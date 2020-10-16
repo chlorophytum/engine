@@ -284,10 +284,22 @@ class GeometryEvaluator {
 				for (const tfm of ev.transformStack) {
 					zTransformed = Ot.Glyph.PointOps.applyTransform(zTransformed, tfm);
 				}
+				let pointType = Geometry.GlyphPointType.Corner;
+				switch (zTransformed.kind) {
+					case Ot.Glyph.PointType.Quad:
+						pointType = Geometry.GlyphPointType.Quadratic;
+						break;
+					case Ot.Glyph.PointType.Lead:
+						pointType = Geometry.GlyphPointType.CubicStart;
+						break;
+					case Ot.Glyph.PointType.Follow:
+						pointType = Geometry.GlyphPointType.CubicEnd;
+						break;
+				}
 				contour.push({
 					x: Ot.Var.Ops.evaluate(zTransformed.x, instance),
 					y: Ot.Var.Ops.evaluate(zTransformed.y, instance),
-					on: zTransformed.kind === Ot.Glyph.PointType.Corner,
+					type: pointType,
 					references: [ev.nextPointRef()]
 				});
 			}
