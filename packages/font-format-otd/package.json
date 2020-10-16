@@ -1,6 +1,6 @@
 {
 	"name": "@chlorophytum/font-format-otd",
-	"version": "0.11.4",
+	"version": "0.20.0",
 	"description": "",
 	"main": "lib/index.js",
 	"typings": "lib/index.d.ts",
@@ -12,12 +12,12 @@
 	"author": "Renzhi Li (aka. Belleve Invis)",
 	"license": "MIT",
 	"dependencies": {
-		"@chlorophytum/arch": "0.11.4",
-		"@chlorophytum/final-hint-format-hltt": "0.11.4",
-		"@chlorophytum/font-opentype": "0.11.4",
-		"@chlorophytum/fontforge-instr": "0.11.4",
-		"@chlorophytum/hltt": "0.11.4",
-		"@chlorophytum/util-json": "0.11.4",
+		"@chlorophytum/arch": "0.20.0",
+		"@chlorophytum/final-hint-format-hltt": "0.20.0",
+		"@chlorophytum/font-opentype": "0.20.0",
+		"@chlorophytum/fontforge-instr": "0.20.0",
+		"@chlorophytum/hltt": "0.20.0",
+		"@chlorophytum/util-json": "0.20.0",
 		"tslib": "^2.0.1"
 	},
 	"devDependencies": {
