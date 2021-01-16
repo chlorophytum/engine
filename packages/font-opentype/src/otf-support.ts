@@ -3,7 +3,8 @@ import { Glyph, Variation } from "@chlorophytum/arch";
 export type OtVarMasterDR = { readonly min: number; readonly peak: number; readonly max: number };
 export type OtVarMaster = { readonly otVar: { readonly [axis: string]: OtVarMasterDR } };
 export function isOtVarMaster(m: unknown): m is OtVarMaster {
-	return m && typeof (m as any).otVar === "object";
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	return !!m && typeof (m as any).otVar === "object";
 }
 
 export interface ISimpleGetMap<K, V> {

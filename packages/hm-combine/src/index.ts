@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
 	IArbitratorProxy,
 	IFontSource,
@@ -68,7 +69,7 @@ const TypePrefix = `@chlorophytum/hm-combine::CCombinedHintingModel`;
 
 export class CCombinedHintingModel implements IHintingModel {
 	constructor(private readonly subModels: IHintingModel[]) {
-		let type = `${TypePrefix}{${subModels.map(x => x.type).join(",")}}`;
+		const type = `${TypePrefix}{${subModels.map(x => x.type).join(",")}}`;
 		this.type = type;
 	}
 	public getPreTask(env: IHintingModelPreEnv) {

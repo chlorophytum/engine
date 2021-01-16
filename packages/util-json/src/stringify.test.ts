@@ -1,16 +1,17 @@
-import test from "ava";
 import * as stream from "stream";
+
+import test from "ava";
 
 import { jsonStringifyToStream } from "./stringify";
 
 function collect(stream: stream.Readable) {
-	return new Promise<string>(function(resolve) {
+	return new Promise<string>(function (resolve) {
 		let string = "";
-		stream.on("data", function(data) {
+		stream.on("data", function (data) {
 			string += data.toString();
 		});
 
-		stream.on("end", function() {
+		stream.on("end", function () {
 			resolve(string);
 		});
 	});
@@ -19,7 +20,7 @@ function collect(stream: stream.Readable) {
 test("jsonStringifyToStream roundtrip", async t => {
 	const obj = { a: 1, b: 2, c: [3, 4, 5] };
 	const s = new stream.Transform();
-	s._transform = function(chunk, encoding, done) {
+	s._transform = function (chunk, encoding, done) {
 		this.push(chunk);
 		done();
 	};

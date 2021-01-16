@@ -1,5 +1,6 @@
 import Assembler from "../../asm";
 import { EdslProgramScope, Statement } from "../interface";
+
 import { BeginStatement } from "./begin";
 import { LastReturnStatement } from "./return";
 

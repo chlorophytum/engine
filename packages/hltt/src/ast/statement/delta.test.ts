@@ -1,7 +1,9 @@
 import test from "ava";
+
 import { TextInstr, TTI } from "../../instr";
 import { cExpr, ConstantExpression, VolatileExpression } from "../expression/constant";
 import { compileProgram } from "../test-util";
+
 import { DeltaStatement } from "./deltas";
 
 test("Statement: Deltas", t => {

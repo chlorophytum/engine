@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { IHintFactory } from "../interfaces";
 
 export class FallbackHintFactory implements IHintFactory {

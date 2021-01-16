@@ -1,7 +1,9 @@
 import test from "ava";
+
 import { TextInstrSink } from "../../instr";
 import { cExpr, ConstantExpression, VolatileExpression } from "../expression/constant";
 import { compileProgram } from "../test-util";
+
 import { AlternativeStatement } from "./branch";
 import { LIp, LMdap, LMdrp, LMiap } from "./move-point";
 

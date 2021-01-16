@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Geometry } from "../interfaces";
 
 export namespace WellKnownGlyphRelation {
-	export interface Pattern<A extends any[]> {
+	export interface Pattern<A extends unknown[]> {
 		apply(...a: A): string;
 		unApply(x: string): null | A;
 	}

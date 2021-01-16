@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { TypeRep } from "typable";
 
 export class PropertyBag {

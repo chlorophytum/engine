@@ -10,6 +10,7 @@ import {
 	HlttCollector,
 	HlttPreStatSink
 } from "@chlorophytum/final-hint-format-hltt";
+
 import { TtfFontLoader } from "./plugin-impl/font-loader";
 import { TtfInstrIntegrator } from "./plugin-impl/instruction-integrator";
 import { TtfPreStatAnalyzer } from "./plugin-impl/pre-stat";

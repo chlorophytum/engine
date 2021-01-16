@@ -1,5 +1,6 @@
-import { IHintingPass } from "@chlorophytum/arch";
 import { MessagePort, parentPort, workerData } from "worker_threads";
+
+import { IHintingPass } from "@chlorophytum/arch";
 
 import { getHintingPasses } from "../env";
 

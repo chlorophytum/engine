@@ -58,7 +58,7 @@ export abstract class OpenTypeFontEntry<GID> implements IFontEntry<GID> {
 	}
 
 	public async getRelatedGlyphs(source: GID, codePoint?: number) {
-		let result: Glyph.Relation<GID>[] = [];
+		const result: Glyph.Relation<GID>[] = [];
 		const gsubRel = await this.support.getGsubRelatedGlyphs(source);
 		for (const { target, script, language, feature, lookupKind } of gsubRel) {
 			result.push({

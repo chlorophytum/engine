@@ -1,6 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import * as stream from "stream";
+
 import { IHint, IHintCacheManager, IHintFactory } from "@chlorophytum/arch";
 import { StreamJsonZip } from "@chlorophytum/util-json";
-import * as stream from "stream";
 
 type HintCacheRep = {
 	[ck: string]: any;

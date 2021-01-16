@@ -301,10 +301,7 @@ export class TextInstrSink implements InstrSink<string> {
 		return this.size;
 	}
 	static rectify(s: string) {
-		return s
-			.trim()
-			.replace(/\s+$/gm, "")
-			.replace(/^\s+/gm, "");
+		return s.trim().replace(/\s+$/gm, "").replace(/^\s+/gm, "");
 	}
 	getResult() {
 		return TextInstrSink.rectify(this.s);

@@ -1,5 +1,7 @@
-import { Plugins } from "@chlorophytum/arch";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as Module from "module";
+
+import { Plugins } from "@chlorophytum/arch";
 
 export interface ProcOptions {
 	jobs?: number;

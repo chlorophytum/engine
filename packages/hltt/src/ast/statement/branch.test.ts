@@ -1,8 +1,10 @@
 import test from "ava";
+
 import { TextInstrSink } from "../../instr";
 import { BinaryExpression } from "../expression/arith";
 import { cExpr } from "../expression/constant";
 import { compileFdef } from "../test-util";
+
 import { AlternativeStatement, DoWhileStatement, IfStatement, WhileStatement } from "./branch";
 
 test("Statement: If", t => {

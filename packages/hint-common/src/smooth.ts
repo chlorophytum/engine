@@ -24,6 +24,7 @@ export namespace Smooth {
 
 	export class HintFactory implements IHintFactory {
 		public readonly type = TAG;
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		public readJson(json: any) {
 			if (json && json.type === TAG) {
 				return new Hint();
@@ -35,7 +36,7 @@ export namespace Smooth {
 	export class HlttCompiler implements IHintCompiler {
 		constructor(private readonly sink: HlttProgramSink) {}
 		public doCompile() {
-			this.sink.addSegment(function*($) {
+			this.sink.addSegment(function* ($) {
 				yield $.iup.x();
 				yield $.iup.y();
 			});

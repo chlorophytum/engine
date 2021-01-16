@@ -18,7 +18,7 @@ export const HlttProgramSink = new TypeRep<HlttProgramSink>(
 export interface HlttProgramSink extends IFinalHintProgramSink {
 	addSegment(gen: ProgramGenerator): void;
 	setDefaultControlValue(
-		symbol: Edsl.Symbol<Edsl.VkCvt>,
+		symbol: Edsl.Linkable<Edsl.VkCvt>,
 		...values: (number | Variation.Variance<number>)[]
 	): void;
 	resolveGlyphPoint(from: Geometry.PointReference): number;
@@ -27,7 +27,10 @@ export interface HlttProgramSink extends IFinalHintProgramSink {
 export class HlttProgramSinkImpl implements Typable<HlttProgramSink> {
 	public readonly format = "hltt";
 	private readonly generators: ProgramGenerator[] = [];
-	private readonly pendingCvtSets: [Edsl.Symbol<Edsl.VkCvt>, Variation.Variance<number>[]][] = [];
+	private readonly pendingCvtSets: [
+		Edsl.Linkable<Edsl.VkCvt>,
+		Variation.Variance<number>[]
+	][] = [];
 
 	constructor(private fSave: (gen: ProgramGenerator, genCvt: CvtGenerator) => void) {}
 
@@ -39,10 +42,10 @@ export class HlttProgramSinkImpl implements Typable<HlttProgramSink> {
 		this.generators.push(gen);
 	}
 	public setDefaultControlValue(
-		symbol: Edsl.Symbol<Edsl.VkCvt>,
+		symbol: Edsl.Linkable<Edsl.VkCvt>,
 		...values: (number | Variation.Variance<number>)[]
 	) {
-		let results: Variation.Variance<number>[] = [];
+		const results: Variation.Variance<number>[] = [];
 		for (const value of values) {
 			if (typeof value === "number") results.push([[null, value]]);
 			else results.push(value);
@@ -62,7 +65,7 @@ export class HlttProgramSinkImpl implements Typable<HlttProgramSink> {
 		$: Edsl.GlobalDsl
 	): IterableIterator<[Edsl.Variable<Edsl.VkCvt>, Variation.Variance<number>[]]> {
 		for (const [symbol, value] of this.pendingCvtSets) {
-			yield [$.convertSymbol(symbol), value];
+			yield [$.convertLinkable(symbol), value];
 		}
 	}
 	public resolveGlyphPoint(from: Geometry.PointReference): number {

@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import * as fs from "fs";
+
 import {
 	IFinalHintCollector,
 	IFinalHintFormat,
@@ -19,7 +22,7 @@ import {
 } from "@chlorophytum/final-hint-format-hltt";
 import { FontForgeTextInstr } from "@chlorophytum/fontforge-instr";
 import { StreamJson } from "@chlorophytum/util-json";
-import * as fs from "fs";
+
 import { OtdFontSource } from "./simple-otd-support";
 
 class OtdFontFormat implements IFontFormat {
@@ -112,7 +115,7 @@ class OtdHlttIntegrator implements IFinalHintIntegrator {
 		const prep = [fhs.getPreProgram(FontForgeTextInstr)];
 		const cvt = col.getControlValueDefs();
 		const glyf: { [key: string]: string } = {};
-		for (let gid of fhs.listGlyphNames()) {
+		for (const gid of fhs.listGlyphNames()) {
 			glyf[gid] = fhs.getGlyphProgram(gid, FontForgeTextInstr, this.instructionCache);
 		}
 		return { stats: col.getStats(), fpgm, prep, glyf, cvt };

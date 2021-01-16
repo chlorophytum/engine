@@ -1,4 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as stringify from "json-stable-stringify";
+
 import Assembler from "../asm";
 import { cExprArr } from "../ast/expression/constant";
 import { ArrayIndex, ArrayInitGetVariation } from "../ast/expression/pointer";
@@ -29,6 +31,7 @@ import { ReturnStatement } from "../ast/statement/return";
 import { SequenceStatement } from "../ast/statement/sequence";
 import { InstrFormat, InstrSink, TTI } from "../instr";
 import { TtGlobalScopeT } from "../scope";
+
 import { DslConstructor, NExpr } from "./expr-ctor";
 import { TtStat } from "./stat";
 
@@ -146,7 +149,7 @@ export class GlobalDsl {
 
 	public compileFunctions<R>(format: InstrFormat<R>): Map<Variable<VkFpgm>, R> {
 		this.beginCompilation();
-		let m = new Map<Variable<VkFpgm>, R>();
+		const m = new Map<Variable<VkFpgm>, R>();
 		for (let loop = 0; loop < 16; loop++) {
 			for (const v of this.store.fpgm.keys()) {
 				m.set(v, this.compileFunction(v, format.createSink()));
@@ -191,7 +194,7 @@ export class GlobalDsl {
 		return this.stat;
 	}
 
-	public convertSymbol<A extends VarKind>(T: Variable<A> | Symbol<A>) {
+	public convertLinkable<A extends VarKind>(T: Variable<A> | Linkable<A>) {
 		if (T instanceof Function) {
 			return T(this);
 		} else {
@@ -206,7 +209,7 @@ export class ProgramDsl extends DslConstructor {
 	}
 	public args(n: number) {
 		if (!this.scope.isFunction) throw new TypeError("Cannot declare arguments for programs");
-		let a: Variable<VkArgument>[] = [];
+		const a: Variable<VkArgument>[] = [];
 		for (let j = 0; j < n; j++) a[j] = this.scope.arguments.declare();
 		this.scope.arguments.lock();
 		return a;
@@ -261,15 +264,15 @@ export class ProgramDsl extends DslConstructor {
 		};
 	}
 
-	// Symbol resolution and call
-	public symbol<A extends VarKind>(T: Variable<A> | Symbol<A>): Variable<A> {
+	// Linkable resolution and call
+	public Linkable<A extends VarKind>(T: Variable<A> | Linkable<A>): Variable<A> {
 		if (T instanceof Function) {
 			return T(this.globalDsl);
 		} else {
 			return T;
 		}
 	}
-	public call(T: Variable<VkFpgm> | Symbol<VkFpgm>, ...parts: NExpr[]): Expression {
+	public call(T: Variable<VkFpgm> | Linkable<VkFpgm>, ...parts: NExpr[]): Expression {
 		if (T instanceof Function) {
 			return this.apply(T(this.globalDsl), cExprArr(parts));
 		} else {
@@ -286,8 +289,8 @@ export class ProgramDsl extends DslConstructor {
 	}
 }
 
-export type Template<Ax extends VarKind, A extends any[]> = (...args: A) => Symbol<Ax>;
-export type Symbol<Ax extends VarKind> = (dsl: GlobalDsl) => Variable<Ax>;
+export type Template<Ax extends VarKind, A extends unknown[]> = (...args: A) => Linkable<Ax>;
+export type Linkable<Ax extends VarKind> = (dsl: GlobalDsl) => Variable<Ax>;
 
 export class Library {
 	private fid = 0;
@@ -297,13 +300,13 @@ export class Library {
 		return this.namePrefix + `::` + this.fid++;
 	}
 
-	public Func(G: (e: ProgramDsl) => Iterable<Statement>): Symbol<VkFpgm> {
+	public Func(G: (e: ProgramDsl) => Iterable<Statement>): Linkable<VkFpgm> {
 		const name = this.generateFunctionName();
 		return (dsl: GlobalDsl) =>
 			dsl.defineFunction(dsl.mangleTemplateName(name), (e: ProgramDsl) => G(e));
 	}
 
-	public Template<A extends any[]>(
+	public Template<A extends unknown[]>(
 		G: (e: ProgramDsl, ...args: A) => Iterable<Statement>
 	): Template<VkFpgm, A> {
 		const fName = this.generateFunctionName();
@@ -313,7 +316,7 @@ export class Library {
 			);
 	}
 
-	public TemplateEx<A extends any[]>(
+	public TemplateEx<A extends unknown[]>(
 		Identity: (...from: A) => any,
 		G: (e: ProgramDsl, ...args: A) => Iterable<Statement>
 	): Template<VkFpgm, A> {
@@ -327,21 +330,21 @@ export class Library {
 		};
 	}
 
-	public Twilight(size: number = 1): Symbol<VkTwilight> {
+	public Twilight(size: number = 1): Linkable<VkTwilight> {
 		const name = this.generateFunctionName();
 		return (dsl: GlobalDsl) => dsl.scope.twilights.declare(name, size);
 	}
-	public TwilightTemplate<A extends any[]>(size: number = 1): Template<VkTwilight, A> {
+	public TwilightTemplate<A extends unknown[]>(size: number = 1): Template<VkTwilight, A> {
 		const name = this.generateFunctionName();
 		return (...args: A) => (dsl: GlobalDsl) =>
 			dsl.scope.twilights.declare(dsl.mangleTemplateName(name, ...args), size);
 	}
 
-	public ControlValue(size: number = 1): Symbol<VkCvt> {
+	public ControlValue(size: number = 1): Linkable<VkCvt> {
 		const name = this.generateFunctionName();
 		return (dsl: GlobalDsl) => dsl.scope.cvt.declare(name, size);
 	}
-	public ControlValueTemplate<A extends any[]>(size: number = 1): Template<VkCvt, A> {
+	public ControlValueTemplate<A extends unknown[]>(size: number = 1): Template<VkCvt, A> {
 		const name = this.generateFunctionName();
 		return (...args: A) => (dsl: GlobalDsl) =>
 			dsl.scope.cvt.declare(dsl.mangleTemplateName(name, ...args), size);

@@ -1,5 +1,6 @@
-import test from "ava";
 import * as Path from "path";
+
+import test from "ava";
 
 import { TtfFontLoader } from "../plugin-impl/font-loader";
 

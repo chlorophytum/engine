@@ -29,6 +29,7 @@ export namespace LinkChain {
 
 	export class HintFactory implements IHintFactory {
 		public readonly type = TAG;
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		public readJson(json: any) {
 			if (json && json.type === TAG) {
 				return new Hint(json.pts);
@@ -44,8 +45,9 @@ export namespace LinkChain {
 		) {}
 		public doCompile() {
 			const ptIndex = this.pts.map(pt => this.sink.resolveGlyphPoint(pt));
+			// eslint-disable-next-line @typescript-eslint/no-this-alias
 			const hc = this;
-			this.sink.addSegment(function*($) {
+			this.sink.addSegment(function* ($) {
 				for (let j = 1; j < hc.pts.length; j++) {
 					yield $.mdrp(ptIndex[j - 1], ptIndex[j]);
 				}

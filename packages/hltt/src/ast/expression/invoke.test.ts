@@ -1,8 +1,10 @@
 import test from "ava";
+
 import { BinaryInstrSink, TTI } from "../../instr";
 import { TtProgramScopeT } from "../../scope";
 import { EdslGlobalScope } from "../interface";
 import { compileCompositeProgram } from "../test-util";
+
 import { cExpr } from "./constant";
 import { InvokeExpression } from "./invoke";
 import { VariableFactory } from "./variable";

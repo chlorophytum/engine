@@ -20,7 +20,7 @@ export class LastReturnStatement extends Statement {
 		return true;
 	}
 	public compile(asm: Assembler, ps: EdslProgramScope) {
-		let argArity = this.getArgsArity(ps);
+		const argArity = this.getArgsArity(ps);
 		if (argArity !== (ps.returnArity || 0)) {
 			throw new TypeError("Return value arity mismatches");
 		}

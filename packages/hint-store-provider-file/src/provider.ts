@@ -1,3 +1,6 @@
+import * as fs from "fs";
+import * as stream from "stream";
+
 import {
 	BuiltInCombinators,
 	IHint,
@@ -7,8 +10,6 @@ import {
 } from "@chlorophytum/arch";
 import { MemoryHintStore } from "@chlorophytum/hint-store-memory";
 import { StreamJsonZip } from "@chlorophytum/util-json";
-import * as fs from "fs";
-import * as stream from "stream";
 
 export class HintStoreFsProvider implements IHintStoreProvider {
 	public async connectRead(path: string, pass: IHintingPass) {
@@ -33,6 +34,7 @@ class FsHintStore extends MemoryHintStore {
 
 class OtdHsSupport {
 	private hintMapToDict(map: Map<string, IHint>) {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const dict: { [key: string]: any } = Object.create(null);
 		for (const [k, v] of map) {
 			dict[k] = v.toJSON();

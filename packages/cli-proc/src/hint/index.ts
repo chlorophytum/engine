@@ -1,3 +1,5 @@
+import * as fs from "fs";
+
 import {
 	BuiltInCombinators,
 	ConsoleLogger,
@@ -9,10 +11,11 @@ import {
 	PropertyBag
 } from "@chlorophytum/arch";
 import { MemoryHintStore } from "@chlorophytum/hint-store-memory";
-import * as fs from "fs";
+
 import { getFontPlugin, getHintingPasses, getHintStoreProvider, ProcOptions } from "../env";
 import { Arbitrator } from "../tasks/arb";
 import { Progress } from "../tasks/progress";
+
 import { HintCache } from "./cache";
 import { Host } from "./worker-host-nodejs";
 

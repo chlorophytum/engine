@@ -1,4 +1,5 @@
 import Assembler from "../asm";
+
 import { VariableFactory } from "./expression/variable";
 import { EdslGlobalScope, EdslProgramScope, Statement } from "./interface";
 import { BeginStatement } from "./statement/begin";

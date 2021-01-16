@@ -22,6 +22,7 @@ import {
 } from "../ast/statement/graph-state";
 import { LIp, LMdap, LMdrp, LMiap, LMirp } from "../ast/statement/move-point";
 import { TTI } from "../instr";
+
 import { mxapFunctionSys, mxrpFunctionSys } from "./flags";
 
 export type NExpr = number | Expression;

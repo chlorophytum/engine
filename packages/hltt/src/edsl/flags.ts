@@ -1,23 +1,23 @@
 import { Statement } from "../ast";
 
-export interface MxapConstructor<A extends any[]> {
+export interface MxapConstructor<A extends unknown[]> {
 	(round: boolean, ...a: A): Statement;
 }
-export interface MxapFnSet<A extends any[]> {
+export interface MxapFnSet<A extends unknown[]> {
 	(...a: A): Statement;
 	noRound: MxapFnSet<A>;
 	round: MxapFnSet<A>;
 }
-export interface ReadonlyMxapFnSet<A extends any[]> {
+export interface ReadonlyMxapFnSet<A extends unknown[]> {
 	(...a: A): Statement;
 	readonly noRound: ReadonlyMxapFnSet<A>;
 	readonly round: ReadonlyMxapFnSet<A>;
 }
-function MxapT<A extends any[], E>(b: boolean, ctor: MxapConstructor<A>) {
+function MxapT<A extends unknown[], E>(b: boolean, ctor: MxapConstructor<A>) {
 	return (...a: A) => ctor(b, ...a);
 }
 
-export function mxapFunctionSys<A extends any[], E>(
+export function mxapFunctionSys<A extends unknown[], E>(
 	ctor: MxapConstructor<A>
 ): ReadonlyMxapFnSet<A> {
 	const noRound = (MxapT(false, ctor) as unknown) as MxapFnSet<A>;
@@ -27,7 +27,7 @@ export function mxapFunctionSys<A extends any[], E>(
 	return noRound;
 }
 
-export interface MxrpConstructor<A extends any[]> {
+export interface MxrpConstructor<A extends unknown[]> {
 	(
 		rp0: boolean,
 		minDist: boolean,
@@ -36,7 +36,7 @@ export interface MxrpConstructor<A extends any[]> {
 		...a: A
 	): Statement;
 }
-export interface MxrpFnSet<A extends any[]> {
+export interface MxrpFnSet<A extends unknown[]> {
 	(...a: A): Statement;
 	noRp0: MxrpFnSet<A>;
 	rp0: MxrpFnSet<A>;
@@ -49,7 +49,7 @@ export interface MxrpFnSet<A extends any[]> {
 	white: MxrpFnSet<A>;
 	mode3: MxrpFnSet<A>;
 }
-export interface ReadonlyMxrpFnSet<A extends any[]> {
+export interface ReadonlyMxrpFnSet<A extends unknown[]> {
 	(...a: A): Statement;
 	noRp0: ReadonlyMxrpFnSet<A>;
 	rp0: ReadonlyMxrpFnSet<A>;
@@ -62,7 +62,7 @@ export interface ReadonlyMxrpFnSet<A extends any[]> {
 	white: ReadonlyMxrpFnSet<A>;
 	mode3: ReadonlyMxrpFnSet<A>;
 }
-function MxrpT<A extends any[]>(
+function MxrpT<A extends unknown[]>(
 	rp0: boolean,
 	minDist: boolean,
 	round: boolean,
@@ -72,8 +72,10 @@ function MxrpT<A extends any[]>(
 	return (...a: A) => ctor(rp0, minDist, round, distanceMode, ...a);
 }
 
-export function mxrpFunctionSys<A extends any[]>(ctor: MxrpConstructor<A>): ReadonlyMxrpFnSet<A> {
-	let a: MxrpFnSet<A>[] = [];
+export function mxrpFunctionSys<A extends unknown[]>(
+	ctor: MxrpConstructor<A>
+): ReadonlyMxrpFnSet<A> {
+	const a: MxrpFnSet<A>[] = [];
 	for (let j = 0; j < 32; j++) {
 		a[j] = (MxrpT(
 			!!(j & 16),

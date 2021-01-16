@@ -1,5 +1,6 @@
 import * as fs from "fs-extra";
 import { FontIo, Ot } from "ot-builder";
+
 import { OtbFontSource } from "../support/otb-support";
 
 export class TtfFontLoader {

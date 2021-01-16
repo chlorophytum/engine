@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as stream from "stream";
 
 const BUFFER_LIMIT = 1e6;
@@ -45,10 +46,10 @@ class JsonStringifyContext {
 					}
 					this.push("]");
 				} else {
-					let keys = Object.keys(obj);
+					const keys = Object.keys(obj);
 					let needComma = false;
 					this.push("{");
-					for (let key of keys) {
+					for (const key of keys) {
 						if (needComma) this.push(",");
 						this.push(JSON.stringify(key));
 						this.push(":");
@@ -66,7 +67,7 @@ class JsonStringifyContext {
 	}
 }
 
-export function jsonStringifyToStream(obj: object, writer: stream.Writable, dontEnd?: boolean) {
+export function jsonStringifyToStream(obj: any, writer: stream.Writable, dontEnd?: boolean) {
 	const ctx = new JsonStringifyContext(writer);
 
 	return ctx.traverse(obj, 0).then(

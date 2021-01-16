@@ -1,5 +1,5 @@
-import { TTI } from "../../instr";
 import Assembler from "../../asm";
+import { TTI } from "../../instr";
 import { cExpr } from "../expression/constant";
 import { EdslProgramScope, Expression, Statement } from "../interface";
 

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { IArbitratorProxy, IParallelCoTask, ITask } from "@chlorophytum/arch";
 
 import { Progress } from "./progress";
@@ -86,7 +87,7 @@ export class Arbitrator implements IArbitratorProxy, IWorkerHostMain {
 	}
 
 	public demand<R>(task: ITask<R>) {
-		let state = this.getState(task);
+		const state = this.getState(task);
 		return state.demand();
 	}
 

@@ -1,5 +1,5 @@
-import { TTI } from "../../instr";
 import Assembler from "../../asm";
+import { TTI } from "../../instr";
 import {
 	VarKind,
 	Expression,
@@ -57,7 +57,7 @@ export class TupleExpression extends Expression {
 	}
 	getArity(ps: EdslProgramScope) {
 		let arity = 0;
-		for (let part of this.parts) arity += part.getArity(ps);
+		for (const part of this.parts) arity += part.getArity(ps);
 		return arity;
 	}
 	public compile(asm: Assembler, ps: EdslProgramScope) {

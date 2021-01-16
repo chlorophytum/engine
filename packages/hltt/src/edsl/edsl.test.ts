@@ -3,8 +3,9 @@ import test from "ava";
 import { compileProgram } from "../ast/test-util";
 import { TextInstr } from "../instr";
 
-import { GlobalDsl, ProgramDsl } from ".";
 import { TtStat } from "./stat";
+
+import { GlobalDsl, ProgramDsl } from "./index";
 
 test("EDSL flags test", t => {
 	const asm = compileProgram(function* (gs, ls) {

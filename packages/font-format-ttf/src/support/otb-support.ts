@@ -18,6 +18,7 @@ import {
 	OtVarMasterDR
 } from "@chlorophytum/font-opentype";
 import { Ot } from "ot-builder";
+
 import { F16D16Div, F16D16FromNumber, F16D16Mul, F16D16ToF2D14 } from "../normalization";
 
 export class OtbFontSource extends OpenTypeFontSource<Ot.Glyph> {
@@ -203,8 +204,8 @@ class MasterCollector {
 	}
 	private processMaster(m: Ot.Var.Master) {
 		if (this.masterCache.has(m)) return;
-		let peak: { [axis: string]: number } = {};
-		let mx: { [axis: string]: OtVarMasterDR } = {};
+		const peak: { [axis: string]: number } = {};
+		const mx: { [axis: string]: OtVarMasterDR } = {};
 		for (const region of m.regions) {
 			const axisTag = this.fvarWrapper.coGetDim(region.dim);
 			if (!axisTag) continue;
@@ -255,20 +256,23 @@ class GeometryEvaluator {
 		instance: Ot.Var.Instance
 	) {
 		switch (geometry.type) {
-			case Ot.Glyph.GeometryType.ContourSet:
+			case Ot.Glyph.GeometryType.ContourSet: {
 				this.processContourSet(ev, geometry, instance);
 				break;
-			case Ot.Glyph.GeometryType.GeometryList:
+			}
+			case Ot.Glyph.GeometryType.GeometryList: {
 				for (const child of geometry.items) {
 					this.processGeometry(ev, child, instance);
 				}
 				break;
-			case Ot.Glyph.GeometryType.TtReference:
+			}
+			case Ot.Glyph.GeometryType.TtReference: {
 				const evChild = new GeometryEvaluator(ev, geometry.transform);
 				if (geometry.to && geometry.to.geometry) {
 					this.processGeometry(evChild, geometry.to.geometry, instance);
 				}
 				break;
+			}
 		}
 	}
 
@@ -355,7 +359,7 @@ export class VarWrapper implements ISimpleGetBimap<string, Ot.Fvar.Axis> {
 	public getRangeAndStops(key: string): null | readonly (readonly [number, number])[] {
 		const axis = this.get(key);
 		if (!axis) return null;
-		let a: (readonly [number, number])[] = [];
+		const a: (readonly [number, number])[] = [];
 		if (axis.dim.min < axis.dim.default) a.push([axis.dim.min, -1]);
 		a.push([axis.dim.default, 0]);
 		if (axis.dim.max > axis.dim.default) a.push([axis.dim.max, +1]);
@@ -380,7 +384,7 @@ export class VarWrapper implements ISimpleGetBimap<string, Ot.Fvar.Axis> {
 	private normalizeUserAxisValue(key: string, userValue: number) {
 		const axis = this.get(key);
 		if (!axis) return 0;
-		let normalized = this.calcDefaultNormalizationValue(key, userValue);
+		const normalized = this.calcDefaultNormalizationValue(key, userValue);
 		const segMap = this.avar.get(key);
 		if (segMap) {
 			const nNormalized = F16D16FromNumber(normalized);
@@ -425,7 +429,7 @@ export class VarWrapper implements ISimpleGetBimap<string, Ot.Fvar.Axis> {
 	// CH to underlying
 	public convertMaster(masterCh: Variation.Master) {
 		if (!isOtVarMaster(masterCh)) return null;
-		let masterRep: Ot.Var.MasterDim[] = [];
+		const masterRep: Ot.Var.MasterDim[] = [];
 		for (const dimKey in masterCh.otVar) {
 			const axis = this.get(dimKey);
 			if (!axis) continue;

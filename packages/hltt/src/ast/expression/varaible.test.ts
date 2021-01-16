@@ -1,6 +1,8 @@
 import test from "ava";
+
 import { TextInstrSink } from "../../instr";
 import { compileFdef, compileProgram } from "../test-util";
+
 import { BinaryExpression } from "./arith";
 import { cExpr, VolatileExpression } from "./constant";
 import { ArrayIndex, ArrayInit, ArrayInitGetVariation, TupleExpression } from "./pointer";

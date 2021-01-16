@@ -8,7 +8,9 @@ import {
 	IHintStoreProvider,
 	ILogger
 } from "@chlorophytum/arch";
+
 import { getFontPlugin, getHintingPasses, getHintStoreProvider, ProcOptions } from "../env";
+
 import { mainMidHint } from "./procs";
 
 interface ExportPlan {

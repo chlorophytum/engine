@@ -1,6 +1,7 @@
 import Assembler from "../../asm";
 import { TTI } from "../../instr";
 import { EdslProgramScope, Expression, Statement } from "../interface";
+
 import { addLongPointNumberD, addLongPointNumberUD, decideTwilight, setZone } from "./long-point";
 
 export class DeltaStatement extends Statement {

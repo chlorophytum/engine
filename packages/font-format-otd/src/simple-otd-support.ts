@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
 	Geometry,
 	Glyph,
@@ -126,7 +127,7 @@ export class OtdSupport
 		if (!g) return [];
 
 		let zid: number = 0;
-		let c1: Geometry.GlyphPoint[][] = [];
+		const c1: Geometry.GlyphPoint[][] = [];
 		if (g.contours) {
 			for (const c of g.contours) {
 				const contour: Geometry.GlyphPoint[] = [];

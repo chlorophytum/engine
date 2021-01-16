@@ -6,6 +6,7 @@ import {
 } from "@chlorophytum/final-hint-format-hltt";
 import * as fs from "fs-extra";
 import { FontIo, Ot } from "ot-builder";
+
 import { BufferInstr } from "../support/buffer-instr";
 import { GlyphSetWrapper, VarWrapper } from "../support/otb-support";
 
@@ -56,7 +57,7 @@ export class TtfInstrIntegrator implements IFinalHintIntegrator {
 		const prep = [fhs.getPreProgram(BufferInstr)];
 		const cvt = col.getControlValueDefs();
 		const glyf: { [key: string]: Buffer } = {};
-		for (let gid of fhs.listGlyphNames()) {
+		for (const gid of fhs.listGlyphNames()) {
 			glyf[gid] = fhs.getGlyphProgram(gid, BufferInstr, this.instructionCache);
 		}
 		return { stats: col.getStats(), fpgm, prep, glyf, cvt };

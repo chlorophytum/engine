@@ -1,6 +1,7 @@
 import Assembler from "../../asm";
 import { TTI } from "../../instr";
 import { EdslProgramScope, Expression, Statement } from "../interface";
+
 import { setZone } from "./long-point";
 
 export class GraphStateStatement extends Statement {

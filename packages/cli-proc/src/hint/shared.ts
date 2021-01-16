@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { ProcOptions } from "../env";
 
 export interface HintWorkData {

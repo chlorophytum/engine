@@ -1,11 +1,13 @@
 #!/usr/bin/env node
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+import * as fs from "fs";
+import * as path from "path";
 
 import * as CliProc from "@chlorophytum/cli-proc";
 import * as program from "commander";
-import * as fs from "fs";
 import * as json5 from "json5";
 import * as _ from "lodash";
-import * as path from "path";
 
 const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, "../package.json"), "utf8"));
 
@@ -50,7 +52,7 @@ program
 program.parse(process.argv);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-function WithErrors<A extends any[]>(command: (...args: A) => Promise<void>) {
+function WithErrors<A extends unknown[]>(command: (...args: A) => Promise<void>) {
 	return async (...args: A) => {
 		try {
 			await command(...args);

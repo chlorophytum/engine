@@ -3,7 +3,7 @@ import {
 	IHint,
 	IHintCompiler,
 	IHintFactory,
-	PropertyBag,
+	PropertyBag
 } from "@chlorophytum/arch";
 
 export namespace Empty {
@@ -20,6 +20,7 @@ export namespace Empty {
 
 	export class Factory implements IHintFactory {
 		public readonly type = TAG;
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		public readJson(json: any) {
 			if (json && json.type === TAG) return new Hint();
 			return null;

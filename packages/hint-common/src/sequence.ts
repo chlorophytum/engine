@@ -15,7 +15,7 @@ export namespace Sequence {
 			return { type: TAG, of: this.children.map(c => c.toJSON()) };
 		}
 		public createCompiler(bag: PropertyBag, sink: IFinalHintProgramSink): IHintCompiler | null {
-			let compilers: IHintCompiler[] = [];
+			const compilers: IHintCompiler[] = [];
 			for (const part of this.children) {
 				const c = part.createCompiler(bag, sink);
 				if (!c) return null;
@@ -30,11 +30,12 @@ export namespace Sequence {
 
 	export class Factory implements IHintFactory {
 		public readonly type = TAG;
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		public readJson(json: any, general: IHintFactory) {
 			if (json && json.type === TAG) {
-				let hs: IHint[] = [];
+				const hs: IHint[] = [];
 				for (const h of json.of) {
-					let h1 = general.readJson(h, general);
+					const h1 = general.readJson(h, general);
 					if (h1) hs.push(h1);
 					else return null;
 				}

@@ -35,6 +35,7 @@ export namespace Interpolate {
 
 	export class HintFactory implements IHintFactory {
 		public readonly type = TAG;
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		public readJson(json: any) {
 			if (json && json.type === TAG) {
 				return new Hint(json.rp1, json.rp2, json.pts);
@@ -51,6 +52,7 @@ export namespace Interpolate {
 			private readonly pts: Geometry.PointReference[]
 		) {}
 		public doCompile() {
+			// eslint-disable-next-line @typescript-eslint/no-this-alias
 			const hc = this;
 			this.sink.addSegment($ => [
 				$.ip(

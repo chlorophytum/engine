@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Typable } from "typable";
 
 import { Glyph } from "./geometry";
@@ -163,14 +164,14 @@ export interface IFinalHintFormat {
 	createFinalHintCollector(preStat: IFinalHintPreStatSink): Promise<IFinalHintCollector>;
 	createPreStatSink(): Promise<IFinalHintPreStatSink>;
 }
-export interface IFinalHintPreStatSink extends Typable<{}> {
+export interface IFinalHintPreStatSink extends Typable {
 	settleDown(): void;
 }
-export interface IFinalHintCollector extends Typable<{}> {
+export interface IFinalHintCollector extends Typable {
 	readonly format: string;
 	consolidate(): void;
 }
-export interface IFinalHintSession extends Typable<{}> {
+export interface IFinalHintSession extends Typable {
 	readonly format: string;
 	createGlyphProgramSink(
 		gid: string,
@@ -179,7 +180,7 @@ export interface IFinalHintSession extends Typable<{}> {
 	createSharedProgramSink(type: string): Promise<IFinalHintProgramSink>;
 	consolidate(): void;
 }
-export interface IFinalHintProgramSink extends Typable<{}> {
+export interface IFinalHintProgramSink extends Typable {
 	readonly format: string;
 	save(): void;
 }

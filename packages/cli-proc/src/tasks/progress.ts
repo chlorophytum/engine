@@ -51,7 +51,7 @@ export class Progress {
 	}
 
 	public update() {
-		let currentProgress = this.percentage(this.finishedDifficulty, this.totalDifficulty);
+		const currentProgress = this.percentage(this.finishedDifficulty, this.totalDifficulty);
 		const now = new Date();
 		const deltaTime = now.valueOf() - this.lastDate.valueOf();
 		if (deltaTime >= 250) {

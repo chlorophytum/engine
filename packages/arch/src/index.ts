@@ -1,6 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as _BuiltInCombinators from "./combinators";
 import { IFontFormat, IHintingPass, IHintStoreProvider } from "./interfaces";
 import * as _Support from "./support/index";
+
 export * from "./interfaces/index";
 export * from "./logger";
 export { WellKnownGeometryKind, WellKnownGlyphRelation } from "./well-known-relation";

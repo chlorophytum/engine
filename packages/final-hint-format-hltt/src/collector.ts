@@ -1,6 +1,7 @@
 import { IFinalHintCollector, Variation } from "@chlorophytum/arch";
 import { CreateDSL, Edsl, initStdLib, InstrFormat, TtStat } from "@chlorophytum/hltt";
 import { implDynamicCast, Typable, TypeRep } from "typable";
+
 import { HlttPreStatSink } from "./pre-stat-sink";
 import { HlttSession, HlttSessionImpl, SharedGlyphPrograms } from "./session";
 
@@ -43,7 +44,7 @@ export class HlttCollectorImpl implements Typable<HlttCollector> {
 		return this.edsl.compileFunctions(format);
 	}
 	public getControlValueDefs() {
-		let cv: (undefined | Variation.Variance<number>)[] = [];
+		const cv: (undefined | Variation.Variance<number>)[] = [];
 		for (const [variable, valueArr] of this.shared.controlValues) {
 			for (let offset = 0; offset < variable.size; offset++) {
 				cv[(variable.variableIndex || 0) + offset] = valueArr[offset];
