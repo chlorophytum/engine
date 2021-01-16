@@ -1,18 +1,18 @@
 {
 	"name": "@chlorophytum/final-hint-format-hltt",
-	"version": "0.20.0",
+	"version": "0.21.0",
 	"description": "",
 	"main": "lib/index.js",
 	"typings": "lib/index.d.ts",
 	"scripts": {
 		"clean": "rimraf lib .build-cache",
-    "build": "tsc --build"
-  },
+		"build": "tsc --build"
+	},
 	"author": "Renzhi Li (aka. Belleve Invis)",
 	"license": "MIT",
 	"dependencies": {
-		"@chlorophytum/arch": "0.20.0",
-		"@chlorophytum/hltt": "0.20.0",
+		"@chlorophytum/arch": "0.21.0",
+		"@chlorophytum/hltt": "0.21.0",
 		"tslib": "^2.0.1",
 		"typable": "^1.0.0"
 	},
