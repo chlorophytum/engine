@@ -6,8 +6,7 @@
 	"typings": "lib/index.d.ts",
 	"scripts": {
 		"clean": "rimraf lib .build-cache",
-		"build": "tsc --build",
-		"test": "ava --verbose"
+		"build": "tsc --build"
 	},
 	"author": "Renzhi Li (aka. Belleve Invis)",
 	"license": "MIT",
@@ -16,13 +15,7 @@
 		"tslib": "^2.0.1"
 	},
 	"devDependencies": {
-		"@types/json-stable-stringify": "^1.0.32",
-		"ava": "^1.4.1"
-	},
-	"ava": {
-		"files": [
-			"lib/**/*.test.js"
-		]
+		"@types/json-stable-stringify": "^1.0.32"
 	},
 	"publishConfig": {
 		"access": "public"

@@ -1,5 +1,6 @@
 {
 	"devDependencies": {
+		"ava": "^3.15.0",
 		"json-stringify-pretty-compact": "^2.0.0",
 		"lerna": "^3.22.1",
 		"prettier": "^2.0.5",
@@ -17,11 +18,16 @@
 		"reset": "lerna run clean && lerna clean --yes && npm run init",
 		"create-package": "node common/create-package",
 		"rebuild": "npm run reset && npm run build",
-		"test": "lerna run --stream test",
+		"test": "ava --verbose",
 		"prepack": "npm run init && npm run build",
 		"add-dep": "lerna add",
 		"publish": "lerna publish --force-publish=* --exact",
 		"publish:canary": "lerna publish --force-publish=* --exact",
 		"sync-external-links": "node common/sync-external-links"
+	},
+	"ava": {
+		"files": [
+			"packages/*/lib/**/*.test.js"
+		]
 	}
 }

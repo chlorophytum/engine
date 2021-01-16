@@ -6,8 +6,7 @@
 	"typings": "lib/index.d.ts",
 	"scripts": {
 		"clean": "rimraf lib .build-cache",
-		"build": "tsc --build",
-		"test": "ava --verbose"
+		"build": "tsc --build"
 	},
 	"author": "Renzhi Li (aka. Belleve Invis)",
 	"license": "MIT",
@@ -18,18 +17,12 @@
 		"@chlorophytum/fontforge-instr": "0.20.0",
 		"@chlorophytum/hltt": "0.20.0",
 		"@chlorophytum/util-json": "0.20.0",
-		"fs-extra": "^8.1.0",
-		"ot-builder": "^0.10.8",
+		"fs-extra": "^9.0.1",
+		"ot-builder": "^1.0.0",
 		"tslib": "^2.0.1"
 	},
 	"devDependencies": {
-		"@types/fs-extra": "^8.1.0",
-		"ava": "^1.4.1"
-	},
-	"ava": {
-		"files": [
-			"lib/**/*.test.js"
-		]
+		"@types/fs-extra": "^9.0.6"
 	},
 	"publishConfig": {
 		"access": "public"
