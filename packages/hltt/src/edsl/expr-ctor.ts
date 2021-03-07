@@ -54,6 +54,14 @@ export class DslConstructor {
 		return new LIp(cExpr(p1), cExpr(p2), cExprArr(p));
 	}
 
+	// Logic
+	public and(a: NExpr, b: NExpr): Expression {
+		return BinaryExpression.And(cExpr(a), cExpr(b));
+	}
+	public or(a: NExpr, b: NExpr): Expression {
+		return BinaryExpression.Or(cExpr(a), cExpr(b));
+	}
+
 	// Binary
 	public add(a: NExpr, b: NExpr): Expression {
 		return BinaryExpression.Add(cExpr(a), cExpr(b));
@@ -91,11 +99,15 @@ export class DslConstructor {
 	public neq(a: NExpr, b: NExpr): Expression {
 		return BinaryExpression.Neq(cExpr(a), cExpr(b));
 	}
-	public and(a: NExpr, b: NExpr): Expression {
-		return BinaryExpression.And(cExpr(a), cExpr(b));
+
+	public imul(s: number, x: NExpr): Expression {
+		return BinaryExpression.Mul(cExpr(x), cExpr(this.coerce.toF26D6(s)));
 	}
-	public or(a: NExpr, b: NExpr): Expression {
-		return BinaryExpression.Or(cExpr(a), cExpr(b));
+	public int2F26D6(x: NExpr) {
+		return this.mul(64, x);
+	}
+	public int2F26D6Scale(s: number, x: NExpr) {
+		return this.mul(64 * s, x);
 	}
 
 	// Binary-then-set
