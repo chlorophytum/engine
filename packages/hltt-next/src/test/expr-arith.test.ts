@@ -4,7 +4,7 @@ import { add, mul } from "../edsl/expr-impl/arith-ctor";
 import { func } from "../edsl/lib-system";
 import { Frac, Int } from "../edsl/type-system";
 
-import { StmtTestLoop } from "./stmt-test-loop";
+import { StmtTestLoop } from "./-stmt-test-loop";
 
 test("Expr: Arith 1", t => {
 	const f1 = func(Int, Int);

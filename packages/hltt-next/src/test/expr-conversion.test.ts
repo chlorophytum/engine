@@ -4,7 +4,7 @@ import { cast, unsafeCoerce } from "../edsl/expr-impl/expr";
 import { func } from "../edsl/lib-system";
 import { Frac, Int } from "../edsl/type-system";
 
-import { StmtTestLoop } from "./stmt-test-loop";
+import { StmtTestLoop } from "./-stmt-test-loop";
 
 test("Expr: Conversion", t => {
 	const f1 = func(Int);

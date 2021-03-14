@@ -4,7 +4,7 @@ import { func } from "../edsl/lib-system";
 import { If } from "../edsl/stmt-impl/branch";
 import { Bool, Int } from "../edsl/type-system";
 
-import { StmtTestLoop } from "./stmt-test-loop";
+import { StmtTestLoop } from "./-stmt-test-loop";
 
 test("TrStmt: If 1", t => {
 	const f1 = func(Bool, Int, Int);

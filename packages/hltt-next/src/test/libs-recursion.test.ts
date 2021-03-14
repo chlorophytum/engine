@@ -3,7 +3,7 @@ import test from "ava";
 import { func } from "../edsl/lib-system";
 import { Int } from "../edsl/type-system";
 
-import { StmtTestLoop } from "./stmt-test-loop";
+import { StmtTestLoop } from "./-stmt-test-loop";
 
 test("Libs: Recursion", t => {
 	const f1 = func(Int);

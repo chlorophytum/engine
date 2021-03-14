@@ -6,7 +6,7 @@ import { TTI } from "../instr";
 import { TrConst } from "../tr/exp/const";
 import { TrDeltas } from "../tr/stmt/deltas";
 
-import { StmtTestLoop } from "./stmt-test-loop";
+import { StmtTestLoop } from "./-stmt-test-loop";
 
 test("TrStmt: Deltas", t => {
 	const f1 = func();

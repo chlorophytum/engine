@@ -1,12 +1,14 @@
 import { TrExp } from "../tr/tr";
 
+import { Stmt } from "./stmt";
 import { Bool, Cvt, Int, Store, TArith, THandle, TT } from "./type-system";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // eDSL Expression, with conditional types
 
 export type Expr<T> = ExprBase<T> &
-	(T extends Store<infer TElement> | Cvt<infer TElement> ? ExprDeRef<TElement> : ExprNotDeRef);
+	(T extends Store<infer TElement> ? ExprDeRefStore<TElement> : ExprNotDeRef) &
+	(T extends Cvt<infer TElement> ? ExprDeRefCvt<TElement> : ExprNotDeRef);
 
 export interface ExprBase<T> {
 	readonly type: T;
@@ -15,20 +17,28 @@ export interface ExprBase<T> {
 
 export interface ExprNotArith<T> {}
 
-export interface ExprDeRef<T> {
-	readonly deRef: Expr<T>;
-	part(n: number | Expr<Int>): Expr<T>;
+export interface ExprDeRefStore<T extends TT> {
+	readonly deRef: Expr<T> & ExprVarStore<T>;
+	part(n: number | Expr<Int>): Expr<T> & ExprVarStore<T>;
+}
+export interface ExprDeRefCvt<T extends TT> {
+	readonly deRef: Expr<T> & ExprVarCvt<T>;
+	part(n: number | Expr<Int>): Expr<T> & ExprVarCvt<T>;
 }
 export interface ExprNotDeRef {}
 
 export interface ExprVarStore<T extends TT> extends ExprBase<T> {
 	readonly ptr: Expr<Store<T>>;
 	offsetPtr(n: number | Expr<Int>): Expr<Store<T>>;
+	setPart(n: number | Expr<Int>, value: CompatibleType<T>): Stmt;
+	set(value: CompatibleType<T>): Stmt;
 }
 
 export interface ExprVarCvt<T extends TT> extends ExprBase<T> {
 	readonly ptr: Expr<Cvt<T>>;
 	offsetPtr(n: number | Expr<Int>): Expr<Store<T>>;
+	setPart(n: number | Expr<Int>, value: CompatibleType<T>): Stmt;
+	set(value: CompatibleType<T>): Stmt;
 }
 
 export type CompatibleType<T> = T extends TArith
@@ -42,19 +52,16 @@ export type CompatibleType<T> = T extends TArith
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // "All interface" version, used for implementing constructors
 
-export type ExprAll<T> = ExprBase<T> & ExprDeRefAll<TT>;
+export type ExprAll = ExprBase<TT> & ExprDeRefAll;
 
-export interface ExprDeRefAll<T> {
-	readonly deRef: ExprAll<T>;
-	part(n: number | ExprAll<Int>): ExprAll<T>;
+export interface ExprDeRefAll {
+	readonly deRef: ExprVarAll;
+	part(n: number | ExprAll): ExprVarAll;
 }
 
-export interface ExprVarStoreAll<T extends TT> extends ExprAll<T> {
-	readonly ptr: ExprAll<Store<T>>;
-	offsetPtr(n: number | ExprAll<Int>): ExprAll<Store<T>>;
-}
-
-export interface ExprVarCvtAll<T extends TT> extends ExprAll<T> {
-	readonly ptr: ExprAll<Cvt<T>>;
-	offsetPtr(n: number | ExprAll<Int>): ExprAll<Cvt<T>>;
+export interface ExprVarAll extends ExprAll {
+	readonly ptr: ExprAll;
+	offsetPtr(n: number | ExprAll): ExprAll;
+	setPart(n: number | ExprAll, v: number | boolean | ExprAll): Stmt;
+	set(v: number | boolean | ExprAll): Stmt;
 }

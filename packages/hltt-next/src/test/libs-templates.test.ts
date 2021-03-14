@@ -4,7 +4,7 @@ import { add } from "../edsl/expr-impl/arith-ctor";
 import { func, template } from "../edsl/lib-system";
 import { Bool, Frac, Int, TArith, TT } from "../edsl/type-system";
 
-import { StmtTestLoop } from "./stmt-test-loop";
+import { StmtTestLoop } from "./-stmt-test-loop";
 
 test("Libs: Templates", t => {
 	const addT = template(<T extends TArith>(delta: number, TY: T) =>

@@ -1,7 +1,7 @@
-import { Decl, Def } from "../../tr/decl";
+import { Decl } from "../../tr/decl";
 import { TrInvoke } from "../../tr/exp/invoke";
 import { TrParameter } from "../../tr/exp/parameter";
-import { GlobalScope, ProgramScope } from "../../tr/scope";
+import { ProgramDef, GlobalScope, ProgramScope } from "../../tr/scope";
 import { TrExprStmt } from "../../tr/stmt/expr";
 import { TrSeq } from "../../tr/stmt/sequence";
 import { TrStmt } from "../../tr/tr";
@@ -18,13 +18,13 @@ type WrapExprOrLiteral<Ts extends TT[]> = { [K in keyof Ts]: CompatibleType<Ts[K
 type WrapExpr<Ts extends TT[]> = { [K in keyof Ts]: Expr<Ts[K]> };
 
 type RawCallableFunc<Ts extends TT[], Tr extends TT> = (...xs: WrapExprOrLiteral<Ts>) => Expr<Tr>;
-type CallableFunc<Ts extends TT[], Tr extends TT> = Def &
+type CallableFunc<Ts extends TT[], Tr extends TT> = ProgramDef &
 	RawCallableFunc<Ts, Tr> & {
 		def: (fb: FuncBody<Ts, Tr>) => CallableFunc<Ts, Tr>;
 	};
 
 type RawCallableProc<Ts extends TT[]> = (...xs: WrapExprOrLiteral<Ts>) => Stmt;
-type CallableProc<Ts extends TT[]> = Def &
+type CallableProc<Ts extends TT[]> = ProgramDef &
 	RawCallableProc<Ts> & {
 		returns: <Tr extends TT>(t: Tr) => CallableFunc<Ts, Tr>;
 		def: (fp: ProcBody<Ts>) => CallableProc<Ts>;
@@ -72,7 +72,7 @@ function funcDef<Ts extends TT[], Tr extends TT>(parameterSig: Ts, ret: Tr): Cal
 	return callable;
 }
 
-class FunctionDeclaration<Ts extends TT[], Tr extends TT> implements Def {
+class FunctionDeclaration<Ts extends TT[], Tr extends TT> implements ProgramDef {
 	constructor(public readonly argumentTypes: Ts, public readonly returnType: Tr) {}
 	public body: null | FuncBody<Ts, Tr> = null;
 	private readonly m_symbol = Symbol();
@@ -98,7 +98,7 @@ class FunctionDeclaration<Ts extends TT[], Tr extends TT> implements Def {
 	}
 }
 
-class ProcedureDeclaration<Ts extends TT[]> implements Def {
+class ProcedureDeclaration<Ts extends TT[]> implements ProgramDef {
 	constructor(public readonly argumentTypes: Ts) {}
 	public body: null | ProcBody<Ts> = null;
 	private readonly m_symbol = Symbol();
@@ -124,10 +124,10 @@ class ProcedureDeclaration<Ts extends TT[]> implements Def {
 	}
 }
 
-function populateInterfaceImpl(gs: GlobalScope, s: symbol, decl: Def) {
-	if (!gs.functions.haveDeclared(s)) {
-		gs.functions.declare(1, s);
-		gs.functions.setDef(s, decl);
+function populateInterfaceImpl(gs: GlobalScope, s: symbol, decl: ProgramDef) {
+	if (!gs.fpgm.haveDeclared(s)) {
+		gs.fpgm.declare(1, s);
+		gs.fpgm.setDef(s, decl);
 	}
 }
 

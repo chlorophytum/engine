@@ -4,6 +4,6 @@ import { TrStmt } from "./tr";
 export interface Decl {
 	populateInterface(gs: GlobalScope): symbol;
 }
-export interface Def extends Decl {
-	populateDefinition(gs: GlobalScope): [ProgramScope, TrStmt];
+export interface Def<T> extends Decl {
+	populateDefinition(gs: GlobalScope): T;
 }

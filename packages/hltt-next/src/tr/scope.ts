@@ -1,8 +1,9 @@
 import { TtLabel } from "../asm/label";
 
 import { Def } from "./decl";
+import { TrStmt } from "./tr";
 
-export interface GlobalScopeBase {
+export interface GsBaseStats {
 	varDimensionCount: number;
 	fpgm: number;
 	cvt: number;
@@ -10,13 +11,18 @@ export interface GlobalScopeBase {
 	twilights: number;
 }
 
+export type ProgramRecord = [ProgramScope, TrStmt];
+export type ProgramDef = Def<ProgramRecord>;
+
 export class GlobalScope {
-	constructor(bases: GlobalScopeBase) {
-		this.storage = new SimpleSymbolTable(1 + bases.storage);
+	constructor(bases: GsBaseStats) {
+		// Initialize SP storage index and GETVARIATION arity
 		this.sp = bases.storage;
-		this.cvt = new SimpleSymbolTable(bases.cvt);
-		this.functions = new DefinesSymbolTable(bases.fpgm);
 		this.getVariationArity = bases.varDimensionCount;
+		// Initialize symbol tables
+		this.storage = new SimpleSymbolTable(1 + bases.storage);
+		this.cvt = new SimpleSymbolTable(bases.cvt);
+		this.fpgm = new DefinesSymbolTable(bases.fpgm);
 	}
 	public get storageStackFrameStart() {
 		return this.storage.base;
@@ -28,7 +34,7 @@ export class GlobalScope {
 	public readonly getVariationArity: number;
 	public readonly storage: SimpleSymbolTable;
 	public readonly cvt: SimpleSymbolTable;
-	public readonly functions: DefinesSymbolTable<Def>;
+	public readonly fpgm: DefinesSymbolTable<ProgramDef>;
 }
 
 export class ProgramScope {
@@ -56,6 +62,9 @@ export class SimpleSymbolTable {
 	public get size() {
 		return this.m_size;
 	}
+	symbols() {
+		return this.mapping.keys();
+	}
 	haveDeclared(symbol: symbol) {
 		return this.mapping.has(symbol);
 	}
@@ -82,6 +91,9 @@ export class DefinesSymbolTable<T> {
 
 	public get size() {
 		return this.m_size;
+	}
+	symbols() {
+		return this.mapping.keys();
 	}
 	haveDeclared(symbol: symbol) {
 		return this.mapping.has(symbol);

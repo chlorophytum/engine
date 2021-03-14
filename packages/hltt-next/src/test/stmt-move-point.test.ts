@@ -4,7 +4,7 @@ import { glyphPoint, twilightPoint, volatile } from "../edsl/expr-impl/const";
 import { func } from "../edsl/lib-system";
 import { Ip, Mdap, Mdrp } from "../edsl/stmt-impl/move-point";
 
-import { StmtTestLoop } from "./stmt-test-loop";
+import { StmtTestLoop } from "./-stmt-test-loop";
 
 test("TrStmt: MDAP 1", t => {
 	const f1 = func();

@@ -4,7 +4,7 @@ import { func } from "../edsl/lib-system";
 import { arrayInit } from "../edsl/stmt-impl/array-init";
 import { Int } from "../edsl/type-system";
 
-import { StmtTestLoop } from "./stmt-test-loop";
+import { StmtTestLoop } from "./-stmt-test-loop";
 
 test("Stmt: Array init", t => {
 	const f1 = func();

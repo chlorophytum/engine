@@ -1,8 +1,10 @@
 import { TrBinaryOp } from "../../tr/exp/arith";
 import { TrConst } from "../../tr/exp/const";
 import { TrCvt, TrCvtPtr, TrLocalPtr, TrOffsetPtr, TrStorage } from "../../tr/exp/variable";
-import { TrExp } from "../../tr/tr";
-import { Expr, ExprAll, ExprVarCvtAll, ExprVarStore, ExprVarStoreAll } from "../expr";
+import { TrSetVariable } from "../../tr/stmt/set-variable";
+import { TrExp, TrVar } from "../../tr/tr";
+import { Expr, ExprAll, ExprVarAll, ExprVarStore } from "../expr";
+import { Stmt } from "../stmt";
 import {
 	Bool,
 	Cvt,
@@ -16,6 +18,70 @@ import {
 } from "../type-system";
 
 // Impl classes
+export class ExprImpl implements ExprAll {
+	protected constructor(public readonly type: TT, public readonly tr: TrExp) {}
+	static create<T extends TT>(type: T, ir: TrExp) {
+		return (new ExprImpl(type, ir) as unknown) as Expr<T>;
+	}
+	part(n: number | ExprAll) {
+		const ty: TT = this.type;
+		if (ty.kind === "Store")
+			return new CoercedVarImpl(ty.member, Store, TrStorage, this.tr, castLiteral(Int, n).tr);
+		if (ty.kind === "Cvt")
+			return new CoercedVarImpl(ty.member, Cvt, TrCvt, this.tr, castLiteral(Int, n).tr);
+		throw new TypeError("Cannot use deRef on non-pointer types");
+	}
+	get deRef() {
+		return this.part(0);
+	}
+}
+
+class CoercedVarImpl extends ExprImpl implements ExprVarAll {
+	public constructor(
+		type: TT,
+		private readonly ptrCon: (ty: TT) => TT,
+		private readonly CAccess: { new (tr: TrExp): TrVar },
+		private readonly trPtr: TrExp,
+		private readonly trOffset: TrExp
+	) {
+		super(type, new CAccess(TrOffsetPtr.from(trPtr, trOffset)));
+	}
+	offsetPtr(n: number | ExprAll) {
+		return new ExprImpl(
+			this.ptrCon(this.type),
+			TrOffsetPtr.from(TrOffsetPtr.from(this.trPtr, this.trOffset), castLiteral(Int, n).tr)
+		);
+	}
+	get ptr() {
+		return this.offsetPtr(0);
+	}
+	setPart(n: number | ExprAll, v: boolean | number | ExprAll) {
+		return new Stmt(
+			new TrSetVariable(new this.CAccess(this.offsetPtr(n).tr), castLiteral(this.type, v).tr)
+		);
+	}
+	set(v: number | boolean | ExprAll) {
+		return this.setPart(0, v);
+	}
+}
+
+export class LocalVarExprImpl extends CoercedVarImpl {
+	protected constructor(type: TT, symbol: symbol) {
+		super(type, Store, TrStorage, new TrLocalPtr(symbol, 0), new TrConst(0));
+	}
+
+	static fromSymbol<T extends TT>(ty: T, s: symbol): Expr<T> & ExprVarStore<T> {
+		return (new LocalVarExprImpl(ty, s) as unknown) as Expr<T> & ExprVarStore<T>;
+	}
+}
+
+export class CvtExprImpl<T extends TT> extends CoercedVarImpl {
+	protected constructor(type: T, symbol: symbol) {
+		super(type, Cvt, TrCvt, new TrCvtPtr(symbol, 0), new TrConst(0));
+	}
+}
+
+// Casting
 export function castArithLiteral<T extends TT>(ty: T, x: number): Expr<T> {
 	if (ty === Int) return ExprImpl.create(ty, new TrConst(x));
 	if (ty === Frac) return ExprImpl.create(ty, new TrConst(x * 64));
@@ -53,70 +119,4 @@ export function cast<T2 extends TT, T1 extends TT>(
 
 export function unsafeCoerce<T2 extends TT, T1 extends TT>(t1: T2, x: Expr<T1>): Expr<T2> {
 	return ExprImpl.create(t1, x.tr);
-}
-
-export class ExprImpl<T extends TT> implements ExprAll<T> {
-	protected constructor(public readonly type: T, public readonly tr: TrExp) {}
-	static create<T extends TT>(type: T, ir: TrExp) {
-		return (new ExprImpl(type, ir) as unknown) as Expr<T>;
-	}
-	part(n: number | Expr<Int>) {
-		const ty: TT = this.type;
-		if (ty.kind === "Store")
-			return new ExprImpl(
-				ty.member,
-				new TrStorage(TrOffsetPtr.from(this.tr, castLiteral(Int, n).tr))
-			);
-		if (ty.kind === "Cvt")
-			return new ExprImpl(
-				ty.member,
-				new TrCvt(TrOffsetPtr.from(this.tr, castLiteral(Int, n).tr))
-			);
-		throw new TypeError("Cannot use deRef on non-pointer types");
-	}
-	get deRef() {
-		return this.part(0);
-	}
-}
-
-export class LocalVarExprImpl<T extends TT> extends ExprImpl<T> implements ExprVarStoreAll<T> {
-	protected constructor(type: T, symbol: symbol) {
-		super(type, new TrStorage(new TrLocalPtr(symbol, 0)));
-		this.symbol = symbol;
-	}
-
-	private readonly symbol: symbol;
-
-	get ptr() {
-		return this.offsetPtr(0);
-	}
-	offsetPtr(n: number | Expr<Int>) {
-		return new ExprImpl<Store<T>>(
-			Store(this.type),
-			TrOffsetPtr.from(new TrLocalPtr(this.symbol, 0), castLiteral(Int, n).tr)
-		);
-	}
-
-	static fromSymbol<T extends TT>(ty: T, s: symbol): Expr<T> & ExprVarStore<T> {
-		return (new LocalVarExprImpl(ty, s) as unknown) as Expr<T> & ExprVarStore<T>;
-	}
-}
-
-export class CvtExprImpl<T extends TT> extends ExprImpl<T> implements ExprVarCvtAll<T> {
-	protected constructor(type: T, symbol: symbol) {
-		super(type, new TrCvt(new TrCvtPtr(symbol, 0)));
-		this.symbol = symbol;
-	}
-
-	private readonly symbol: symbol;
-
-	get ptr() {
-		return this.offsetPtr(0);
-	}
-	offsetPtr(n: number | Expr<Int>) {
-		return new ExprImpl<Cvt<T>>(
-			Cvt(this.type),
-			TrOffsetPtr.from(new TrCvtPtr(this.symbol, 0), castLiteral(Int, n).tr)
-		);
-	}
 }

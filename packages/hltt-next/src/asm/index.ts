@@ -157,17 +157,26 @@ export default class Assembler {
 		this.rises = [{ startHeight: -0xffff }];
 		return h0;
 	}
+	public label(ref?: TtLabel) {
+		return this.blockBegin(ref);
+	}
 	public blockBegin(ref?: TtLabel) {
 		this.forgetRegisters();
 		const h0 = this.needAccurateStackHeight(this.stackHeight);
 		if (ref) this.ir(ref);
 		return h0;
 	}
-	public label(ref?: TtLabel) {
-		return this.blockBegin(ref);
-	}
 	public blockEnd(h: number, ref?: TtLabel) {
 		this.forgetRegisters();
+		if (ref) this.ir(ref);
+		return this.balanceStack(h);
+	}
+	public softBlockBegin(ref?: TtLabel) {
+		const h0 = this.needAccurateStackHeight(this.stackHeight);
+		if (ref) this.ir(ref);
+		return h0;
+	}
+	public softBlockEnd(h: number, ref?: TtLabel) {
 		if (ref) this.ir(ref);
 		return this.balanceStack(h);
 	}

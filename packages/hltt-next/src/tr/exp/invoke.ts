@@ -15,7 +15,7 @@ export class TrInvoke implements TrExp {
 	}
 	compile(asm: Assembler, ps: ProgramScope) {
 		const sFn = this.fnDecl.populateInterface(ps.global);
-		const iFn = ps.global.functions.resolve(sFn);
+		const iFn = ps.global.fpgm.resolve(sFn);
 		if (iFn == null) throw new TypeError(`Function ${String(sFn)} failed to declare.`);
 		for (const arg of this.args) arg.compile(asm, ps);
 		asm.intro(iFn);

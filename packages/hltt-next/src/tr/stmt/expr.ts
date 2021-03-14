@@ -9,8 +9,8 @@ export class TrExprStmt extends TrStmtBase {
 		super();
 	}
 	compile(asm: Assembler, ps: ProgramScope) {
-		const h0 = asm.needAccurateStackHeight();
+		const h0 = asm.softBlockBegin();
 		this.expr.compile(asm, ps);
-		asm.balanceStack(h0);
+		asm.softBlockEnd(h0);
 	}
 }
