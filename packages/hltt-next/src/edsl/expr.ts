@@ -1,3 +1,4 @@
+import { Decl } from "../tr/decl";
 import { TrExp } from "../tr/tr";
 
 import { Stmt } from "./stmt";
@@ -36,7 +37,8 @@ export interface ExprVarStore<T extends TT> extends ExprBase<T> {
 
 export interface ExprVarCvt<T extends TT> extends ExprBase<T> {
 	readonly ptr: Expr<Cvt<T>>;
-	offsetPtr(n: number | Expr<Int>): Expr<Store<T>>;
+	readonly decl: Decl;
+	offsetPtr(n: number | Expr<Int>): Expr<Cvt<T>>;
 	setPart(n: number | Expr<Int>, value: CompatibleType<T>): Stmt;
 	set(value: CompatibleType<T>): Stmt;
 }

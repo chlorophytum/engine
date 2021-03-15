@@ -1,12 +1,12 @@
 import test from "ava";
 
-import { func } from "../edsl/lib-system";
+import { Func } from "../edsl/lib-system/programs";
 import { Int } from "../edsl/type-system";
 
 import { StmtTestLoop } from "./-stmt-test-loop";
 
 test("Stmt: Variable set", t => {
-	const f1 = func();
+	const f1 = Func();
 	f1.def(function* ($) {
 		const x = $.Local(Int);
 		yield x.set(3);

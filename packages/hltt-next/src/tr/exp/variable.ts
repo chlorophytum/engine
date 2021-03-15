@@ -1,5 +1,6 @@
 import Assembler from "../../asm";
 import { TTI } from "../../instr";
+import { Decl } from "../decl";
 import { ProgramScope } from "../scope";
 import { TrExp, TrVar } from "../tr";
 
@@ -97,16 +98,17 @@ export class TrGlobalPtr implements TrExp {
 }
 
 export class TrCvtPtr implements TrExp {
-	constructor(private readonly symbol: symbol, private readonly offset: number) {}
+	constructor(private readonly decl: Decl, private readonly offset: number) {}
 	isConstant() {
 		return undefined;
 	}
 	withOffset(offset: number) {
-		return new TrCvtPtr(this.symbol, this.offset + offset);
+		return new TrCvtPtr(this.decl, this.offset + offset);
 	}
 	compile(asm: Assembler, ps: ProgramScope) {
-		const id = ps.global.cvt.resolve(this.symbol);
-		if (id == null) throw new Error(`Cvt ${String(this.symbol)} not declared.`);
+		const symbol = this.decl.populateInterface(ps.global);
+		const id = ps.global.cvt.resolve(symbol);
+		if (id == null) throw new Error(`Cvt ${String(symbol)} not declared.`);
 		asm.intro(id + this.offset);
 	}
 }

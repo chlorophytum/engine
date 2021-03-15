@@ -1,13 +1,13 @@
 import test from "ava";
 
 import { glyphPoint, twilightPoint, volatile } from "../edsl/expr-impl/const";
-import { func } from "../edsl/lib-system";
+import { Func } from "../edsl/lib-system/programs";
 import { Ip, Mdap, Mdrp } from "../edsl/stmt-impl/move-point";
 
 import { StmtTestLoop } from "./-stmt-test-loop";
 
-test("TrStmt: MDAP 1", t => {
-	const f1 = func();
+test("Stmt: MDAP 1", t => {
+	const f1 = Func();
 	f1.def(function* ($) {
 		yield Mdap(glyphPoint(1));
 		yield Mdap(glyphPoint(2));
@@ -27,8 +27,8 @@ test("TrStmt: MDAP 1", t => {
 	);
 });
 
-test("TrStmt: MDRP", t => {
-	const f1 = func();
+test("Stmt: MDRP", t => {
+	const f1 = Func();
 	f1.def(function* ($) {
 		yield Mdrp(glyphPoint(1), glyphPoint(2));
 		yield Mdrp(glyphPoint(1), glyphPoint(3));
@@ -50,8 +50,8 @@ test("TrStmt: MDRP", t => {
 	);
 });
 
-test("TrStmt: IP", t => {
-	const f1 = func();
+test("Stmt: IP", t => {
+	const f1 = Func();
 	f1.def(function* ($) {
 		yield Ip(glyphPoint(1), glyphPoint(2), [glyphPoint(3), twilightPoint(4), twilightPoint(5)]);
 	});

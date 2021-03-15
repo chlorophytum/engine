@@ -1,12 +1,12 @@
 import test from "ava";
 
-import { func } from "../edsl/lib-system";
+import { Func } from "../edsl/lib-system/programs";
 import { Int } from "../edsl/type-system";
 
 import { StmtTestLoop } from "./-stmt-test-loop";
 
 test("Libs: Recursion", t => {
-	const f1 = func(Int);
+	const f1 = Func(Int);
 	f1.def(function* ($, x) {
 		yield f1(1);
 	});
@@ -23,8 +23,8 @@ test("Libs: Recursion", t => {
 });
 
 test("Libs: Mutual Recursion", t => {
-	const f1 = func(Int);
-	const f2 = func(Int);
+	const f1 = Func(Int);
+	const f2 = Func(Int);
 	f1.def(function* ($, x) {
 		yield f2(1);
 	});

@@ -1,13 +1,13 @@
 import test from "ava";
 
 import { add, mul } from "../edsl/expr-impl/arith-ctor";
-import { func } from "../edsl/lib-system";
+import { Func } from "../edsl/lib-system/programs";
 import { Frac, Int } from "../edsl/type-system";
 
 import { StmtTestLoop } from "./-stmt-test-loop";
 
 test("Expr: Arith 1", t => {
-	const f1 = func(Int, Int);
+	const f1 = Func(Int, Int);
 	f1.def(function* ($, y, z) {
 		yield add(y, z);
 		yield add(1, z);
@@ -35,7 +35,7 @@ test("Expr: Arith 1", t => {
 });
 
 test("Expr: Arith 2", t => {
-	const f1 = func(Frac, Frac);
+	const f1 = Func(Frac, Frac);
 	f1.def(function* ($, y, z) {
 		yield add(y, z);
 		yield add(1, z);
@@ -63,7 +63,7 @@ test("Expr: Arith 2", t => {
 });
 
 test("Expr: Arith 3", t => {
-	const f1 = func(Frac, Frac);
+	const f1 = Func(Frac, Frac);
 	f1.def(function* ($, y, z) {
 		yield mul(y, z);
 		yield mul(1, z);
@@ -91,7 +91,7 @@ test("Expr: Arith 3", t => {
 });
 
 test("Expr: Arith 4", t => {
-	const f1 = func(Int, Int);
+	const f1 = Func(Int, Int);
 	f1.def(function* ($, y, z) {
 		yield mul(y, z);
 		yield mul(1, z);

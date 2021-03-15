@@ -1,13 +1,13 @@
 import test from "ava";
 
-import { func } from "../edsl/lib-system";
+import { Func } from "../edsl/lib-system/programs";
 import { If } from "../edsl/stmt-impl/branch";
 import { Bool, Int } from "../edsl/type-system";
 
 import { StmtTestLoop } from "./-stmt-test-loop";
 
-test("TrStmt: If 1", t => {
-	const f1 = func(Bool, Int, Int);
+test("Stmt: If 1", t => {
+	const f1 = Func(Bool, Int, Int);
 	f1.def(function* ($, x, y, z) {
 		yield If(x).Then(y).Else(z);
 	});
@@ -33,8 +33,8 @@ test("TrStmt: If 1", t => {
 	);
 });
 
-test("TrStmt: If 2", t => {
-	const f1 = func(Bool, Int, Int).returns(Int);
+test("Stmt: If 2", t => {
+	const f1 = Func(Bool, Int, Int).returns(Int);
 	f1.def(function* ($, x, y, z) {
 		yield If(x)
 			.Then(() => [$.Return(y)])

@@ -1,13 +1,13 @@
 import test from "ava";
 
 import { cast, unsafeCoerce } from "../edsl/expr-impl/expr";
-import { func } from "../edsl/lib-system";
+import { Func } from "../edsl/lib-system/programs";
 import { Frac, Int } from "../edsl/type-system";
 
 import { StmtTestLoop } from "./-stmt-test-loop";
 
 test("Expr: Conversion", t => {
-	const f1 = func(Int);
+	const f1 = Func(Int);
 	f1.def(function* ($, x) {
 		yield cast(Frac, x);
 		yield unsafeCoerce(Frac, x);

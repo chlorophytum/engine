@@ -3,7 +3,7 @@ import { ProgramScope } from "../scope";
 import { TrStmt } from "../tr";
 
 import { TrStmtBase } from "./base";
-import { TrEntry } from "./entry";
+import { TrEntry, TrRootEntry } from "./entry";
 import { TrLastReturn } from "./exit";
 
 export class TrSeq extends TrStmtBase {
@@ -25,8 +25,16 @@ export class TrSeq extends TrStmtBase {
 		const last = this.parts[this.parts.length - 1];
 		return last && last.willReturnAfter();
 	}
+
 	public asFunctionBody(scope: ProgramScope) {
-		const pre: TrStmt[] = [new TrEntry()];
+		return this.asFunctionBodyImpl(scope, new TrEntry());
+	}
+	public asRootProgram(scope: ProgramScope) {
+		return this.asFunctionBodyImpl(scope, new TrRootEntry());
+	}
+
+	private asFunctionBodyImpl(scope: ProgramScope, entry: TrStmt) {
+		const pre: TrStmt[] = [entry];
 		const body = [...this.parts];
 		const post: TrStmt[] = [];
 		const last = body[body.length - 1];

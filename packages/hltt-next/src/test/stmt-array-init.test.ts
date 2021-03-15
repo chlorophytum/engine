@@ -1,13 +1,13 @@
 import test from "ava";
 
-import { func } from "../edsl/lib-system";
+import { Func } from "../edsl/lib-system/programs";
 import { arrayInit } from "../edsl/stmt-impl/array-init";
 import { Int } from "../edsl/type-system";
 
 import { StmtTestLoop } from "./-stmt-test-loop";
 
 test("Stmt: Array init", t => {
-	const f1 = func();
+	const f1 = Func();
 	f1.def(function* ($) {
 		const arr = $.LocalArray(Int, 3);
 		yield arrayInit(arr, 1, 2, 3);

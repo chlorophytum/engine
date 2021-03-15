@@ -1,18 +1,18 @@
 import test from "ava";
 
 import { add } from "../edsl/expr-impl/arith-ctor";
-import { func, template } from "../edsl/lib-system";
+import { Func, template } from "../edsl/lib-system/programs";
 import { Bool, Frac, Int, TArith, TT } from "../edsl/type-system";
 
 import { StmtTestLoop } from "./-stmt-test-loop";
 
 test("Libs: Templates", t => {
 	const addT = template(<T extends TArith>(delta: number, TY: T) =>
-		func(TY)
+		Func(TY)
 			.returns(TY)
 			.def(($, y) => [add(delta, y)])
 	);
-	const f1 = func().def(function* ($) {
+	const f1 = Func().def(function* ($) {
 		yield addT(1, Int)(1);
 		yield addT(1, Frac)(1);
 		yield addT(2, Int)(2);
@@ -37,11 +37,11 @@ test("Libs: Templates", t => {
 
 test("Libs: Template literal conversion", t => {
 	const idT = template(<T extends TT>(TY: T) =>
-		func(TY)
+		Func(TY)
 			.returns(TY)
 			.def(($, y) => [y])
 	);
-	const f1 = func().def(function* ($) {
+	const f1 = Func().def(function* ($) {
 		yield idT(Int)(1);
 		yield idT(Frac)(1.5);
 		yield idT(Bool)(true);
@@ -66,9 +66,9 @@ test("Libs: Template literal conversion", t => {
 
 test("Libs: Variable Arity Template", t => {
 	const idT = template((n: number) =>
-		func(Int, ...(Array(n).fill(Frac) as Frac[])).def(($, a, ...b) => [a, ...b])
+		Func(Int, ...(Array(n).fill(Frac) as Frac[])).def(($, a, ...b) => [a, ...b])
 	);
-	const f1 = func().def(function* ($) {
+	const f1 = Func().def(function* ($) {
 		yield idT(1)(1, 1);
 		yield idT(2)(1, 1, 2);
 		yield idT(3)(1, 1, 2, 3);

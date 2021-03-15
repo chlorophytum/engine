@@ -1,9 +1,10 @@
+import { Decl } from "../../tr/decl";
 import { TrBinaryOp } from "../../tr/exp/arith";
 import { TrConst } from "../../tr/exp/const";
 import { TrCvt, TrCvtPtr, TrLocalPtr, TrOffsetPtr, TrStorage } from "../../tr/exp/variable";
 import { TrSetVariable } from "../../tr/stmt/set-variable";
 import { TrExp, TrVar } from "../../tr/tr";
-import { Expr, ExprAll, ExprVarAll, ExprVarStore } from "../expr";
+import { Expr, ExprAll, ExprVarAll, ExprVarCvt, ExprVarStore } from "../expr";
 import { Stmt } from "../stmt";
 import {
 	Bool,
@@ -76,8 +77,11 @@ export class LocalVarExprImpl extends CoercedVarImpl {
 }
 
 export class CvtExprImpl<T extends TT> extends CoercedVarImpl {
-	protected constructor(type: T, symbol: symbol) {
-		super(type, Cvt, TrCvt, new TrCvtPtr(symbol, 0), new TrConst(0));
+	protected constructor(type: T, public readonly decl: Decl) {
+		super(type, Cvt, TrCvt, new TrCvtPtr(decl, 0), new TrConst(0));
+	}
+	static fromDecl<T extends TT>(ty: T, s: Decl): Expr<T> & ExprVarCvt<T> {
+		return (new CvtExprImpl(ty, s) as unknown) as Expr<T> & ExprVarCvt<T>;
 	}
 }
 

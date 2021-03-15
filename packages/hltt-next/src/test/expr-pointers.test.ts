@@ -1,13 +1,13 @@
 import test from "ava";
 
 import { integer, volatile } from "../edsl/expr-impl/const";
-import { func } from "../edsl/lib-system";
+import { Func } from "../edsl/lib-system/programs";
 import { Int, Store } from "../edsl/type-system";
 
 import { StmtTestLoop } from "./-stmt-test-loop";
 
 test("Expr: Pointer from Parameter", t => {
-	const f1 = func(Store(Int)).def(function* ($, x) {
+	const f1 = Func(Store(Int)).def(function* ($, x) {
 		yield x.deRef;
 		yield x.part(1);
 	});
@@ -30,7 +30,7 @@ test("Expr: Pointer from Parameter", t => {
 });
 
 test("Expr: Pointer of Variable", t => {
-	const f1 = func().def(function* ($) {
+	const f1 = Func().def(function* ($) {
 		const x = $.Local(Int);
 		yield x.ptr;
 		yield x.offsetPtr(1);

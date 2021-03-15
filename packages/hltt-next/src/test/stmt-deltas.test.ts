@@ -1,27 +1,22 @@
 import test from "ava";
 
-import { func } from "../edsl/lib-system";
-import { Stmt } from "../edsl/stmt";
-import { TTI } from "../instr";
-import { TrConst } from "../tr/exp/const";
-import { TrDeltas } from "../tr/stmt/deltas";
+import { glyphPoint, twilightPoint } from "../edsl/expr-impl/const";
+import { Func } from "../edsl/lib-system/programs";
+import { Delta } from "../edsl/stmt-impl/delta";
 
 import { StmtTestLoop } from "./-stmt-test-loop";
 
-test("TrStmt: Deltas", t => {
-	const f1 = func();
-	f1.def($ => [
-		new Stmt(
-			new TrDeltas(TTI.DELTAP1, [
-				[new TrConst(1), false, new TrConst(1)],
-				[new TrConst(2), true, new TrConst(2)],
-				[new TrConst(3), false, new TrConst(3)],
-				[new TrConst(4), false, new TrConst(4)],
-				[new TrConst(5), false, new TrConst(5)]
-			])
-		)
-	]);
-
+test("Stmt: Deltas", t => {
+	const f1 = Func();
+	f1.def(function* ($) {
+		yield Delta.p1(
+			[glyphPoint(1), 1],
+			[twilightPoint(2), 2],
+			[glyphPoint(3), 3],
+			[glyphPoint(4), 4],
+			[glyphPoint(5), 5]
+		);
+	});
 	StmtTestLoop(
 		t,
 		f1,

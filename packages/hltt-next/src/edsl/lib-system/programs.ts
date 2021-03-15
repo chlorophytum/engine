@@ -1,11 +1,10 @@
 import { Decl } from "../../tr/decl";
 import { TrInvoke } from "../../tr/exp/invoke";
 import { TrParameter } from "../../tr/exp/parameter";
-import { ProgramDef, GlobalScope, ProgramScope } from "../../tr/scope";
+import { GlobalScope, ProgramDef, ProgramRecord, ProgramScope } from "../../tr/scope";
 import { TrExprStmt } from "../../tr/stmt/expr";
 import { TrSeq } from "../../tr/stmt/sequence";
-import { TrStmt } from "../../tr/tr";
-import { CompatibleType, Expr } from "../expr";
+import { Expr } from "../expr";
 import { castLiteral, ExprImpl } from "../expr-impl/expr";
 import { FuncScopeProxy, ProgramScopeProxy } from "../scope-proxy";
 import { Stmt } from "../stmt";
@@ -13,31 +12,14 @@ import { AnyStmt, castExprStmt } from "../stmt-impl/branch";
 import { TT } from "../type-system";
 
 import { createIdentifier, Identifiable } from "./id-generator";
-
-type WrapExprOrLiteral<Ts extends TT[]> = { [K in keyof Ts]: CompatibleType<Ts[K]> | Expr<Ts[K]> };
-type WrapExpr<Ts extends TT[]> = { [K in keyof Ts]: Expr<Ts[K]> };
-
-type RawCallableFunc<Ts extends TT[], Tr extends TT> = (...xs: WrapExprOrLiteral<Ts>) => Expr<Tr>;
-type CallableFunc<Ts extends TT[], Tr extends TT> = ProgramDef &
-	RawCallableFunc<Ts, Tr> & {
-		def: (fb: FuncBody<Ts, Tr>) => CallableFunc<Ts, Tr>;
-	};
-
-type RawCallableProc<Ts extends TT[]> = (...xs: WrapExprOrLiteral<Ts>) => Stmt;
-type CallableProc<Ts extends TT[]> = ProgramDef &
-	RawCallableProc<Ts> & {
-		returns: <Tr extends TT>(t: Tr) => CallableFunc<Ts, Tr>;
-		def: (fp: ProcBody<Ts>) => CallableProc<Ts>;
-	};
-
-type FuncBody<Ts extends TT[], Tr extends TT> = (
-	pps: FuncScopeProxy<Tr>,
-	...params: WrapExpr<Ts>
-) => Iterable<AnyStmt>;
-type ProcBody<Ts extends TT[]> = (
-	pps: ProgramScopeProxy,
-	...params: WrapExpr<Ts>
-) => Iterable<AnyStmt>;
+import {
+	CallableFunc,
+	CallableProc,
+	FuncBody,
+	ProcBody,
+	WrapExpr,
+	WrapExprOrLiteral
+} from "./interfaces";
 
 export function template<IDs extends Identifiable[], R>(fnDef: (...ids: IDs) => R) {
 	const cache = new Map<string, R>();
@@ -51,7 +33,7 @@ export function template<IDs extends Identifiable[], R>(fnDef: (...ids: IDs) => 
 	};
 }
 
-export function func<Ts extends TT[]>(...parameterSig: Ts): CallableProc<Ts> {
+export function Func<Ts extends TT[]>(...parameterSig: Ts): CallableProc<Ts> {
 	const decl = new ProcedureDeclaration(parameterSig);
 	const callable = Object.assign((...xs: WrapExprOrLiteral<Ts>) => decl.createCall(xs), {
 		populateInterface: (gs: GlobalScope) => decl.populateInterface(gs),
@@ -81,7 +63,7 @@ class FunctionDeclaration<Ts extends TT[], Tr extends TT> implements ProgramDef 
 		populateInterfaceImpl(gs, this.m_symbol, this);
 		return this.m_symbol;
 	}
-	populateDefinition(gs: GlobalScope): [ProgramScope, TrStmt] {
+	populateDefinition(gs: GlobalScope): ProgramRecord {
 		if (!this.body)
 			throw new TypeError("Attempt to populate a function before its body is set.");
 
@@ -107,7 +89,7 @@ class ProcedureDeclaration<Ts extends TT[]> implements ProgramDef {
 		populateInterfaceImpl(gs, this.m_symbol, this);
 		return this.m_symbol;
 	}
-	populateDefinition(gs: GlobalScope): [ProgramScope, TrStmt] {
+	populateDefinition(gs: GlobalScope): ProgramRecord {
 		if (!this.body)
 			throw new TypeError("Attempt to populate a function before its body is set.");
 
@@ -121,6 +103,17 @@ class ProcedureDeclaration<Ts extends TT[]> implements ProgramDef {
 	}
 	createCall(args: (number | boolean | Expr<TT>)[]) {
 		return new Stmt(new TrExprStmt(createCallImpl(this, this.argumentTypes, args, 0)));
+	}
+}
+
+export class RootProgramDeclaration {
+	constructor(private readonly body: (pps: ProgramScopeProxy) => Iterable<AnyStmt>) {}
+	populateDefinition(gs: GlobalScope): ProgramRecord {
+		const ps = new ProgramScope(gs, true);
+		const pps = new ProgramScopeProxy(ps);
+		const sBody = Array.from(this.body(pps)).map(x => castExprStmt(x).tr);
+		const trBody = new TrSeq(true, sBody).asRootProgram(ps);
+		return [ps, trBody];
 	}
 }
 

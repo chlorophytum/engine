@@ -1,4 +1,12 @@
-import { GlobalScope } from "../tr/scope";
+import { GlobalScope, ProgramRecord } from "../tr/scope";
+
+import { RootProgramDeclaration } from "./lib-system/programs";
+import { ProgramScopeProxy } from "./scope-proxy";
+import { AnyStmt } from "./stmt-impl/branch";
+
+export interface ProgramStore {
+	fpgm: Map<symbol, ProgramRecord>;
+}
 
 export interface TtStat {
 	stackHeight?: number;
@@ -12,7 +20,7 @@ export interface TtStat {
 }
 
 export class ProgramAssembly {
-	constructor(stat: TtStat) {
+	constructor(private readonly store: ProgramStore, private readonly stat: TtStat) {
 		this.scope = new GlobalScope({
 			fpgm: stat.maxFunctionDefs || 0,
 			twilights: stat.maxTwilightPoints || 0,
@@ -23,4 +31,9 @@ export class ProgramAssembly {
 	}
 
 	public readonly scope: GlobalScope;
+
+	createProgram(body: (pps: ProgramScopeProxy) => Iterable<AnyStmt>) {
+		const decl = new RootProgramDeclaration(body);
+		return decl;
+	}
 }
