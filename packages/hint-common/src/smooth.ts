@@ -6,6 +6,7 @@ import {
 	PropertyBag
 } from "@chlorophytum/arch";
 import { HlttProgramSink } from "@chlorophytum/final-hint-format-hltt";
+import { Iup } from "@chlorophytum/hltt-next";
 
 export namespace Smooth {
 	const TAG = "Chlorophytum::CommonHints::Smooth";
@@ -37,8 +38,8 @@ export namespace Smooth {
 		constructor(private readonly sink: HlttProgramSink) {}
 		public doCompile() {
 			this.sink.addSegment(function* ($) {
-				yield $.iup.x();
-				yield $.iup.y();
+				yield Iup.x();
+				yield Iup.y();
 			});
 		}
 	}

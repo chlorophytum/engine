@@ -11,10 +11,11 @@ export interface GsBaseStats {
 }
 
 export interface Decl {
-	populateInterface(gs: GlobalScope): symbol;
+	readonly symbol: symbol;
+	register(gs: GlobalScope): symbol;
 }
 export interface Def<T> extends Decl {
-	populateDefinition(gs: GlobalScope): T;
+	computeDefinition(gs: GlobalScope): T;
 }
 
 export type ProgramRecord = [ProgramScope, TrStmt];
@@ -28,7 +29,8 @@ export class GlobalScope {
 		// Initialize symbol tables
 		this.storage = new SimpleSymbolTable(1 + bases.storage);
 		this.cvt = new SimpleSymbolTable(bases.cvt);
-		this.fpgm = new SimpleSymbolTable(bases.fpgm);
+		this.fpgm = new DefinesSymbolTable<ProgramDef>(bases.fpgm);
+		this.twilightPoints = new SimpleSymbolTable(bases.twilights);
 	}
 	public get storageStackFrameStart() {
 		return this.storage.base;
@@ -40,7 +42,8 @@ export class GlobalScope {
 	public readonly getVariationArity: number;
 	public readonly storage: SimpleSymbolTable;
 	public readonly cvt: SimpleSymbolTable;
-	public readonly fpgm: SimpleSymbolTable;
+	public readonly fpgm: DefinesSymbolTable<ProgramDef>;
+	public readonly twilightPoints: SimpleSymbolTable;
 }
 
 export class ProgramScope {
@@ -119,7 +122,7 @@ export class DefinesSymbolTable<T> {
 	setDef(s: symbol, d: T) {
 		this.definitions.set(s, d);
 	}
-	getDef(s: symbol, d: T) {
-		this.definitions.get(s);
+	getDef(s: symbol) {
+		return this.definitions.get(s);
 	}
 }

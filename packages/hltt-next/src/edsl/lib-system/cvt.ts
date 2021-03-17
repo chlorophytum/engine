@@ -9,10 +9,10 @@ export function ControlValue<T extends TArith>(type: T, size: number = 1) {
 
 class CvDeclaration<T extends TArith> implements Decl {
 	constructor(public readonly type: T, private readonly size: number) {}
-	private readonly m_symbol = Symbol();
+	public readonly symbol = Symbol();
 
-	populateInterface(gs: GlobalScope) {
-		if (!gs.cvt.haveDeclared(this.m_symbol)) gs.cvt.declare(this.size, this.m_symbol);
-		return this.m_symbol;
+	register(gs: GlobalScope) {
+		if (!gs.cvt.haveDeclared(this.symbol)) gs.cvt.declare(this.size, this.symbol);
+		return this.symbol;
 	}
 }

@@ -3,7 +3,7 @@ import test from "ava";
 import { Func } from "../edsl/lib-system/programs";
 import { Int } from "../edsl/type-system";
 
-import { StmtTestLoop } from "./-stmt-test-loop";
+import { MultiStmtTestLoop, StmtTestLoop } from "./-stmt-test-loop";
 
 test("Libs: Recursion", t => {
 	const f1 = Func(Int);
@@ -32,23 +32,23 @@ test("Libs: Mutual Recursion", t => {
 		yield f1(1);
 	});
 
-	StmtTestLoop(
+	MultiStmtTestLoop(
 		t,
-		f1,
-		`
-		PUSHB_2 1 1
-		CALL
-		POP
-        `
-	);
-
-	StmtTestLoop(
-		t,
-		f2,
-		`
-		PUSHB_2 1 1
-		CALL
-		POP
-        `
+		[
+			f1,
+			`
+			PUSHB_2 1 0
+			CALL
+			POP
+			`
+		],
+		[
+			f2,
+			`
+			PUSHB_2 1 1
+			CALL
+			POP
+        	`
+		]
 	);
 });

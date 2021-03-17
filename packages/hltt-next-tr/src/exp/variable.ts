@@ -105,7 +105,7 @@ export class TrCvtPtr implements TrExp {
 		return new TrCvtPtr(this.decl, this.offset + offset);
 	}
 	compile(asm: Assembler, ps: ProgramScope) {
-		const symbol = this.decl.populateInterface(ps.global);
+		const symbol = this.decl.register(ps.global);
 		const id = ps.global.cvt.resolve(symbol);
 		if (id == null) throw new Error(`Cvt ${String(symbol)} not declared.`);
 		asm.intro(id + this.offset);

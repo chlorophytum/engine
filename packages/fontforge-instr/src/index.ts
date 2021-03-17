@@ -1,4 +1,4 @@
-import { InstrSink, TTI } from "@chlorophytum/hltt";
+import { InstrSink, TTI } from "@chlorophytum/hltt-next-backend";
 
 const FF_INSTR_NAMES = [
 	"SVTCA[y-axis]",

@@ -7,8 +7,8 @@
 	},
 	"references": [
 		{"path": "../arch"},
-		{"path": "../hltt"},
 		{"path": "../hltt-next"},
+		{"path": "../hltt-next-backend"},
 		{"path": "../hltt-next-tr"}
 	]
 }

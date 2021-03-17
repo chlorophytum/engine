@@ -42,8 +42,11 @@ export function Template<IDs extends Identifiable[], R>(fnDef: (...ids: IDs) => 
 export function Func<Ts extends TT[]>(...parameterSig: Ts): CallableProc<Ts> {
 	const decl = new ProcedureDeclaration(parameterSig);
 	const callable = Object.assign((...xs: WrapExprOrLiteral<Ts>) => decl.createCall(xs), {
-		populateInterface: (gs: GlobalScope) => decl.populateInterface(gs),
-		populateDefinition: (gs: GlobalScope) => decl.populateDefinition(gs),
+		get symbol() {
+			return decl.symbol;
+		},
+		register: (gs: GlobalScope) => decl.register(gs),
+		computeDefinition: (gs: GlobalScope) => decl.computeDefinition(gs),
 		def: (fb: ProcBody<Ts>) => ((decl.body = fb), callable),
 		returns: <Tr extends TT>(tr: Tr) => funcDef(parameterSig, tr)
 	});
@@ -53,8 +56,11 @@ export function Func<Ts extends TT[]>(...parameterSig: Ts): CallableProc<Ts> {
 function funcDef<Ts extends TT[], Tr extends TT>(parameterSig: Ts, ret: Tr): CallableFunc<Ts, Tr> {
 	const decl = new FunctionDeclaration(parameterSig, ret);
 	const callable = Object.assign((...xs: WrapExprOrLiteral<Ts>) => decl.createCall(xs), {
-		populateInterface: (gs: GlobalScope) => decl.populateInterface(gs),
-		populateDefinition: (gs: GlobalScope) => decl.populateDefinition(gs),
+		get symbol() {
+			return decl.symbol;
+		},
+		register: (gs: GlobalScope) => decl.register(gs),
+		computeDefinition: (gs: GlobalScope) => decl.computeDefinition(gs),
 		def: (fb: FuncBody<Ts, Tr>) => ((decl.body = fb), callable)
 	});
 	return callable;
@@ -63,13 +69,13 @@ function funcDef<Ts extends TT[], Tr extends TT>(parameterSig: Ts, ret: Tr): Cal
 class FunctionDeclaration<Ts extends TT[], Tr extends TT> implements ProgramDef {
 	constructor(public readonly argumentTypes: Ts, public readonly returnType: Tr) {}
 	public body: null | FuncBody<Ts, Tr> = null;
-	private readonly m_symbol = Symbol();
+	public readonly symbol = Symbol();
 
-	populateInterface(gs: GlobalScope) {
-		populateInterfaceImpl(gs, this.m_symbol, this);
-		return this.m_symbol;
+	register(gs: GlobalScope) {
+		populateInterfaceImpl(gs, this.symbol, this);
+		return this.symbol;
 	}
-	populateDefinition(gs: GlobalScope): ProgramRecord {
+	computeDefinition(gs: GlobalScope): ProgramRecord {
 		if (!this.body)
 			throw new TypeError("Attempt to populate a function before its body is set.");
 
@@ -89,13 +95,13 @@ class FunctionDeclaration<Ts extends TT[], Tr extends TT> implements ProgramDef 
 class ProcedureDeclaration<Ts extends TT[]> implements ProgramDef {
 	constructor(public readonly argumentTypes: Ts) {}
 	public body: null | ProcBody<Ts> = null;
-	private readonly m_symbol = Symbol();
+	public readonly symbol = Symbol();
 
-	populateInterface(gs: GlobalScope) {
-		populateInterfaceImpl(gs, this.m_symbol, this);
-		return this.m_symbol;
+	register(gs: GlobalScope) {
+		populateInterfaceImpl(gs, this.symbol, this);
+		return this.symbol;
 	}
-	populateDefinition(gs: GlobalScope): ProgramRecord {
+	computeDefinition(gs: GlobalScope): ProgramRecord {
 		if (!this.body)
 			throw new TypeError("Attempt to populate a function before its body is set.");
 
@@ -114,7 +120,7 @@ class ProcedureDeclaration<Ts extends TT[]> implements ProgramDef {
 
 export class RootProgramDeclaration {
 	constructor(private readonly body: (pps: ProgramScopeProxy) => Iterable<AnyStmt>) {}
-	populateDefinition(gs: GlobalScope): ProgramRecord {
+	computeDefinition(gs: GlobalScope): ProgramRecord {
 		const ps = new ProgramScope(gs, true);
 		const pps = new ProgramScopeProxy(ps);
 		const sBody = Array.from(this.body(pps)).map(x => castExprStmt(x).tr);
@@ -124,7 +130,11 @@ export class RootProgramDeclaration {
 }
 
 function populateInterfaceImpl(gs: GlobalScope, s: symbol, decl: ProgramDef) {
-	if (!gs.fpgm.haveDeclared(s)) gs.fpgm.declare(1, s);
+	if (!gs.fpgm.haveDeclared(s)) {
+		gs.fpgm.declare(1, s);
+		gs.fpgm.setDef(s, decl);
+		decl.computeDefinition(gs);
+	}
 }
 
 function createCallImpl(

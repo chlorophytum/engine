@@ -5,5 +5,5 @@
 		"outDir": "lib",
 		"tsBuildInfoFile": ".build-cache/src"
 	},
-	"references": [{"path": "../arch"}, {"path": "../hltt"}]
+	"references": [{"path": "../arch"}, {"path": "../hltt-next-backend"}]
 }

@@ -13,7 +13,7 @@ export class TrInvoke implements TrExp {
 		return undefined;
 	}
 	compile(asm: Assembler, ps: ProgramScope) {
-		const sFn = this.fnDecl.populateInterface(ps.global);
+		const sFn = this.fnDecl.register(ps.global);
 		const iFn = ps.global.fpgm.resolve(sFn);
 		if (iFn == null) throw new TypeError(`Function ${String(sFn)} failed to declare.`);
 		for (const arg of this.args) arg.compile(asm, ps);

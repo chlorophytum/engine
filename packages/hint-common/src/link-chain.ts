@@ -7,6 +7,7 @@ import {
 	PropertyBag
 } from "@chlorophytum/arch";
 import { HlttProgramSink } from "@chlorophytum/final-hint-format-hltt";
+import { Mdrp } from "@chlorophytum/hltt-next";
 
 export namespace LinkChain {
 	const TAG = "Chlorophytum::CommonHints::LinkChain";
@@ -49,7 +50,7 @@ export namespace LinkChain {
 			const hc = this;
 			this.sink.addSegment(function* ($) {
 				for (let j = 1; j < hc.pts.length; j++) {
-					yield $.mdrp(ptIndex[j - 1], ptIndex[j]);
+					yield Mdrp(ptIndex[j - 1], ptIndex[j]);
 				}
 			});
 		}

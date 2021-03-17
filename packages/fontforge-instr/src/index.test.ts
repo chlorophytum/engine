@@ -1,4 +1,4 @@
-import { TTI } from "@chlorophytum/hltt";
+import { TTI } from "@chlorophytum/hltt-next-backend";
 import test from "ava";
 
 import { FontForgeTextInstr } from "./index";

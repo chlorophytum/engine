@@ -4,33 +4,33 @@ import {
 	Variation,
 	WellKnownGeometryKind
 } from "@chlorophytum/arch";
-import { Edsl } from "@chlorophytum/hltt";
+import {
+	AnyStmt,
+	Expr,
+	glyphPoint,
+	ProgramAssembly,
+	ProgramScopeProxy
+} from "@chlorophytum/hltt-next";
+import { Decl } from "@chlorophytum/hltt-next-tr";
+import { GlyphPoint } from "@chlorophytum/hltt-next/src/edsl/type-system";
 import { implDynamicCast, Typable, TypeRep } from "typable";
 
-export type ProgramGenerator = ($: Edsl.ProgramDsl) => Iterable<Edsl.Statement>;
-export type CvtGenerator = (
-	$: Edsl.GlobalDsl
-) => Iterable<[Edsl.Variable<Edsl.VkCvt>, Variation.Variance<number>[]]>;
+export type ProgramGenerator = ($: ProgramScopeProxy) => Iterable<AnyStmt>;
+export type CvtGenerator = ($: ProgramAssembly) => Iterable<[Decl, Variation.Variance<number>[]]>;
 
 export const HlttProgramSink = new TypeRep<HlttProgramSink>(
 	"Chlorophytum::HlttFinalHintPlugin::HlttProgramSink"
 );
 export interface HlttProgramSink extends IFinalHintProgramSink {
 	addSegment(gen: ProgramGenerator): void;
-	setDefaultControlValue(
-		symbol: Edsl.Linkable<Edsl.VkCvt>,
-		...values: (number | Variation.Variance<number>)[]
-	): void;
-	resolveGlyphPoint(from: Geometry.PointReference): number;
+	setDefaultControlValue(symbol: Decl, ...values: (number | Variation.Variance<number>)[]): void;
+	resolveGlyphPoint(from: Geometry.PointReference): Expr<GlyphPoint>;
 }
 
 export class HlttProgramSinkImpl implements Typable<HlttProgramSink> {
 	public readonly format = "hltt";
 	private readonly generators: ProgramGenerator[] = [];
-	private readonly pendingCvtSets: [
-		Edsl.Linkable<Edsl.VkCvt>,
-		Variation.Variance<number>[]
-	][] = [];
+	private readonly pendingCvtSets: [Decl, Variation.Variance<number>[]][] = [];
 
 	constructor(private fSave: (gen: ProgramGenerator, genCvt: CvtGenerator) => void) {}
 
@@ -42,7 +42,7 @@ export class HlttProgramSinkImpl implements Typable<HlttProgramSink> {
 		this.generators.push(gen);
 	}
 	public setDefaultControlValue(
-		symbol: Edsl.Linkable<Edsl.VkCvt>,
+		symbol: Decl,
 		...values: (number | Variation.Variance<number>)[]
 	) {
 		const results: Variation.Variance<number>[] = [];
@@ -58,18 +58,16 @@ export class HlttProgramSinkImpl implements Typable<HlttProgramSink> {
 			$ => this.buildCvt($)
 		);
 	}
-	private *buildProgram($: Edsl.ProgramDsl) {
+	private *buildProgram($: ProgramScopeProxy) {
 		for (const gen of this.generators) yield* gen($);
 	}
-	private *buildCvt(
-		$: Edsl.GlobalDsl
-	): IterableIterator<[Edsl.Variable<Edsl.VkCvt>, Variation.Variance<number>[]]> {
-		for (const [symbol, value] of this.pendingCvtSets) {
-			yield [$.convertLinkable(symbol), value];
+	private *buildCvt($: ProgramAssembly): IterableIterator<[Decl, Variation.Variance<number>[]]> {
+		for (const [decl, value] of this.pendingCvtSets) {
+			yield [decl, value];
 		}
 	}
-	public resolveGlyphPoint(from: Geometry.PointReference): number {
-		if (from.kind === WellKnownGeometryKind.Identity.kind) return from.id;
+	public resolveGlyphPoint(from: Geometry.PointReference): Expr<GlyphPoint> {
+		if (from.kind === WellKnownGeometryKind.Identity.kind) return glyphPoint(from.id);
 		throw new Error("Unable to resolve point. Not inside Geometry.");
 	}
 }

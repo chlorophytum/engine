@@ -7,6 +7,7 @@ import {
 	PropertyBag
 } from "@chlorophytum/arch";
 import { HlttProgramSink } from "@chlorophytum/final-hint-format-hltt";
+import { Ip } from "@chlorophytum/hltt-next";
 
 export namespace Interpolate {
 	const TAG = "Chlorophytum::CommonHints::Interpolate";
@@ -55,10 +56,10 @@ export namespace Interpolate {
 			// eslint-disable-next-line @typescript-eslint/no-this-alias
 			const hc = this;
 			this.sink.addSegment($ => [
-				$.ip(
+				Ip(
 					this.sink.resolveGlyphPoint(hc.rp1),
 					this.sink.resolveGlyphPoint(hc.rp2),
-					...hc.pts.map(pt => this.sink.resolveGlyphPoint(pt))
+					hc.pts.map(pt => this.sink.resolveGlyphPoint(pt))
 				)
 			]);
 		}
