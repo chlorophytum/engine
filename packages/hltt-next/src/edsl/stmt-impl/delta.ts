@@ -1,5 +1,6 @@
-import { TTI } from "../../instr";
-import { TrDeltas } from "../../tr/stmt/deltas";
+import { TTI } from "@chlorophytum/hltt-next-backend";
+import { TrDeltas } from "@chlorophytum/hltt-next-tr";
+
 import { Expr } from "../expr";
 import { castLiteral } from "../expr-impl/expr";
 import { Stmt } from "../stmt";

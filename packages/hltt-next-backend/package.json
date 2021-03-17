@@ -1,5 +1,5 @@
 {
-	"name": "@chlorophytum/hltt-next",
+	"name": "@chlorophytum/hltt-next-backend",
 	"version": "0.21.2",
 	"description": "",
 	"main": "lib/index.js",
@@ -11,8 +11,6 @@
 	"author": "Renzhi Li (aka. Belleve Invis)",
 	"license": "MIT",
 	"dependencies": {
-    "@chlorophytum/hltt-next-backend": "0.21.2",
-		"@chlorophytum/hltt-next-tr": "0.21.2",
 		"json-stable-stringify": "^1.0.1",
 		"tslib": "^2.0.1"
 	},

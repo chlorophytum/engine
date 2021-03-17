@@ -1,16 +1,19 @@
+import { Assembler, TextInstr, TextInstrSink } from "@chlorophytum/hltt-next-backend";
+import { Def, GlobalScope, ProgramRecord } from "@chlorophytum/hltt-next-tr";
 import { ExecutionContext } from "ava";
-
-import Assembler from "../asm";
-import { TextInstr, TextInstrSink } from "../instr";
-import { Def } from "../tr/decl";
-import { GlobalScope, ProgramRecord } from "../tr/scope";
 
 export function StmtTestLoop(
 	t: ExecutionContext<unknown>,
 	f1: Def<ProgramRecord>,
 	compiled: string
 ) {
-	const gs = new GlobalScope({ varDimensionCount: 0, fpgm: 0, cvt: 0, storage: 0, twilights: 0 });
+	const gs = new GlobalScope({
+		varDimensionCount: 0,
+		fpgm: 0,
+		cvt: 0,
+		storage: 0,
+		twilights: 0
+	});
 	f1.populateInterface(gs);
 
 	const [ps, tr] = f1.populateDefinition(gs);

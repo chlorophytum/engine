@@ -1,5 +1,5 @@
-import { Decl } from "../../tr/decl";
-import { GlobalScope } from "../../tr/scope";
+import { Decl, GlobalScope } from "@chlorophytum/hltt-next-tr";
+
 import { CvtExprImpl } from "../expr-impl/expr";
 import { TArith } from "../type-system";
 

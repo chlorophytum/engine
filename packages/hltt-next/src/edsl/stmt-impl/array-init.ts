@@ -1,5 +1,5 @@
-import { TrCvt, TrStorage } from "../../tr/exp/variable";
-import { TrArrayInit, TrArrayInitGetVariation } from "../../tr/stmt/array-init";
+import { TrCvt, TrStorage, TrArrayInit, TrArrayInitGetVariation } from "@chlorophytum/hltt-next-tr";
+
 import { CompatibleType, Expr } from "../expr";
 import { castLiteral } from "../expr-impl/expr";
 import { Stmt } from "../stmt";

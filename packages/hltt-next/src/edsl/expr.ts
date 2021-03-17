@@ -1,5 +1,4 @@
-import { Decl } from "../tr/decl";
-import { TrExp } from "../tr/tr";
+import { Decl, TrExp } from "@chlorophytum/hltt-next-tr";
 
 import { Stmt } from "./stmt";
 import { Bool, Cvt, Int, Store, TArith, THandle, TT } from "./type-system";

@@ -1,9 +1,15 @@
-import { Decl } from "../../tr/decl";
-import { TrInvoke } from "../../tr/exp/invoke";
-import { TrParameter } from "../../tr/exp/parameter";
-import { GlobalScope, ProgramDef, ProgramRecord, ProgramScope } from "../../tr/scope";
-import { TrExprStmt } from "../../tr/stmt/expr";
-import { TrSeq } from "../../tr/stmt/sequence";
+import {
+	Decl,
+	GlobalScope,
+	ProgramDef,
+	ProgramRecord,
+	ProgramScope,
+	TrExprStmt,
+	TrInvoke,
+	TrParameter,
+	TrSeq
+} from "@chlorophytum/hltt-next-tr";
+
 import { Expr } from "../expr";
 import { castLiteral, ExprImpl } from "../expr-impl/expr";
 import { FuncScopeProxy, ProgramScopeProxy } from "../scope-proxy";
@@ -21,7 +27,7 @@ import {
 	WrapExprOrLiteral
 } from "./interfaces";
 
-export function template<IDs extends Identifiable[], R>(fnDef: (...ids: IDs) => R) {
+export function Template<IDs extends Identifiable[], R>(fnDef: (...ids: IDs) => R) {
 	const cache = new Map<string, R>();
 	return function (...ids: IDs): R {
 		const key = createIdentifier(ids);
@@ -118,10 +124,7 @@ export class RootProgramDeclaration {
 }
 
 function populateInterfaceImpl(gs: GlobalScope, s: symbol, decl: ProgramDef) {
-	if (!gs.fpgm.haveDeclared(s)) {
-		gs.fpgm.declare(1, s);
-		gs.fpgm.setDef(s, decl);
-	}
+	if (!gs.fpgm.haveDeclared(s)) gs.fpgm.declare(1, s);
 }
 
 function createCallImpl(

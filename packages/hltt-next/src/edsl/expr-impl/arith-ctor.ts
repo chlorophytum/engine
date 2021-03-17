@@ -1,6 +1,6 @@
-import { TTI } from "../../instr";
-import { TrBinaryOp, TrNullaryOp, TrUnaryOp } from "../../tr/exp/arith";
-import { TrConst } from "../../tr/exp/const";
+import { TTI } from "@chlorophytum/hltt-next-backend";
+import { TrBinaryOp, TrConst, TrNullaryOp, TrUnaryOp } from "@chlorophytum/hltt-next-tr";
+
 import { Expr } from "../expr";
 import { Bool, Frac, Int, TArith, TT } from "../type-system";
 

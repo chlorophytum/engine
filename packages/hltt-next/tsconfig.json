@@ -5,5 +5,5 @@
 		"outDir": "lib",
 		"tsBuildInfoFile": ".build-cache/src"
 	},
-	"references": []
+	"references": [{"path": "../hltt-next-backend"}, {"path": "../hltt-next-tr"}]
 }

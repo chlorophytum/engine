@@ -1,4 +1,4 @@
-import { GlobalScope, ProgramRecord } from "../tr/scope";
+import { GlobalScope, ProgramRecord } from "@chlorophytum/hltt-next-tr";
 
 import { RootProgramDeclaration } from "./lib-system/programs";
 import { ProgramScopeProxy } from "./scope-proxy";

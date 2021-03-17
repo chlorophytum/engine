@@ -1,5 +1,5 @@
-import { ProgramScope } from "../../tr/scope";
-import { TrReturn } from "../../tr/stmt/exit";
+import { ProgramScope, TrReturn } from "@chlorophytum/hltt-next-tr";
+
 import { Expr, ExprVarStore } from "../expr";
 import { LocalVarExprImpl } from "../expr-impl/expr";
 import { Stmt } from "../stmt";

@@ -1,13 +1,13 @@
 import test from "ava";
 
 import { add } from "../edsl/expr-impl/arith-ctor";
-import { Func, template } from "../edsl/lib-system/programs";
+import { Func, Template } from "../edsl/lib-system/programs";
 import { Bool, Frac, Int, TArith, TT } from "../edsl/type-system";
 
 import { StmtTestLoop } from "./-stmt-test-loop";
 
 test("Libs: Templates", t => {
-	const addT = template(<T extends TArith>(delta: number, TY: T) =>
+	const addT = Template(<T extends TArith>(delta: number, TY: T) =>
 		Func(TY)
 			.returns(TY)
 			.def(($, y) => [add(delta, y)])
@@ -36,7 +36,7 @@ test("Libs: Templates", t => {
 });
 
 test("Libs: Template literal conversion", t => {
-	const idT = template(<T extends TT>(TY: T) =>
+	const idT = Template(<T extends TT>(TY: T) =>
 		Func(TY)
 			.returns(TY)
 			.def(($, y) => [y])
@@ -65,7 +65,7 @@ test("Libs: Template literal conversion", t => {
 });
 
 test("Libs: Variable Arity Template", t => {
-	const idT = template((n: number) =>
+	const idT = Template((n: number) =>
 		Func(Int, ...(Array(n).fill(Frac) as Frac[])).def(($, a, ...b) => [a, ...b])
 	);
 	const f1 = Func().def(function* ($) {

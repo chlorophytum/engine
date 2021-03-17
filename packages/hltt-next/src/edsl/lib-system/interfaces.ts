@@ -1,4 +1,5 @@
-import { ProgramDef } from "../../tr/scope";
+import { ProgramDef } from "@chlorophytum/hltt-next-tr";
+
 import { CompatibleType, Expr } from "../expr";
 import { FuncScopeProxy, ProgramScopeProxy } from "../scope-proxy";
 import { Stmt } from "../stmt";

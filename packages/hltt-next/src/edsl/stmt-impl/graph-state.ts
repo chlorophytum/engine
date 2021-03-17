@@ -1,5 +1,6 @@
-import { TTI } from "../../instr";
-import { TrGraphState0, TrIup } from "../../tr/stmt/graph-state";
+import { TTI } from "@chlorophytum/hltt-next-backend";
+import { TrGraphState0, TrIup } from "@chlorophytum/hltt-next-tr";
+
 import { Stmt } from "../stmt";
 
 export const Svtca = {

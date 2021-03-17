@@ -1,7 +1,5 @@
-import { TrConst } from "../../tr/exp/const";
-import { TrAlternative, TrIf } from "../../tr/stmt/branch";
-import { TrExprStmt } from "../../tr/stmt/expr";
-import { TrSeq } from "../../tr/stmt/sequence";
+import { TrConst, TrAlternative, TrIf, TrExprStmt, TrSeq } from "@chlorophytum/hltt-next-tr";
+
 import { Expr } from "../expr";
 import { ExprImpl } from "../expr-impl/expr";
 import { Stmt } from "../stmt";

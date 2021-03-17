@@ -1,4 +1,5 @@
-import { TrIp, TrMdap, TrMdrp, TrMiap, TrMirp } from "../../tr/stmt/move-point";
+import { TrIp, TrMdap, TrMdrp, TrMiap, TrMirp } from "@chlorophytum/hltt-next-tr";
+
 import { Expr } from "../expr";
 import { Stmt } from "../stmt";
 import { Cvt, Frac, THandle, TwilightPoint } from "../type-system";

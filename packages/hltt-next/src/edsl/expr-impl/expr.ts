@@ -1,9 +1,17 @@
-import { Decl } from "../../tr/decl";
-import { TrBinaryOp } from "../../tr/exp/arith";
-import { TrConst } from "../../tr/exp/const";
-import { TrCvt, TrCvtPtr, TrLocalPtr, TrOffsetPtr, TrStorage } from "../../tr/exp/variable";
-import { TrSetVariable } from "../../tr/stmt/set-variable";
-import { TrExp, TrVar } from "../../tr/tr";
+import {
+	Decl,
+	TrBinaryOp,
+	TrConst,
+	TrCvt,
+	TrCvtPtr,
+	TrExp,
+	TrLocalPtr,
+	TrOffsetPtr,
+	TrSetVariable,
+	TrStorage,
+	TrVar
+} from "@chlorophytum/hltt-next-tr";
+
 import { Expr, ExprAll, ExprVarAll, ExprVarCvt, ExprVarStore } from "../expr";
 import { Stmt } from "../stmt";
 import {
