@@ -1,7 +1,7 @@
 import { ProgramDef } from "@chlorophytum/hltt-next-tr";
 
 import { CompatibleType, Expr } from "../expr";
-import { FuncScopeProxy, ProgramScopeProxy } from "../scope-proxy";
+import { FuncScopeProxy, ProcScopeProxy } from "../scope-proxy";
 import { Stmt } from "../stmt";
 import { AnyStmt } from "../stmt-impl/branch";
 import { TT } from "../type-system";
@@ -31,6 +31,6 @@ export type FuncBody<Ts extends TT[], Tr extends TT> = (
 	...params: WrapExpr<Ts>
 ) => Iterable<AnyStmt>;
 export type ProcBody<Ts extends TT[]> = (
-	pps: ProgramScopeProxy,
+	pps: ProcScopeProxy,
 	...params: WrapExpr<Ts>
 ) => Iterable<AnyStmt>;

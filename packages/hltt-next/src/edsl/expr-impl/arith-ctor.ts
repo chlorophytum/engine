@@ -1,16 +1,16 @@
 import { TTI } from "@chlorophytum/hltt-next-backend";
-import { TrBinaryOp, TrConst, TrNullaryOp, TrUnaryOp } from "@chlorophytum/hltt-next-tr";
+import { TrBinaryOp, TrConst, TrGc, TrNullaryOp, TrUnaryOp } from "@chlorophytum/hltt-next-tr";
 
 import { Expr } from "../expr";
-import { Bool, Frac, Int, TArith, TT } from "../type-system";
+import { Bool, Frac, Int, TArith, THandle, TT } from "../type-system";
 
 import { castArithLiteral, castLiteral, ExprImpl } from "./expr";
 
-function ArithT2<T extends TT, R extends TT, RN>(
+function ArithT2<TA extends TT, R extends TT, RN>(
 	foldN: (a: number, b: number) => RN,
-	foldE: (a: Expr<T>, b: Expr<T>) => Expr<R>
+	foldE: (a: Expr<TA>, b: Expr<TA>) => Expr<R>
 ) {
-	return function (a: number | Expr<T>, b: number | Expr<T>): RN | Expr<R> {
+	return function <T extends TA>(a: number | Expr<T>, b: number | Expr<T>): RN | Expr<R> {
 		if (typeof a === "number") {
 			if (typeof b === "number") {
 				return foldN(a, b);
@@ -27,11 +27,32 @@ function ArithT2<T extends TT, R extends TT, RN>(
 	};
 }
 
-function ArithT1<T extends TT, R extends TT, RN>(
-	foldN: (a: number) => RN,
-	foldE: (a: Expr<T>) => Expr<R>
+function ArithT2G<TA extends TT, RN>(
+	foldN: (a: number, b: number) => RN,
+	foldE: <T extends TA>(a: Expr<T>, b: Expr<T>) => Expr<T>
 ) {
-	return function (a: number | Expr<T>): RN | Expr<R> {
+	return function <T extends TA>(a: number | Expr<T>, b: number | Expr<T>): RN | Expr<T> {
+		if (typeof a === "number") {
+			if (typeof b === "number") {
+				return foldN(a, b);
+			} else {
+				return foldE(castArithLiteral(b.type, a), b);
+			}
+		} else {
+			if (typeof b === "number") {
+				return foldE(a, castArithLiteral(a.type, b));
+			} else {
+				return foldE(a, b);
+			}
+		}
+	};
+}
+
+function ArithT1G<TA extends TT, RN>(
+	foldN: (a: number) => RN,
+	foldE: <T extends TA>(a: Expr<T>) => Expr<T>
+) {
+	return function <T extends TA>(a: number | Expr<T>): RN | Expr<T> {
 		if (typeof a === "number") {
 			return foldN(a);
 		} else {
@@ -63,17 +84,17 @@ function LogicT1<R extends TT, RN>(foldN: (a: boolean) => RN, foldE: (a: Expr<Bo
 	};
 }
 
-export const add = ArithT2<TArith, TArith, number>(
+export const add = ArithT2G<TArith, number>(
 	(x, y) => x + y,
 	(x, y) => ExprImpl.create(x.type, TrBinaryOp.Add(x.tr, y.tr))
 );
 
-export const sub = ArithT2<TArith, TArith, number>(
+export const sub = ArithT2G<TArith, number>(
 	(x, y) => x - y,
-	(x, y) => ExprImpl.create(x.type, TrBinaryOp.Add(x.tr, y.tr))
+	(x, y) => ExprImpl.create(x.type, TrBinaryOp.Sub(x.tr, y.tr))
 );
 
-export const mul = ArithT2<TArith, TArith, number>(
+export const mul = ArithT2G<TArith, number>(
 	(x, y) => x * y,
 	(x, y) =>
 		x.type === Int
@@ -81,7 +102,7 @@ export const mul = ArithT2<TArith, TArith, number>(
 			: ExprImpl.create(x.type, TrBinaryOp.Mul(x.tr, y.tr))
 );
 
-export const div = ArithT2<TArith, TArith, number>(
+export const div = ArithT2G<TArith, number>(
 	(x, y) => x / y,
 	(x, y) =>
 		x.type === Int
@@ -89,13 +110,13 @@ export const div = ArithT2<TArith, TArith, number>(
 			: ExprImpl.create(x.type, TrBinaryOp.Div(x.tr, y.tr))
 );
 
-export const max = ArithT2<TArith, TArith, number>(
-	(x, y) => Math.max(x + y),
+export const max = ArithT2G<TArith, number>(
+	(x, y) => Math.max(x, y),
 	(x, y) => ExprImpl.create(x.type, TrBinaryOp.Max(x.tr, y.tr))
 );
 
-export const min = ArithT2<TArith, TArith, number>(
-	(x, y) => Math.max(x - y),
+export const min = ArithT2G<TArith, number>(
+	(x, y) => Math.min(x, y),
 	(x, y) => ExprImpl.create(x.type, TrBinaryOp.Min(x.tr, y.tr))
 );
 
@@ -140,14 +161,19 @@ export const or = LogicT2<Bool, boolean>(
 );
 
 // Unary
-export const abs = ArithT1<TArith, TArith, number>(
+export const abs = ArithT1G<TArith, number>(
 	x => Math.abs(x),
 	x => ExprImpl.create(x.type, TrUnaryOp.Abs(x.tr))
 );
 
-export const neg = ArithT1<TArith, TArith, number>(
+export const neg = ArithT1G<TArith, number>(
 	x => -x,
 	x => ExprImpl.create(x.type, TrUnaryOp.Neg(x.tr))
+);
+
+export const not = LogicT1(
+	x => !x,
+	x => ExprImpl.create(Bool, TrUnaryOp.Not(x.tr))
 );
 
 export const odd = (x: number | Expr<Frac>) =>
@@ -197,3 +223,12 @@ export const i2f = (x: number | Expr<Int>) =>
 
 export const f2i = (x: number | Expr<Frac>) =>
 	ExprImpl.create(Frac, TrBinaryOp.Div(castLiteral(Frac, x).tr, new TrConst(64 * 64)));
+
+export const gc = {
+	cur<T extends THandle>(x: Expr<T>) {
+		return ExprImpl.create(Frac, new TrGc(x.tr, TTI.GC_cur, x.type.kind === "TwilightPoint"));
+	},
+	orig<T extends THandle>(x: Expr<T>) {
+		return ExprImpl.create(Frac, new TrGc(x.tr, TTI.GC_orig, x.type.kind === "TwilightPoint"));
+	}
+};

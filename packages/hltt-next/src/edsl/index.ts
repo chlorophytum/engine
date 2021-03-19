@@ -1,13 +1,11 @@
-import { Assembler, InstrFormat, TTI } from "@chlorophytum/hltt-next-backend";
-import { GlobalScope, ProgramDef, ProgramRecord, ProgramScope } from "@chlorophytum/hltt-next-tr";
+import { Assembler, InstrFormat, TextInstr, TTI } from "@chlorophytum/hltt-next-backend";
+import { GlobalScope, ProgramRecord, ProgramScope } from "@chlorophytum/hltt-next-tr";
+
+import { addStdLib } from "../std-lib";
 
 import { RootProgramDeclaration } from "./lib-system/programs";
 import { ProgramScopeProxy } from "./scope-proxy";
 import { AnyStmt } from "./stmt-impl/branch";
-
-export interface ProgramStore {
-	fpgm: Map<symbol, ProgramRecord>;
-}
 
 export interface TtStat {
 	stackHeight?: number;
@@ -21,7 +19,7 @@ export interface TtStat {
 }
 
 export class ProgramAssembly {
-	constructor(private readonly store: ProgramStore, private readonly stat: TtStat) {
+	constructor(private readonly stat: TtStat) {
 		this.scope = new GlobalScope({
 			fpgm: stat.maxFunctionDefs || 0,
 			twilights: stat.maxTwilightPoints || 0,
@@ -29,6 +27,7 @@ export class ProgramAssembly {
 			cvt: stat.cvtSize || 0,
 			varDimensionCount: stat.varDimensionCount || 0
 		});
+		addStdLib(this.scope);
 	}
 
 	public readonly scope: GlobalScope;
@@ -40,7 +39,10 @@ export class ProgramAssembly {
 	public compileProgram<F>(format: InstrFormat<F>, pr: ProgramRecord) {
 		const [ps, tr] = pr;
 		const asm = new Assembler();
+
+		ps.exitLabel = asm.createLabel();
 		tr.compile(asm, ps);
+		asm.label(ps.exitLabel);
 		this.updateStat(ps, asm.maxStackHeight);
 		return asm.codeGen(format.createSink());
 	}
@@ -51,12 +53,14 @@ export class ProgramAssembly {
 
 		const [ps, tr] = pr;
 		ps.exitLabel = asm.createLabel();
-		const h0 = asm.blockBegin();
 		tr.compile(asm, ps);
-		asm.blockEnd(h0, ps.exitLabel);
-
+		asm.label(ps.exitLabel);
 		asm.prim(TTI.ENDF, 0, 0);
 		this.updateStat(ps, asm.maxStackHeight);
+
+		const textSink = TextInstr.createSink();
+		asm.codeGen(textSink);
+
 		return asm.codeGen(format.createSink());
 	}
 

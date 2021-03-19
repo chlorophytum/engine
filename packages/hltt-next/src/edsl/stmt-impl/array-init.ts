@@ -7,7 +7,7 @@ import { Cvt, Store, TT, UniFrac } from "../type-system";
 
 export function arrayInit<T extends TT>(
 	pArr: Expr<Store<T> | Cvt<T>>,
-	...items: CompatibleType<T>[]
+	...items: (CompatibleType<T> | Expr<T>)[]
 ) {
 	const trArr = pArr.type.kind === "Store" ? new TrStorage(pArr.tr) : new TrCvt(pArr.tr);
 	return new Stmt(

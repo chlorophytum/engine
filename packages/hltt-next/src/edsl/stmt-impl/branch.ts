@@ -1,4 +1,11 @@
-import { TrConst, TrAlternative, TrIf, TrExprStmt, TrSeq } from "@chlorophytum/hltt-next-tr";
+import {
+	TrConst,
+	TrAlternative,
+	TrIf,
+	TrExprStmt,
+	TrSeq,
+	TrWhile
+} from "@chlorophytum/hltt-next-tr";
 
 import { Expr } from "../expr";
 import { ExprImpl } from "../expr-impl/expr";
@@ -45,4 +52,10 @@ export class IfStmt extends Stmt {
 	Else(sb: StmtBody) {
 		return new IfStmt(this.condition, this.consequence, reduceStmtBody(sb));
 	}
+}
+
+export function While(c: boolean | Expr<Bool>, body: StmtBody) {
+	return new Stmt(
+		new TrWhile(castBool(c).tr, new TrAlternative(reduceStmtBody(body).map(x => x.tr)))
+	);
 }

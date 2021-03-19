@@ -19,3 +19,5 @@ export * from "./stmt/graph-state";
 export * from "./stmt/move-point";
 export * from "./stmt/sequence";
 export * from "./stmt/set-variable";
+
+export * as StdLibImpl from "./std-lib/index";

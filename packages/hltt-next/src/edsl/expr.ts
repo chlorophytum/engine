@@ -31,15 +31,15 @@ export interface ExprVarStore<T extends TT> extends ExprBase<T> {
 	readonly ptr: Expr<Store<T>>;
 	offsetPtr(n: number | Expr<Int>): Expr<Store<T>>;
 	setPart(n: number | Expr<Int>, value: CompatibleType<T>): Stmt;
-	set(value: CompatibleType<T>): Stmt;
+	set(value: CompatibleType<T> | Expr<T>): Stmt;
 }
 
 export interface ExprVarCvt<T extends TT> extends ExprBase<T> {
 	readonly ptr: Expr<Cvt<T>>;
-	readonly decl: Decl;
+	readonly decl: undefined | null | Decl;
 	offsetPtr(n: number | Expr<Int>): Expr<Cvt<T>>;
 	setPart(n: number | Expr<Int>, value: CompatibleType<T>): Stmt;
-	set(value: CompatibleType<T>): Stmt;
+	set(value: CompatibleType<T> | Expr<T>): Stmt;
 }
 
 export type CompatibleType<T> = T extends TArith

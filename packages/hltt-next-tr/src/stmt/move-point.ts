@@ -120,8 +120,8 @@ export class TrIp extends TrStmtBase {
 		super();
 	}
 	public compile(asm: Assembler, ps: ProgramScope) {
-		setRpIfNeeded(asm, ps, "zp1", "rp1", this.p1, this.p1Twilight);
-		setRpIfNeeded(asm, ps, "zp2", "rp2", this.p1, this.p2Twilight);
+		setRpIfNeeded(asm, ps, "zp0", "rp1", this.p1, this.p1Twilight);
+		setRpIfNeeded(asm, ps, "zp1", "rp2", this.p2, this.p2Twilight);
 
 		const run = new IpRun(ps, TTI.IP, asm);
 		for (const [z, tw] of this.points) run.intro(z, tw);
@@ -140,10 +140,17 @@ class IpRun {
 
 	public flushDecidable() {
 		if (!this.arity) return;
-		this.asm.intro(this.arity);
-		setZone(this.asm, "zp0", this.twilight);
-		this.asm.prim(this.op, this.arity + 1, 0);
+		this.setArity(this.arity);
+		setZone(this.asm, "zp2", this.twilight);
+		this.asm.prim(this.op, this.arity, 0);
 		this.arity = 0;
+	}
+
+	private setArity(n: number) {
+		if (n > 1) {
+			this.asm.push(n).prim(TTI.SLOOP, 1, 0);
+			this.asm.setRegister("loop", n);
+		}
 	}
 
 	public intro(target: TrExp, fTwilight: boolean) {

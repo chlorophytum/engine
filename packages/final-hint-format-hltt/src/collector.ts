@@ -1,7 +1,6 @@
 import { IFinalHintCollector, Variation } from "@chlorophytum/arch";
 import { ProgramAssembly, TtStat } from "@chlorophytum/hltt-next";
-import { Assembler, InstrFormat, TTI } from "@chlorophytum/hltt-next-backend";
-import { ProgramDef } from "@chlorophytum/hltt-next-tr";
+import { InstrFormat } from "@chlorophytum/hltt-next-backend";
 import { implDynamicCast, Typable, TypeRep } from "typable";
 
 import { HlttPreStatSink } from "./pre-stat-sink";
@@ -23,14 +22,14 @@ export class HlttCollectorImpl implements Typable<HlttCollector> {
 	private shared = new SharedGlyphPrograms();
 
 	constructor(pss: HlttPreStatSink) {
-		this.edsl = new ProgramAssembly(this.shared, {
+		this.edsl = new ProgramAssembly({
 			maxFunctionDefs: pss.maxFunctionDefs,
 			maxStorage: pss.maxStorage,
 			maxTwilightPoints: pss.maxTwilightPoints,
 			stackHeight: pss.maxStack,
 			cvtSize: pss.cvtSize,
-			stackHeightMultiplier: 8,
-			maxStorageMultiplier: 8
+			stackHeightMultiplier: 32,
+			maxStorageMultiplier: 32
 		});
 		// initStdLib(this.edsl);
 	}

@@ -16,6 +16,6 @@ export class TrGc implements TrExp {
 	compile(asm: Assembler, ps: ProgramScope) {
 		this.z.compile(asm, ps);
 		setZone(asm, "zp2", this.fTwilight);
-		asm.prim(this.op, 1, 0);
+		asm.prim(this.op, 1, 1);
 	}
 }

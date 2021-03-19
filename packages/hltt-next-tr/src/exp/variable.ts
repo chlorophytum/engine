@@ -1,6 +1,7 @@
 import { Assembler, TTI } from "@chlorophytum/hltt-next-backend";
 
 import { Decl, ProgramScope } from "../scope";
+import * as StdLib from "../std-lib";
 import { TrExp, TrVar } from "../tr";
 
 export class TrStorage implements TrVar {
@@ -74,10 +75,14 @@ export class TrLocalPtr implements TrExp {
 	compile(asm: Assembler, ps: ProgramScope) {
 		const id = ps.locals.resolve(this.symbol);
 		if (id == null) throw new Error(`Variable ${String(this.symbol)} not declared.`);
-		asm.intro(ps.global.sp);
-		asm.prim(TTI.RS).deleted(1).added(1);
-		asm.intro(ps.storageStackFrameSize - (id + this.offset));
-		asm.prim(TTI.SUB).deleted(2).added(1);
+		const ifnStdLibPtrLocal = ps.global.fpgm.resolve(StdLib.PtrLocal);
+		if (ifnStdLibPtrLocal != null) {
+			asm.intro(ps.storageStackFrameSize - (id + this.offset));
+			asm.intro(ifnStdLibPtrLocal);
+			asm.prim(TTI.CALL).deleted(2).added(1);
+		} else {
+			StdLib.TrStdLib_PtrLocal.inline(asm, ps, ps.storageStackFrameSize - (id + this.offset));
+		}
 	}
 }
 
@@ -109,5 +114,18 @@ export class TrCvtPtr implements TrExp {
 		const id = ps.global.cvt.resolve(symbol);
 		if (id == null) throw new Error(`Cvt ${String(symbol)} not declared.`);
 		asm.intro(id + this.offset);
+	}
+}
+
+export class TrTwilightPointRef implements TrExp {
+	constructor(private readonly decl: Decl) {}
+	isConstant() {
+		return undefined;
+	}
+	compile(asm: Assembler, ps: ProgramScope) {
+		const symbol = this.decl.register(ps.global);
+		const id = ps.global.twilightPoints.resolve(symbol);
+		if (id == null) throw new Error(`Twilight ${String(symbol)} not declared.`);
+		asm.intro(id);
 	}
 }

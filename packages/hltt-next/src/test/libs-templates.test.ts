@@ -2,10 +2,11 @@ import test from "ava";
 
 import { add } from "../edsl/expr-impl/arith-ctor";
 import { ControlValue } from "../edsl/lib-system/cvt";
+import { CallableFunc } from "../edsl/lib-system/interfaces";
 import { Func, Template } from "../edsl/lib-system/programs";
 import { Bool, Frac, Int, TArith, TT } from "../edsl/type-system";
 
-import { StmtTestLoop } from "./-stmt-test-loop";
+import { MultiStmtTestLoop, StmtTestLoop } from "./-stmt-test-loop";
 
 test("Libs: Templates", t => {
 	const addT = Template(<T extends TArith>(delta: number, TY: T) =>
@@ -62,6 +63,75 @@ test("Libs: Template literal conversion", t => {
 		CALL
 		POP
         `
+	);
+});
+
+test("Libs: Template Mutual Recursion", t => {
+	const idA: <T extends TT>(ty: T) => CallableFunc<[T], T> = Template(<T extends TT>(ty: T) =>
+		Func(ty)
+			.returns(ty)
+			.def(function* ($, x) {
+				yield $.Return(idB(ty)(x));
+			})
+	);
+	const idB: <T extends TT>(ty: T) => CallableFunc<[T], T> = Template(<T extends TT>(ty: T) =>
+		Func(ty)
+			.returns(ty)
+			.def(function* ($, x) {
+				yield $.Return(idA(ty)(x));
+			})
+	);
+
+	MultiStmtTestLoop(
+		t,
+		[
+			idA(Int),
+			`
+		DUP
+		PUSHB_1 0
+		CALL
+		SWAP
+		POP
+		PUSHB_1 1
+		JMPR
+        `
+		],
+		[
+			idB(Int),
+			`
+		DUP
+		PUSHB_1 1
+		CALL
+		SWAP
+		POP
+		PUSHB_1 1
+		JMPR
+        `
+		],
+		[
+			idA(Frac),
+			`
+		DUP
+		PUSHB_1 2
+		CALL
+		SWAP
+		POP
+		PUSHB_1 1
+		JMPR
+        `
+		],
+		[
+			idB(Frac),
+			`
+		DUP
+		PUSHB_1 3
+		CALL
+		SWAP
+		POP
+		PUSHB_1 1
+		JMPR
+        `
+		]
 	);
 });
 

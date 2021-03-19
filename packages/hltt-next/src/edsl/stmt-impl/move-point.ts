@@ -1,6 +1,7 @@
-import { TrIp, TrMdap, TrMdrp, TrMiap, TrMirp } from "@chlorophytum/hltt-next-tr";
+import { TrIp, TrMdap, TrMdrp, TrMiap, TrMirp, TrScfs } from "@chlorophytum/hltt-next-tr";
 
 import { Expr } from "../expr";
+import { castLiteral } from "../expr-impl/expr";
 import { Stmt } from "../stmt";
 import { Cvt, Frac, THandle, TwilightPoint } from "../type-system";
 
@@ -151,4 +152,8 @@ export function Ip(rp1: Expr<THandle>, rp2: Expr<THandle>, points: Expr<THandle>
 			points.map(x => [x.tr, x.type === TwilightPoint])
 		)
 	);
+}
+
+export function Scfs(z: Expr<THandle>, y: number | Expr<Frac>) {
+	return new Stmt(new TrScfs(z.tr, z.type.kind === "TwilightPoint", castLiteral(Frac, y).tr));
 }

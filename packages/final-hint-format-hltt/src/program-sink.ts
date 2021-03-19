@@ -7,12 +7,13 @@ import {
 import {
 	AnyStmt,
 	Expr,
+	ExprVarCvt,
 	glyphPoint,
 	ProgramAssembly,
 	ProgramScopeProxy
 } from "@chlorophytum/hltt-next";
 import { Decl } from "@chlorophytum/hltt-next-tr";
-import { GlyphPoint } from "@chlorophytum/hltt-next/src/edsl/type-system";
+import { GlyphPoint, TT } from "@chlorophytum/hltt-next/src/edsl/type-system";
 import { implDynamicCast, Typable, TypeRep } from "typable";
 
 export type ProgramGenerator = ($: ProgramScopeProxy) => Iterable<AnyStmt>;
@@ -23,7 +24,10 @@ export const HlttProgramSink = new TypeRep<HlttProgramSink>(
 );
 export interface HlttProgramSink extends IFinalHintProgramSink {
 	addSegment(gen: ProgramGenerator): void;
-	setDefaultControlValue(symbol: Decl, ...values: (number | Variation.Variance<number>)[]): void;
+	setDefaultControlValue(
+		expr: ExprVarCvt<TT>,
+		...values: (number | Variation.Variance<number>)[]
+	): void;
 	resolveGlyphPoint(from: Geometry.PointReference): Expr<GlyphPoint>;
 }
 
@@ -42,15 +46,16 @@ export class HlttProgramSinkImpl implements Typable<HlttProgramSink> {
 		this.generators.push(gen);
 	}
 	public setDefaultControlValue(
-		symbol: Decl,
+		expr: ExprVarCvt<TT>,
 		...values: (number | Variation.Variance<number>)[]
 	) {
+		if (!expr.decl) throw new TypeError("Cannot use coerced expressions");
 		const results: Variation.Variance<number>[] = [];
 		for (const value of values) {
 			if (typeof value === "number") results.push([[null, value]]);
 			else results.push(value);
 		}
-		this.pendingCvtSets.push([symbol, results]);
+		this.pendingCvtSets.push([expr.decl, results]);
 	}
 	public save() {
 		this.fSave(

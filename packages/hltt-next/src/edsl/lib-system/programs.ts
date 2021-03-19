@@ -7,12 +7,13 @@ import {
 	TrExprStmt,
 	TrInvoke,
 	TrParameter,
-	TrSeq
+	TrSeq,
+	TrStmt
 } from "@chlorophytum/hltt-next-tr";
 
 import { Expr } from "../expr";
 import { castLiteral, ExprImpl } from "../expr-impl/expr";
-import { FuncScopeProxy, ProgramScopeProxy } from "../scope-proxy";
+import { FuncScopeProxy, ProcScopeProxy, ProgramScopeProxy } from "../scope-proxy";
 import { Stmt } from "../stmt";
 import { AnyStmt, castExprStmt } from "../stmt-impl/branch";
 import { TT } from "../type-system";
@@ -80,7 +81,7 @@ class FunctionDeclaration<Ts extends TT[], Tr extends TT> implements ProgramDef 
 			throw new TypeError("Attempt to populate a function before its body is set.");
 
 		const ps = new ProgramScope(gs, false);
-		const pps = new FuncScopeProxy<Tr>(ps);
+		const pps = new FuncScopeProxy<Tr>(this.returnType, ps);
 
 		const params = initParams(ps, this.argumentTypes) as WrapExpr<Ts>;
 		const sBody = Array.from(this.body(pps, ...params)).map(x => castExprStmt(x).tr);
@@ -106,7 +107,7 @@ class ProcedureDeclaration<Ts extends TT[]> implements ProgramDef {
 			throw new TypeError("Attempt to populate a function before its body is set.");
 
 		const ps = new ProgramScope(gs, true);
-		const pps = new ProgramScopeProxy(ps);
+		const pps = new ProcScopeProxy(ps);
 
 		const params = initParams(ps, this.argumentTypes) as WrapExpr<Ts>;
 		const sBody = Array.from(this.body(pps, ...params)).map(x => castExprStmt(x).tr);
@@ -154,4 +155,22 @@ function initParams(ps: ProgramScope, argumentTypes: TT[]) {
 		params.push(ExprImpl.create(argTy, new TrParameter(ps.parameters.declare(1, Symbol()))));
 	}
 	return params;
+}
+
+export class StdLibFuncDecl implements ProgramDef {
+	constructor(
+		public readonly symbol: symbol,
+		private readonly entryArity: number,
+		private readonly exitArity: number,
+		private readonly tr: TrStmt
+	) {}
+
+	register(gs: GlobalScope) {
+		populateInterfaceImpl(gs, this.symbol, this);
+		return this.symbol;
+	}
+	computeDefinition(gs: GlobalScope): ProgramRecord {
+		const ps = new ProgramScope(gs, !this.exitArity);
+		return [ps, this.tr];
+	}
 }

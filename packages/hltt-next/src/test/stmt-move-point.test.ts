@@ -59,15 +59,17 @@ test("Stmt: IP", t => {
 		t,
 		f1,
 		`
-            NPUSHB 11 4 5 2 0 3 1 1 1 1 1 1
-            SRP1
-            SZP1
-            SRP2
-            SZP2
-            SZP0
-            IP
-            SZP0
-            IP
+		NPUSHB 9 4 5 0 3 1 1 2 1 1
+		SRP1
+		SZP0
+		SRP2
+		SZP1
+		SZP2
+		IP
+		PUSHB_1 2
+		SLOOP
+		SZP2
+		IP
         `
 	);
 });
