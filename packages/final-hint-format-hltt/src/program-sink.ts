@@ -9,11 +9,12 @@ import {
 	Expr,
 	ExprVarCvt,
 	glyphPoint,
+	GlyphPoint,
 	ProgramAssembly,
-	ProgramScopeProxy
+	ProgramScopeProxy,
+	TT
 } from "@chlorophytum/hltt-next";
 import { Decl } from "@chlorophytum/hltt-next-tr";
-import { GlyphPoint, TT } from "@chlorophytum/hltt-next/src/edsl/type-system";
 import { implDynamicCast, Typable, TypeRep } from "typable";
 
 export type ProgramGenerator = ($: ProgramScopeProxy) => Iterable<AnyStmt>;
