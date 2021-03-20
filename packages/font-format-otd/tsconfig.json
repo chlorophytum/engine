@@ -10,7 +10,9 @@
 		{"path": "../final-hint-format-hltt"},
 		{"path": "../font-opentype"},
 		{"path": "../fontforge-instr"},
-		{"path": "../hltt"},
+		{"path": "../hltt-next"},
+		{"path": "../hltt-next-backend"},
+		{"path": "../hltt-next-tr"},
 		{"path": "../util-json"}
 	]
 }

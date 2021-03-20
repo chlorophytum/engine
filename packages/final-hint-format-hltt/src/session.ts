@@ -1,5 +1,7 @@
 import { IFinalHintSession, Variation } from "@chlorophytum/arch";
-import { Edsl, InstrFormat, TtStat } from "@chlorophytum/hltt";
+import { ProgramAssembly, TtStat } from "@chlorophytum/hltt-next";
+import { Assembler, InstrFormat } from "@chlorophytum/hltt-next-backend";
+import { Decl, ProgramRecord } from "@chlorophytum/hltt-next-tr";
 import { implDynamicCast, Typable, TypeRep } from "typable";
 
 import {
@@ -10,9 +12,9 @@ import {
 } from "./program-sink";
 
 export class SharedGlyphPrograms {
-	public fpgm: Map<Edsl.Variable<Edsl.VkFpgm>, Edsl.ProgramRecord> = new Map();
-	public programs: Map<string, Edsl.ProgramRecord> = new Map();
-	public controlValues: [Edsl.Variable<Edsl.VkCvt>, Variation.Variance<number>[]][] = [];
+	public fpgm: Map<symbol, ProgramRecord> = new Map();
+	public programs: Map<string, ProgramRecord> = new Map();
+	public controlValues: [symbol, Variation.Variance<number>[]][] = [];
 }
 
 export interface HlttFinalHintStoreRep<F> {
@@ -39,7 +41,7 @@ export interface HlttSession extends IFinalHintSession {
 export class HlttSessionImpl implements Typable<HlttSession> {
 	public readonly format = "hltt";
 	constructor(
-		private readonly edsl: Edsl.GlobalDsl,
+		private readonly edsl: ProgramAssembly,
 		private readonly shared: SharedGlyphPrograms
 	) {}
 
@@ -48,9 +50,9 @@ export class HlttSessionImpl implements Typable<HlttSession> {
 	}
 
 	private readonly cacheKeyMaps: Map<string, string> = new Map();
-	private glyphPrograms: Map<string, Edsl.ProgramRecord> = new Map();
+	private glyphPrograms: Map<string, ProgramRecord> = new Map();
 	private preProgramSegments: ProgramGenerator[] = [];
-	private preProgram: Edsl.ProgramRecord | null = null;
+	private preProgram: ProgramRecord | null = null;
 
 	public async createGlyphProgramSink(
 		gid: string,
@@ -60,7 +62,10 @@ export class HlttSessionImpl implements Typable<HlttSession> {
 			this.cacheKeyMaps.set(gid, ck);
 			if (!this.shared.programs.has(ck)) {
 				return new HlttProgramSinkImpl((gen, cv) => {
-					this.shared.programs.set(ck, this.edsl.program(gen));
+					this.shared.programs.set(
+						ck,
+						this.edsl.createProgram(gen).computeDefinition(this.edsl.scope)
+					);
 					this.saveControlValues(cv);
 				});
 			} else {
@@ -68,7 +73,10 @@ export class HlttSessionImpl implements Typable<HlttSession> {
 			}
 		} else {
 			return new HlttProgramSinkImpl((gen, cv) => {
-				this.glyphPrograms.set(gid, this.edsl.program(gen));
+				this.glyphPrograms.set(
+					gid,
+					this.edsl.createProgram(gen).computeDefinition(this.edsl.scope)
+				);
 				this.saveControlValues(cv);
 			});
 		}
@@ -81,14 +89,16 @@ export class HlttSessionImpl implements Typable<HlttSession> {
 	}
 	public consolidatePreProgram() {
 		const preSegments = this.preProgramSegments;
-		this.preProgram = this.edsl.program(function* ($) {
-			for (const gen of preSegments) yield* gen($);
-		});
+		this.preProgram = this.edsl
+			.createProgram(function* ($) {
+				for (const gen of preSegments) yield* gen($);
+			})
+			.computeDefinition(this.edsl.scope);
 		this.preProgramSegments = [];
 	}
 	private saveControlValues(cv: CvtGenerator) {
 		const entries = Array.from(cv(this.edsl));
-		for (const entry of entries) this.shared.controlValues.push(entry);
+		for (const [decl, val] of entries) this.shared.controlValues.push([decl.symbol, val]);
 	}
 	public consolidate() {
 		this.consolidatePreProgram();
@@ -102,7 +112,7 @@ export class HlttSessionImpl implements Typable<HlttSession> {
 		if (!this.preProgram) {
 			return format.createSink().getResult();
 		} else {
-			return this.edsl.compileProgram(this.preProgram, format);
+			return this.edsl.compileProgram(format, this.preProgram);
 		}
 	}
 	public getGlyphProgram<F>(
@@ -116,7 +126,7 @@ export class HlttSessionImpl implements Typable<HlttSession> {
 			if (existing) return existing;
 			const glyphProgram = this.shared.programs.get(ck);
 			if (glyphProgram) {
-				const instr = this.edsl.compileProgram(glyphProgram, format);
+				const instr = this.edsl.compileProgram(format, glyphProgram);
 				if (cache) cache.set(ck, instr);
 				return instr;
 			} else {
@@ -125,7 +135,7 @@ export class HlttSessionImpl implements Typable<HlttSession> {
 		} else {
 			const glyphProgram = this.glyphPrograms.get(gid);
 			if (glyphProgram) {
-				return this.edsl.compileProgram(glyphProgram, format);
+				return this.edsl.compileProgram(format, glyphProgram);
 			} else {
 				return format.createSink().getResult();
 			}

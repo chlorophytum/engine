@@ -23,6 +23,7 @@
 		"ISECT",
 		"ISFNT",
 		"JMPR",
+		"LOOPCALL",
 		"Lerp",
 		"Loca",
 		"MSFT",

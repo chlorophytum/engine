@@ -13,9 +13,10 @@
 	"dependencies": {
 		"@chlorophytum/arch": "0.21.2",
 		"@chlorophytum/final-hint-format-hltt": "0.21.2",
-		"@chlorophytum/font-opentype": "0.21.2",
-		"@chlorophytum/fontforge-instr": "0.21.2",
-		"@chlorophytum/hltt": "0.21.2",
+  		"@chlorophytum/font-opentype": "0.21.2",
+    "@chlorophytum/hltt-next": "0.21.2",
+		"@chlorophytum/hltt-next-backend": "0.21.2",
+		"@chlorophytum/hltt-next-tr": "0.21.2",
 		"@chlorophytum/util-json": "0.21.2",
 		"fs-extra": "^9.0.1",
 		"ot-builder": "^1.0.0",

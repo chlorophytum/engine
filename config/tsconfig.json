@@ -12,7 +12,9 @@
 		{"path": "../packages/hint-common"},
 		{"path": "../packages/hint-store-memory"},
 		{"path": "../packages/hint-store-provider-file"},
-		{"path": "../packages/hltt"},
+		{"path": "../packages/hltt-next"},
+		{"path": "../packages/hltt-next-backend"},
+		{"path": "../packages/hltt-next-tr"},
 		{"path": "../packages/hm-combine"},
 		{"path": "../packages/util-json"}
 	]

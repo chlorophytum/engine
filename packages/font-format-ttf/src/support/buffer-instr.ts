@@ -1,4 +1,4 @@
-import { InstrSink, TTI } from "@chlorophytum/hltt";
+import { InstrSink, TTI } from "@chlorophytum/hltt-next-backend";
 
 class BufferInstrSink implements InstrSink<Buffer> {
 	private capacity = 16;

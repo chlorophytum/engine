@@ -7,6 +7,7 @@ import {
 	PropertyBag
 } from "@chlorophytum/arch";
 import { HlttProgramSink } from "@chlorophytum/final-hint-format-hltt";
+import { Svtca } from "@chlorophytum/hltt-next";
 import { TypeRep } from "typable";
 
 export namespace WithDirection {
@@ -73,9 +74,9 @@ export namespace WithDirection {
 		) {}
 		private addDir(dir: Direction, sink: HlttProgramSink) {
 			if (dir === Direction.Y) {
-				sink.addSegment($ => [$.svtca.y()]);
+				sink.addSegment($ => [Svtca.y()]);
 			} else {
-				sink.addSegment($ => [$.svtca.x()]);
+				sink.addSegment($ => [Svtca.x()]);
 			}
 		}
 
