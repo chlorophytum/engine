@@ -1,8 +1,8 @@
+import { Int } from "@chlorophytum/hltt-next-type-system";
 import test from "ava";
 
 import { Func } from "../edsl/lib-system/programs";
 import { arrayInit } from "../edsl/stmt-impl/array-init";
-import { Int } from "../edsl/type-system";
 
 import { StmtTestLoop } from "./-stmt-test-loop";
 

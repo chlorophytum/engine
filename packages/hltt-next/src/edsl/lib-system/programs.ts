@@ -10,15 +10,14 @@ import {
 	TrSeq,
 	TrStmt
 } from "@chlorophytum/hltt-next-tr";
+import { TT } from "@chlorophytum/hltt-next-type-system";
 
 import { Expr } from "../expr";
 import { castLiteral, ExprImpl } from "../expr-impl/expr";
 import { FuncScopeProxy, ProcScopeProxy, ProgramScopeProxy } from "../scope-proxy";
 import { Stmt } from "../stmt";
 import { AnyStmt, castExprStmt } from "../stmt-impl/branch";
-import { TT } from "../type-system";
 
-import { createIdentifier, Identifiable } from "./id-generator";
 import {
 	CallableFunc,
 	CallableProc,
@@ -27,18 +26,6 @@ import {
 	WrapExpr,
 	WrapExprOrLiteral
 } from "./interfaces";
-
-export function Template<IDs extends Identifiable[], R>(fnDef: (...ids: IDs) => R) {
-	const cache = new Map<string, R>();
-	return function (...ids: IDs): R {
-		const key = createIdentifier(ids);
-		const cached = cache.get(key);
-		if (cached) return cached;
-		const computed = fnDef(...ids);
-		cache.set(key, computed);
-		return computed;
-	};
-}
 
 export function Func<Ts extends TT[]>(...parameterSig: Ts): CallableProc<Ts> {
 	const decl = new ProcedureDeclaration(parameterSig);

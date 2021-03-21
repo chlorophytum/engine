@@ -1,10 +1,10 @@
 import { TTI } from "@chlorophytum/hltt-next-backend";
 import { TrDeltas } from "@chlorophytum/hltt-next-tr";
+import { Cvt, Int, THandle, TwilightPoint } from "@chlorophytum/hltt-next-type-system";
 
 import { Expr } from "../expr";
 import { castLiteral } from "../expr-impl/expr";
 import { Stmt } from "../stmt";
-import { Cvt, Int, THandle, TwilightPoint } from "../type-system";
 
 export const Delta = {
 	p1(...a: [Expr<THandle>, number | Expr<Int>][]) {

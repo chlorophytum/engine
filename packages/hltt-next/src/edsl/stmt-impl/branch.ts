@@ -6,11 +6,11 @@ import {
 	TrSeq,
 	TrWhile
 } from "@chlorophytum/hltt-next-tr";
+import { Bool } from "@chlorophytum/hltt-next-type-system";
 
 import { Expr } from "../expr";
 import { ExprImpl } from "../expr-impl/expr";
 import { Stmt } from "../stmt";
-import { Bool } from "../type-system";
 
 export type AnyStmt = number | boolean | Expr<unknown> | Stmt;
 export type StmtBody = AnyStmt | (() => Iterable<AnyStmt>);

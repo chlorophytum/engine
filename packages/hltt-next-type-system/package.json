@@ -1,5 +1,5 @@
 {
-	"name": "@chlorophytum/hltt-next-backend",
+	"name": "@chlorophytum/hltt-next-type-system",
 	"version": "0.30.1",
 	"description": "",
 	"main": "lib/index.js",

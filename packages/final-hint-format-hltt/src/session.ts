@@ -1,7 +1,7 @@
 import { IFinalHintSession, Variation } from "@chlorophytum/arch";
 import { ProgramAssembly, TtStat } from "@chlorophytum/hltt-next";
-import { Assembler, InstrFormat } from "@chlorophytum/hltt-next-backend";
-import { Decl, ProgramRecord } from "@chlorophytum/hltt-next-tr";
+import { InstrFormat } from "@chlorophytum/hltt-next-backend";
+import { ProgramRecord } from "@chlorophytum/hltt-next-tr";
 import { implDynamicCast, Typable, TypeRep } from "typable";
 
 import {

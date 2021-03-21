@@ -1,10 +1,10 @@
 import { ProgramDef } from "@chlorophytum/hltt-next-tr";
+import { TT } from "@chlorophytum/hltt-next-type-system";
 
 import { CompatibleType, Expr } from "../expr";
 import { FuncScopeProxy, ProcScopeProxy } from "../scope-proxy";
 import { Stmt } from "../stmt";
 import { AnyStmt } from "../stmt-impl/branch";
-import { TT } from "../type-system";
 
 export type WrapExprOrLiteral<Ts extends TT[]> = {
 	[K in keyof Ts]: CompatibleType<Ts[K]> | Expr<Ts[K]>;

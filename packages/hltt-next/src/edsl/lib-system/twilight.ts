@@ -1,7 +1,7 @@
 import { Decl, GlobalScope, TrTwilightPointRef } from "@chlorophytum/hltt-next-tr";
+import { TwilightPoint } from "@chlorophytum/hltt-next-type-system";
 
 import { ExprImpl } from "../expr-impl/expr";
-import { TwilightPoint } from "../type-system";
 
 export function Twilight(size: number = 1) {
 	return ExprImpl.create(TwilightPoint, new TrTwilightPointRef(new TwilightDeclaration()));

@@ -1,5 +1,4 @@
 // EDSL exports
-export * from "./edsl/type-system";
 export { ProgramScopeProxy } from "./edsl/scope-proxy/index";
 export * from "./edsl/expr";
 export * from "./edsl/stmt";
@@ -16,6 +15,7 @@ export * from "./edsl/stmt-impl/move-point";
 export * from "./edsl/stmt-impl/var-args";
 
 export { CallableFunc, CallableProc } from "./edsl/lib-system/interfaces";
-export { Template, Func } from "./edsl/lib-system/programs";
+export { Template } from "./edsl/lib-system/template";
+export { Func } from "./edsl/lib-system/programs";
 export { ControlValue } from "./edsl/lib-system/cvt";
 export { Twilight } from "./edsl/lib-system/twilight";

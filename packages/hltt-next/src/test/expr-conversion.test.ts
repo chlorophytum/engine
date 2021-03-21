@@ -1,8 +1,8 @@
+import { Frac, Int } from "@chlorophytum/hltt-next-type-system";
 import test from "ava";
 
 import { cast, unsafeCoerce } from "../edsl/expr-impl/expr";
 import { Func } from "../edsl/lib-system/programs";
-import { Frac, Int } from "../edsl/type-system";
 
 import { StmtTestLoop } from "./-stmt-test-loop";
 

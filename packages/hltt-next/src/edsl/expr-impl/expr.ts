@@ -11,9 +11,6 @@ import {
 	TrStorage,
 	TrVar
 } from "@chlorophytum/hltt-next-tr";
-
-import { Expr, ExprAll, ExprVarAll, ExprVarCvt, ExprVarStore } from "../expr";
-import { Stmt } from "../stmt";
 import {
 	Bool,
 	Cvt,
@@ -24,7 +21,10 @@ import {
 	TT,
 	TwilightPoint,
 	UniFrac
-} from "../type-system";
+} from "@chlorophytum/hltt-next-type-system";
+
+import { Expr, ExprAll, ExprVarAll, ExprVarCvt, ExprVarStore } from "../expr";
+import { Stmt } from "../stmt";
 
 // Impl classes
 export class ExprImpl implements ExprAll {

@@ -15,6 +15,7 @@
 		{"path": "../packages/hltt-next"},
 		{"path": "../packages/hltt-next-backend"},
 		{"path": "../packages/hltt-next-tr"},
+		{"path": "../packages/hltt-next-type-system"},
 		{"path": "../packages/hm-combine"},
 		{"path": "../packages/util-json"}
 	]

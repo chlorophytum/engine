@@ -1,10 +1,11 @@
+import { Bool, Frac, Int, TArith, TT } from "@chlorophytum/hltt-next-type-system";
 import test from "ava";
 
 import { add } from "../edsl/expr-impl/arith-ctor";
 import { ControlValue } from "../edsl/lib-system/cvt";
 import { CallableFunc } from "../edsl/lib-system/interfaces";
-import { Func, Template } from "../edsl/lib-system/programs";
-import { Bool, Frac, Int, TArith, TT } from "../edsl/type-system";
+import { Func } from "../edsl/lib-system/programs";
+import { Template } from "../edsl/lib-system/template";
 
 import { MultiStmtTestLoop, StmtTestLoop } from "./-stmt-test-loop";
 

@@ -9,6 +9,7 @@
 		{"path": "../arch"},
 		{"path": "../hltt-next"},
 		{"path": "../hltt-next-backend"},
-		{"path": "../hltt-next-tr"}
+		{"path": "../hltt-next-tr"},
+		{"path": "../hltt-next-type-system"}
 	]
 }

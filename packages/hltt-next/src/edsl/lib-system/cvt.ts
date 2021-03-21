@@ -1,7 +1,7 @@
 import { Decl, GlobalScope } from "@chlorophytum/hltt-next-tr";
+import { TArith } from "@chlorophytum/hltt-next-type-system";
 
 import { CvtExprImpl } from "../expr-impl/expr";
-import { TArith } from "../type-system";
 
 export function ControlValue<T extends TArith>(type: T, size: number = 1) {
 	return CvtExprImpl.fromDecl(type, new CvDeclaration<T>(type, size));

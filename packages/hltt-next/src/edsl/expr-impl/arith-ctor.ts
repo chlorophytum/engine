@@ -1,8 +1,8 @@
 import { TTI } from "@chlorophytum/hltt-next-backend";
 import { TrBinaryOp, TrConst, TrGc, TrNullaryOp, TrUnaryOp } from "@chlorophytum/hltt-next-tr";
+import { Bool, Frac, Int, TArith, THandle, TT } from "@chlorophytum/hltt-next-type-system";
 
 import { Expr } from "../expr";
-import { Bool, Frac, Int, TArith, THandle, TT } from "../type-system";
 
 import { castArithLiteral, castLiteral, ExprImpl } from "./expr";
 

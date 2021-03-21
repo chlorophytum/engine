@@ -1,8 +1,8 @@
+import { Bool, Int } from "@chlorophytum/hltt-next-type-system";
 import test from "ava";
 
 import { Func } from "../edsl/lib-system/programs";
 import { If } from "../edsl/stmt-impl/branch";
-import { Bool, Int } from "../edsl/type-system";
 
 import { StmtTestLoop } from "./-stmt-test-loop";
 

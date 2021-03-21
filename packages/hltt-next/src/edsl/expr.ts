@@ -1,7 +1,7 @@
 import { Decl, TrExp } from "@chlorophytum/hltt-next-tr";
+import { Bool, Cvt, Int, Store, TArith, THandle, TT } from "@chlorophytum/hltt-next-type-system";
 
 import { Stmt } from "./stmt";
-import { Bool, Cvt, Int, Store, TArith, THandle, TT } from "./type-system";
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // eDSL Expression, with conditional types

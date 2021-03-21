@@ -1,7 +1,7 @@
 import { TrConst, TrVolatile } from "@chlorophytum/hltt-next-tr";
+import { Frac, GlyphPoint, Int, TT, TwilightPoint } from "@chlorophytum/hltt-next-type-system";
 
 import { Expr } from "../expr";
-import { Frac, GlyphPoint, Int, TT, TwilightPoint } from "../type-system";
 
 import { ExprImpl } from "./expr";
 

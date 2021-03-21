@@ -1,8 +1,8 @@
+import { Int, Store } from "@chlorophytum/hltt-next-type-system";
 import test from "ava";
 
 import { integer, volatile } from "../edsl/expr-impl/const";
 import { Func } from "../edsl/lib-system/programs";
-import { Int, Store } from "../edsl/type-system";
 
 import { StmtTestLoop } from "./-stmt-test-loop";
 
