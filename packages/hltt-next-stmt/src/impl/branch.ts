@@ -1,9 +1,9 @@
 import { Expr, ExprImpl, Stmt } from "@chlorophytum/hltt-next-expr-impl";
 import {
-	TrConst,
 	TrAlternative,
-	TrIf,
+	TrConst,
 	TrExprStmt,
+	TrIf,
 	TrSeq,
 	TrWhile
 } from "@chlorophytum/hltt-next-tr";
@@ -11,9 +11,13 @@ import { Bool } from "@chlorophytum/hltt-next-type-system";
 
 export type AnyStmt = number | boolean | Expr<unknown> | Stmt;
 export type StmtBody = AnyStmt | (() => Iterable<AnyStmt>);
+function isStmt(x: Stmt | Expr<unknown>): x is Stmt {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	return !(x as any).type;
+}
 export function castExprStmt(x: AnyStmt): Stmt {
 	if (typeof x === "number" || typeof x === "boolean") return new Stmt(new TrSeq(false, []));
-	if (x instanceof Stmt) return x;
+	if (isStmt(x)) return x;
 	else return new Stmt(new TrExprStmt(x.tr));
 }
 function reduceStmtBody(sb: StmtBody): Stmt[] {
