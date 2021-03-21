@@ -8,6 +8,8 @@
 	"references": [
 		{"path": "../arch"},
 		{"path": "../final-hint-format-hltt"},
-		{"path": "../hltt-next"}
+		{"path": "../hltt-next"},
+		{"path": "../hltt-next-expr"},
+		{"path": "../hltt-next-stmt"}
 	]
 }

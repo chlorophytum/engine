@@ -1,9 +1,6 @@
+import { Expr, ExprImpl } from "@chlorophytum/hltt-next-expr-impl";
 import { TrConst, TrVolatile } from "@chlorophytum/hltt-next-tr";
 import { Frac, GlyphPoint, Int, TT, TwilightPoint } from "@chlorophytum/hltt-next-type-system";
-
-import { Expr } from "../expr";
-
-import { ExprImpl } from "./expr";
 
 export function integer(x: number): Expr<Int> {
 	return ExprImpl.create(Int, new TrConst(x));

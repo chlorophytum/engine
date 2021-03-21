@@ -1,9 +1,8 @@
+import { Expr, ExprVarStore } from "@chlorophytum/hltt-next-expr";
+import { castLiteral, CompatibleType, LocalVarExprImpl } from "@chlorophytum/hltt-next-expr-impl";
+import { Stmt } from "@chlorophytum/hltt-next-stmt";
 import { ProgramScope, TrReturn } from "@chlorophytum/hltt-next-tr";
 import { Store, TT } from "@chlorophytum/hltt-next-type-system";
-
-import { CompatibleType, Expr, ExprVarStore } from "../expr";
-import { castLiteral, LocalVarExprImpl } from "../expr-impl/expr";
-import { Stmt } from "../stmt";
 
 export class ProgramScopeProxy {
 	constructor(private readonly ps: ProgramScope) {}

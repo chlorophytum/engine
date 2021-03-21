@@ -1,8 +1,8 @@
+import { glyphPoint, twilightPoint, volatile } from "@chlorophytum/hltt-next-expr";
+import { Ip, Mdap, Mdrp } from "@chlorophytum/hltt-next-stmt";
 import test from "ava";
 
-import { glyphPoint, twilightPoint, volatile } from "../edsl/expr-impl/const";
 import { Func } from "../edsl/lib-system/programs";
-import { Ip, Mdap, Mdrp } from "../edsl/stmt-impl/move-point";
 
 import { StmtTestLoop } from "./-stmt-test-loop";
 

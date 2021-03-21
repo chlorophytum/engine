@@ -1,7 +1,6 @@
 import { TTI } from "@chlorophytum/hltt-next-backend";
+import { Stmt } from "@chlorophytum/hltt-next-expr-impl";
 import { TrGraphState0, TrIup } from "@chlorophytum/hltt-next-tr";
-
-import { Stmt } from "../stmt";
 
 export const Svtca = {
 	x() {

@@ -7,7 +7,7 @@ import {
 	PropertyBag
 } from "@chlorophytum/arch";
 import { HlttProgramSink } from "@chlorophytum/final-hint-format-hltt";
-import { Mdrp } from "@chlorophytum/hltt-next";
+import { Mdrp } from "@chlorophytum/hltt-next-stmt";
 
 export namespace LinkChain {
 	const TAG = "Chlorophytum::CommonHints::LinkChain";

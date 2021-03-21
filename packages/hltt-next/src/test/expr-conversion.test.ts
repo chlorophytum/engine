@@ -1,7 +1,7 @@
+import { cast, unsafeCoerce } from "@chlorophytum/hltt-next-expr";
 import { Frac, Int } from "@chlorophytum/hltt-next-type-system";
 import test from "ava";
 
-import { cast, unsafeCoerce } from "../edsl/expr-impl/expr";
 import { Func } from "../edsl/lib-system/programs";
 
 import { StmtTestLoop } from "./-stmt-test-loop";

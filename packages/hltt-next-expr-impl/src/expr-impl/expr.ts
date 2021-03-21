@@ -23,8 +23,7 @@ import {
 	UniFrac
 } from "@chlorophytum/hltt-next-type-system";
 
-import { Expr, ExprAll, ExprVarAll, ExprVarCvt, ExprVarStore } from "../expr";
-import { Stmt } from "../stmt";
+import { Expr, ExprAll, ExprVarAll, ExprVarCvt, ExprVarStore, Stmt } from "../interfaces";
 
 // Impl classes
 export class ExprImpl implements ExprAll {

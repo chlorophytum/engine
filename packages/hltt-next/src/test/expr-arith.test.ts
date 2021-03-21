@@ -1,7 +1,7 @@
+import { add, mul } from "@chlorophytum/hltt-next-expr";
 import { Frac, Int } from "@chlorophytum/hltt-next-type-system";
 import test from "ava";
 
-import { add, mul } from "../edsl/expr-impl/arith-ctor";
 import { Func } from "../edsl/lib-system/programs";
 
 import { StmtTestLoop } from "./-stmt-test-loop";

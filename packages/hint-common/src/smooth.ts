@@ -6,7 +6,7 @@ import {
 	PropertyBag
 } from "@chlorophytum/arch";
 import { HlttProgramSink } from "@chlorophytum/final-hint-format-hltt";
-import { Iup } from "@chlorophytum/hltt-next";
+import { Iup } from "@chlorophytum/hltt-next-stmt";
 
 export namespace Smooth {
 	const TAG = "Chlorophytum::CommonHints::Smooth";

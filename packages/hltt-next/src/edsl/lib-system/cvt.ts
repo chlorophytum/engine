@@ -1,9 +1,9 @@
+import { ExprVarCvt } from "@chlorophytum/hltt-next-expr";
+import { CvtExprImpl } from "@chlorophytum/hltt-next-expr-impl";
 import { Decl, GlobalScope } from "@chlorophytum/hltt-next-tr";
 import { TArith } from "@chlorophytum/hltt-next-type-system";
 
-import { CvtExprImpl } from "../expr-impl/expr";
-
-export function ControlValue<T extends TArith>(type: T, size: number = 1) {
+export function ControlValue<T extends TArith>(type: T, size: number = 1): ExprVarCvt<T> {
 	return CvtExprImpl.fromDecl(type, new CvDeclaration<T>(type, size));
 }
 

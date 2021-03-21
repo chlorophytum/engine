@@ -1,8 +1,8 @@
+import { glyphPoint, twilightPoint } from "@chlorophytum/hltt-next-expr";
+import { Delta } from "@chlorophytum/hltt-next-stmt";
 import test from "ava";
 
-import { glyphPoint, twilightPoint } from "../edsl/expr-impl/const";
 import { Func } from "../edsl/lib-system/programs";
-import { Delta } from "../edsl/stmt-impl/delta";
 
 import { StmtTestLoop } from "./-stmt-test-loop";
 

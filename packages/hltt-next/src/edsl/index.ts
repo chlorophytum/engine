@@ -1,11 +1,11 @@
 import { Assembler, InstrFormat, TextInstr, TTI } from "@chlorophytum/hltt-next-backend";
+import { AnyStmt } from "@chlorophytum/hltt-next-stmt";
 import { GlobalScope, ProgramRecord, ProgramScope } from "@chlorophytum/hltt-next-tr";
 
 import { addStdLib } from "../std-lib";
 
 import { RootProgramDeclaration } from "./lib-system/programs";
 import { ProgramScopeProxy } from "./scope-proxy";
-import { AnyStmt } from "./stmt-impl/branch";
 
 export interface TtStat {
 	stackHeight?: number;

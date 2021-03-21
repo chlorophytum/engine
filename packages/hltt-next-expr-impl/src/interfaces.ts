@@ -1,7 +1,11 @@
-import { Decl, TrExp } from "@chlorophytum/hltt-next-tr";
+import { Decl, TrExp, TrStmt } from "@chlorophytum/hltt-next-tr";
 import { Bool, Cvt, Int, Store, TArith, THandle, TT } from "@chlorophytum/hltt-next-type-system";
 
-import { Stmt } from "./stmt";
+///////////////////////////////////////////////////////////////////////////////////////////////////
+// Statement Base Class
+export class Stmt {
+	constructor(public readonly tr: TrStmt) {}
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // eDSL Expression, with conditional types

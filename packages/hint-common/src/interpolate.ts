@@ -7,7 +7,7 @@ import {
 	PropertyBag
 } from "@chlorophytum/arch";
 import { HlttProgramSink } from "@chlorophytum/final-hint-format-hltt";
-import { Ip } from "@chlorophytum/hltt-next";
+import { Ip } from "@chlorophytum/hltt-next-stmt";
 
 export namespace Interpolate {
 	const TAG = "Chlorophytum::CommonHints::Interpolate";

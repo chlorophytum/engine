@@ -1,7 +1,5 @@
+import { Expr, ExprImpl } from "@chlorophytum/hltt-next-expr-impl";
 import { TT } from "@chlorophytum/hltt-next-type-system";
-
-import { Expr } from "../expr";
-import { ExprImpl } from "../expr-impl/expr";
 
 export class VarArgs {
 	private constructor(private readonly m_args: Expr<TT>[]) {}

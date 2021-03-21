@@ -1,9 +1,6 @@
+import { CompatibleType, Expr, castLiteral, Stmt } from "@chlorophytum/hltt-next-expr-impl";
 import { TrCvt, TrStorage, TrArrayInit, TrArrayInitGetVariation } from "@chlorophytum/hltt-next-tr";
 import { Cvt, Store, TT, UniFrac } from "@chlorophytum/hltt-next-type-system";
-
-import { CompatibleType, Expr } from "../expr";
-import { castLiteral } from "../expr-impl/expr";
-import { Stmt } from "../stmt";
 
 export function arrayInit<T extends TT>(
 	pArr: Expr<Store<T> | Cvt<T>>,

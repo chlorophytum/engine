@@ -1,7 +1,7 @@
+import { add } from "@chlorophytum/hltt-next-expr";
 import { Bool, Frac, Int, TArith, TT } from "@chlorophytum/hltt-next-type-system";
 import test from "ava";
 
-import { add } from "../edsl/expr-impl/arith-ctor";
 import { ControlValue } from "../edsl/lib-system/cvt";
 import { CallableFunc } from "../edsl/lib-system/interfaces";
 import { Func } from "../edsl/lib-system/programs";

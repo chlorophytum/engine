@@ -7,6 +7,9 @@
 	},
 	"references": [
 		{"path": "../hltt-next-backend"},
+		{"path": "../hltt-next-expr"},
+		{"path": "../hltt-next-expr-impl"},
+		{"path": "../hltt-next-stmt"},
 		{"path": "../hltt-next-tr"},
 		{"path": "../hltt-next-type-system"}
 	]

@@ -7,7 +7,7 @@ import {
 	PropertyBag
 } from "@chlorophytum/arch";
 import { HlttProgramSink } from "@chlorophytum/final-hint-format-hltt";
-import { Svtca } from "@chlorophytum/hltt-next";
+import { Svtca } from "@chlorophytum/hltt-next-stmt";
 import { TypeRep } from "typable";
 
 export namespace WithDirection {

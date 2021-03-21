@@ -1,9 +1,6 @@
+import { Expr, castLiteral, Stmt } from "@chlorophytum/hltt-next-expr-impl";
 import { TrIp, TrMdap, TrMdrp, TrMiap, TrMirp, TrScfs } from "@chlorophytum/hltt-next-tr";
 import { Cvt, Frac, THandle, TwilightPoint } from "@chlorophytum/hltt-next-type-system";
-
-import { Expr } from "../expr";
-import { castLiteral } from "../expr-impl/expr";
-import { Stmt } from "../stmt";
 
 // EDSL for MDAP and MDRP
 export const Mdap = mxapFunctionSys(

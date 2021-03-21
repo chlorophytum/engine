@@ -1,3 +1,4 @@
+import { Expr, ExprImpl, Stmt } from "@chlorophytum/hltt-next-expr-impl";
 import {
 	TrConst,
 	TrAlternative,
@@ -7,10 +8,6 @@ import {
 	TrWhile
 } from "@chlorophytum/hltt-next-tr";
 import { Bool } from "@chlorophytum/hltt-next-type-system";
-
-import { Expr } from "../expr";
-import { ExprImpl } from "../expr-impl/expr";
-import { Stmt } from "../stmt";
 
 export type AnyStmt = number | boolean | Expr<unknown> | Stmt;
 export type StmtBody = AnyStmt | (() => Iterable<AnyStmt>);

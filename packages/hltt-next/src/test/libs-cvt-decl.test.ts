@@ -1,10 +1,10 @@
+import { glyphPoint } from "@chlorophytum/hltt-next-expr";
+import { Miap } from "@chlorophytum/hltt-next-stmt";
 import { Frac } from "@chlorophytum/hltt-next-type-system";
 import test from "ava";
 
-import { glyphPoint } from "../edsl/expr-impl/const";
 import { ControlValue } from "../edsl/lib-system/cvt";
 import { Func } from "../edsl/lib-system/programs";
-import { Miap } from "../edsl/stmt-impl/move-point";
 
 import { StmtTestLoop } from "./-stmt-test-loop";
 

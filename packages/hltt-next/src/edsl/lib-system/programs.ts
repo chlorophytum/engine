@@ -1,3 +1,6 @@
+import { Expr } from "@chlorophytum/hltt-next-expr";
+import { castLiteral, ExprImpl } from "@chlorophytum/hltt-next-expr-impl";
+import { Stmt, AnyStmt, castExprStmt } from "@chlorophytum/hltt-next-stmt";
 import {
 	Decl,
 	GlobalScope,
@@ -12,11 +15,7 @@ import {
 } from "@chlorophytum/hltt-next-tr";
 import { TT } from "@chlorophytum/hltt-next-type-system";
 
-import { Expr } from "../expr";
-import { castLiteral, ExprImpl } from "../expr-impl/expr";
 import { FuncScopeProxy, ProcScopeProxy, ProgramScopeProxy } from "../scope-proxy";
-import { Stmt } from "../stmt";
-import { AnyStmt, castExprStmt } from "../stmt-impl/branch";
 
 import {
 	CallableFunc,

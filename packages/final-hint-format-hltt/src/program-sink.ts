@@ -4,14 +4,10 @@ import {
 	Variation,
 	WellKnownGeometryKind
 } from "@chlorophytum/arch";
-import {
-	AnyStmt,
-	Expr,
-	ExprVarCvt,
-	glyphPoint,
-	ProgramAssembly,
-	ProgramScopeProxy
-} from "@chlorophytum/hltt-next";
+import { ProgramAssembly, ProgramScopeProxy } from "@chlorophytum/hltt-next";
+import { Expr, glyphPoint } from "@chlorophytum/hltt-next-expr";
+import { ExprVarCvt } from "@chlorophytum/hltt-next-expr-impl";
+import { AnyStmt } from "@chlorophytum/hltt-next-stmt";
 import { Decl } from "@chlorophytum/hltt-next-tr";
 import { GlyphPoint, TT } from "@chlorophytum/hltt-next-type-system";
 import { implDynamicCast, Typable, TypeRep } from "typable";
