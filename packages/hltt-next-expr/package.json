@@ -1,6 +1,6 @@
 {
 	"name": "@chlorophytum/hltt-next-expr",
-	"version": "0.32.1",
+	"version": "0.32.2",
 	"description": "",
 	"main": "lib/index.js",
 	"typings": "lib/index.d.ts",
@@ -11,10 +11,10 @@
 	"author": "Renzhi Li (aka. Belleve Invis)",
 	"license": "MIT",
 	"dependencies": {
-		"@chlorophytum/hltt-next-backend": "0.32.1",
-		"@chlorophytum/hltt-next-expr-impl": "0.32.1",
-		"@chlorophytum/hltt-next-tr": "0.32.1",
-		"@chlorophytum/hltt-next-type-system": "0.32.1",
+		"@chlorophytum/hltt-next-backend": "0.32.2",
+		"@chlorophytum/hltt-next-expr-impl": "0.32.2",
+		"@chlorophytum/hltt-next-tr": "0.32.2",
+		"@chlorophytum/hltt-next-type-system": "0.32.2",
 		"tslib": "^2.0.1"
 	},
 	"devDependencies": {
