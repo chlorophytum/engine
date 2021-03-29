@@ -57,10 +57,6 @@ export class ProgramAssembly {
 		asm.label(ps.exitLabel);
 		asm.prim(TTI.ENDF, 0, 0);
 		this.updateStat(ps, asm.maxStackHeight);
-
-		const textSink = TextInstr.createSink();
-		asm.codeGen(textSink);
-
 		return asm.codeGen(format.createSink());
 	}
 

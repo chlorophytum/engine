@@ -53,13 +53,13 @@ export class TtfInstrIntegrator implements IFinalHintIntegrator {
 
 	private readonly instructionCache: Map<string, Buffer> = new Map();
 	private createHintRep(col: HlttCollector, fhs: HlttSession): HlttFinalHintStoreRep<Buffer> {
-		const fpgm = [...col.getFunctionDefs(BufferInstr).values()];
-		const prep = [fhs.getPreProgram(BufferInstr)];
-		const cvt = col.getControlValueDefs();
 		const glyf: { [key: string]: Buffer } = {};
 		for (const gid of fhs.listGlyphNames()) {
 			glyf[gid] = fhs.getGlyphProgram(gid, BufferInstr, this.instructionCache);
 		}
+		const prep = [fhs.getPreProgram(BufferInstr)];
+		const fpgm = [...col.getFunctionDefs(BufferInstr).values()];
+		const cvt = col.getControlValueDefs();
 		return { stats: col.getStats(), fpgm, prep, glyf, cvt };
 	}
 

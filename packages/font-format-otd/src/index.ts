@@ -111,13 +111,13 @@ class OtdHlttIntegrator implements IFinalHintIntegrator {
 
 	private readonly instructionCache: Map<string, string> = new Map();
 	private createHintRep(col: HlttCollector, fhs: HlttSession): HlttFinalHintStoreRep<string> {
-		const fpgm = [...col.getFunctionDefs(FontForgeTextInstr).values()];
-		const prep = [fhs.getPreProgram(FontForgeTextInstr)];
-		const cvt = col.getControlValueDefs();
 		const glyf: { [key: string]: string } = {};
 		for (const gid of fhs.listGlyphNames()) {
 			glyf[gid] = fhs.getGlyphProgram(gid, FontForgeTextInstr, this.instructionCache);
 		}
+		const prep = [fhs.getPreProgram(FontForgeTextInstr)];
+		const fpgm = [...col.getFunctionDefs(FontForgeTextInstr).values()];
+		const cvt = col.getControlValueDefs();
 		return { stats: col.getStats(), fpgm, prep, glyf, cvt };
 	}
 
