@@ -1,6 +1,6 @@
 import { IFinalHintSession, Variation } from "@chlorophytum/arch";
 import { ProgramAssembly, TtStat } from "@chlorophytum/hltt-next";
-import { InstrFormat } from "@chlorophytum/hltt-next-backend";
+import { InstrFormat, StatOnly } from "@chlorophytum/hltt-next-backend";
 import { ProgramRecord } from "@chlorophytum/hltt-next-tr";
 import { implDynamicCast, Typable, TypeRep } from "typable";
 
@@ -87,7 +87,16 @@ export class HlttSessionImpl implements Typable<HlttSession> {
 			this.saveControlValues(cv);
 		});
 	}
-	public consolidatePreProgram() {
+	private saveControlValues(cv: CvtGenerator) {
+		const entries = Array.from(cv(this.edsl));
+		for (const [decl, val] of entries) this.shared.controlValues.push([decl.symbol, val]);
+	}
+
+	public consolidate() {
+		this.consolidatePreProgram();
+		this.populateFpgm();
+	}
+	private consolidatePreProgram() {
 		const preSegments = this.preProgramSegments;
 		this.preProgram = this.edsl
 			.createProgram(function* ($) {
@@ -96,12 +105,10 @@ export class HlttSessionImpl implements Typable<HlttSession> {
 			.computeDefinition(this.edsl.scope);
 		this.preProgramSegments = [];
 	}
-	private saveControlValues(cv: CvtGenerator) {
-		const entries = Array.from(cv(this.edsl));
-		for (const [decl, val] of entries) this.shared.controlValues.push([decl.symbol, val]);
-	}
-	public consolidate() {
-		this.consolidatePreProgram();
+	private populateFpgm() {
+		// Perform compilation to populate FPGM entries
+		this.getPreProgram(StatOnly);
+		for (const gid of this.listGlyphNames()) this.getGlyphProgram(gid, StatOnly);
 	}
 
 	public *listGlyphNames() {

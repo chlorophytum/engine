@@ -332,3 +332,30 @@ export const TextInstr = {
 		return TextInstrSink.rectify(s);
 	}
 };
+
+export class StatOnlySink implements InstrSink<void> {
+	constructor() {}
+	private size = 0;
+	getLength() {
+		return this.size;
+	}
+	getResult() {}
+	reset() {
+		this.size = 0;
+	}
+	addOp(x: TTI) {
+		this.size++;
+	}
+	addByte(x: number) {
+		this.size++;
+	}
+	addWord(x: number) {
+		this.size += 2;
+	}
+}
+
+export const StatOnly = {
+	createSink(): InstrSink<void> {
+		return new StatOnlySink();
+	}
+};

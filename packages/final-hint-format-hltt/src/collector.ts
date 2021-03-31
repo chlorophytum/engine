@@ -31,7 +31,6 @@ export class HlttCollectorImpl implements Typable<HlttCollector> {
 			stackHeightMultiplier: 32,
 			maxStorageMultiplier: 32
 		});
-		// initStdLib(this.edsl);
 	}
 	public dynamicCast<U>(tr: TypeRep<U>): undefined | U {
 		return implDynamicCast(tr, this, HlttCollector);
