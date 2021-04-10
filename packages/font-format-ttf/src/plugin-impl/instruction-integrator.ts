@@ -5,7 +5,7 @@ import {
 	HlttSession
 } from "@chlorophytum/final-hint-format-hltt";
 import * as fs from "fs-extra";
-import { FontIo, Ot } from "ot-builder";
+import { FontIo, Ot, Tag } from "ot-builder";
 
 import { BufferInstr } from "../support/buffer-instr";
 import { GlyphSetWrapper, VarWrapper } from "../support/otb-support";
@@ -13,24 +13,36 @@ import { GlyphSetWrapper, VarWrapper } from "../support/otb-support";
 export class TtfInstrIntegrator implements IFinalHintIntegrator {
 	constructor(private readonly sFont: string) {}
 
+	private sfntSrc: null | Ot.Sfnt = null;
 	private ttf: null | Ot.Font<Ot.ListGlyphStore> = null;
 	private async ensureFontRead() {
+		if (!this.sfntSrc) {
+			this.sfntSrc = FontIo.readSfntOtf(await fs.readFile(this.sFont));
+		}
 		if (!this.ttf) {
-			const sfnt = FontIo.readSfntOtf(await fs.readFile(this.sFont));
-			this.ttf = FontIo.readFont(sfnt, Ot.ListGlyphStoreFactory);
+			this.ttf = FontIo.readFont(this.sfntSrc, Ot.ListGlyphStoreFactory);
 		}
 	}
 
 	public async save(output: string) {
 		await this.ensureFontRead();
 		if (!this.ttf) throw new Error("Invalid font format");
-		await this.saveFont(this.ttf, output);
-	}
-	private async saveFont(otd: Ot.Font, sOutput: string) {
-		const sfntOut = FontIo.writeFont(otd, {
+		if (!this.sfntSrc) throw new Error("Invalid font format");
+		const sfntOut = FontIo.writeFont(this.ttf, {
 			glyphStore: { statOs2XAvgCharWidth: false }
 		});
-		await fs.writeFile(sOutput, FontIo.writeSfntOtf(sfntOut));
+		this.copyTable(sfntOut, this.sfntSrc, "maxp");
+		this.copyTable(sfntOut, this.sfntSrc, "fpgm");
+		this.copyTable(sfntOut, this.sfntSrc, "prep");
+		this.copyTable(sfntOut, this.sfntSrc, "cvt ");
+		this.copyTable(sfntOut, this.sfntSrc, "loca");
+		this.copyTable(sfntOut, this.sfntSrc, "glyf");
+		this.copyTable(sfntOut, this.sfntSrc, "head");
+		await fs.writeFile(output, FontIo.writeSfntOtf(this.sfntSrc));
+	}
+	private copyTable(out: Ot.Sfnt, src: Ot.Sfnt, tag: Tag) {
+		const tbl = out.tables.get(tag);
+		if (tbl) src.tables.set(tag, tbl);
 	}
 
 	async apply(collector: IFinalHintCollector, session: IFinalHintSession) {
