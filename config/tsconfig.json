@@ -20,6 +20,7 @@
 		{"path": "../packages/hltt-next-tr"},
 		{"path": "../packages/hltt-next-type-system"},
 		{"path": "../packages/hm-combine"},
+		{"path": "../packages/hm-select-glyphs"},
 		{"path": "../packages/util-json"}
 	]
 }
