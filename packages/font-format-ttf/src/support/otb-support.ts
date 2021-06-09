@@ -46,7 +46,8 @@ export class OtbFontEntry extends OpenTypeFontEntry<Ot.Glyph> {
 }
 
 export class OtbSupport
-	implements IOpenTypeFontEntrySupport<Ot.Glyph>, IOpenTypeFontSourceSupport<Ot.Glyph> {
+	implements IOpenTypeFontEntrySupport<Ot.Glyph>, IOpenTypeFontSourceSupport<Ot.Glyph>
+{
 	public readonly glyphSet: ISimpleGetBimap<string, Ot.Glyph>;
 	public readonly cmap: ISimpleGetMap<number, Ot.Glyph>;
 	private readonly cmapUvs: CmapUvsMap;

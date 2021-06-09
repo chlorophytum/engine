@@ -93,7 +93,8 @@ class CmapUvsMap<T> {
 }
 
 export class OtdSupport
-	implements IOpenTypeFontEntrySupport<string>, IOpenTypeFontSourceSupport<string> {
+	implements IOpenTypeFontEntrySupport<string>, IOpenTypeFontSourceSupport<string>
+{
 	public readonly glyphSet: ISimpleGetBimap<string, string>;
 	public readonly cmap: ISimpleGetMap<number, string>;
 	private readonly cmapUvs = new CmapUvsMap<string>();

@@ -29,7 +29,7 @@ import { Expr, ExprAll, ExprVarAll, ExprVarCvt, ExprVarStore, Stmt } from "../in
 export class ExprImpl implements ExprAll {
 	protected constructor(public readonly type: TT, public readonly tr: TrExp) {}
 	static create<T extends TT>(type: T, ir: TrExp) {
-		return (new ExprImpl(type, ir) as unknown) as Expr<T>;
+		return new ExprImpl(type, ir) as unknown as Expr<T>;
 	}
 	part(n: number | ExprAll) {
 		const ty: TT = this.type;
@@ -79,7 +79,7 @@ export class LocalVarExprImpl extends CoercedVarImpl {
 	}
 
 	static fromSymbol<T extends TT>(ty: T, s: symbol): Expr<T> & ExprVarStore<T> {
-		return (new LocalVarExprImpl(ty, s) as unknown) as Expr<T> & ExprVarStore<T>;
+		return new LocalVarExprImpl(ty, s) as unknown as Expr<T> & ExprVarStore<T>;
 	}
 }
 
@@ -88,7 +88,7 @@ export class CvtExprImpl<T extends TT> extends CoercedVarImpl {
 		super(type, Cvt, TrCvt, new TrCvtPtr(decl, 0), new TrConst(0));
 	}
 	static fromDecl<T extends TT>(ty: T, s: Decl): Expr<T> & ExprVarCvt<T> {
-		return (new CvtExprImpl(ty, s) as unknown) as Expr<T> & ExprVarCvt<T>;
+		return new CvtExprImpl(ty, s) as unknown as Expr<T> & ExprVarCvt<T>;
 	}
 }
 

@@ -31,8 +31,8 @@ function MxapT<A extends unknown[], E>(b: boolean, ctor: MxapConstructor<A>) {
 export function mxapFunctionSys<A extends unknown[], E>(
 	ctor: MxapConstructor<A>
 ): ReadonlyMxapFnSet<A> {
-	const noRound = (MxapT(false, ctor) as unknown) as MxapFnSet<A>;
-	const round = (MxapT(true, ctor) as unknown) as MxapFnSet<A>;
+	const noRound = MxapT(false, ctor) as unknown as MxapFnSet<A>;
+	const round = MxapT(true, ctor) as unknown as MxapFnSet<A>;
 	noRound.round = round.round = round;
 	round.noRound = noRound.noRound = noRound;
 	return noRound;
@@ -115,13 +115,13 @@ export function mxrpFunctionSys<A extends unknown[]>(
 ): ReadonlyMxrpFnSet<A> {
 	const a: MxrpFnSet<A>[] = [];
 	for (let j = 0; j < 32; j++) {
-		a[j] = (MxrpT(
+		a[j] = MxrpT(
 			!!(j & 16),
 			!!(j & 8),
 			!!(j & 4),
 			(j & 3) as 0 | 1 | 2 | 3,
 			ctor
-		) as unknown) as MxrpFnSet<A>;
+		) as unknown as MxrpFnSet<A>;
 	}
 	for (let j = 0; j < 32; j++) {
 		a[j].rp0 = a[j | 16];
