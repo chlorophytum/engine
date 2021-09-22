@@ -1,8 +1,8 @@
-import { IFinalHintCollector, IFinalHintIntegrator, IFinalHintSession } from "@chlorophytum/arch";
+import { IFinalHintIntegrator, IFinalHintSink, IFinalHintSinkSession } from "@chlorophytum/arch";
 import {
-	HlttCollector,
 	HlttFinalHintStoreRep,
-	HlttSession
+	HlttSession,
+	HlttCollector
 } from "@chlorophytum/final-hint-format-hltt";
 import * as fs from "fs-extra";
 import { FontIo, Ot, Tag } from "ot-builder";
@@ -45,7 +45,7 @@ export class TtfInstrIntegrator implements IFinalHintIntegrator {
 		if (tbl) src.tables.set(tag, tbl);
 	}
 
-	async apply(collector: IFinalHintCollector, session: IFinalHintSession) {
+	async apply(collector: IFinalHintSink, session: IFinalHintSinkSession) {
 		const hlttCollector = collector.dynamicCast(HlttCollector);
 		const hlttSession = session.dynamicCast(HlttSession);
 		if (hlttCollector && hlttSession) {

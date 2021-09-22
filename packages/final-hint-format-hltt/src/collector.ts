@@ -1,16 +1,16 @@
-import { IFinalHintCollector, Variation } from "@chlorophytum/arch";
+import { IFinalHintSink, IFinalHintStore, Variation } from "@chlorophytum/arch";
 import { ProgramAssembly, TtStat } from "@chlorophytum/hltt-next";
 import { InstrFormat } from "@chlorophytum/hltt-next-backend";
 import { implDynamicCast, Typable, TypeRep } from "typable";
 
 import { HlttPreStatSink } from "./pre-stat-sink";
-import { HlttSession, HlttSessionImpl, SharedGlyphPrograms } from "./session";
+import { HlttSessionImpl, SharedGlyphPrograms } from "./session";
 
 export const HlttCollector = new TypeRep<HlttCollector>(
 	"Chlorophytum::HlttFinalHintPlugin::HlttCollector"
 );
-export interface HlttCollector extends IFinalHintCollector {
-	createSession(): HlttSession;
+export interface HlttCollector extends IFinalHintSink, IFinalHintStore {
+	preStatSink: HlttPreStatSink;
 	getFunctionDefs<F>(format: InstrFormat<F>): Map<symbol, F>;
 	getControlValueDefs(): (undefined | Variation.Variance<number>)[];
 	getStats(): TtStat;
@@ -18,44 +18,52 @@ export interface HlttCollector extends IFinalHintCollector {
 
 export class HlttCollectorImpl implements Typable<HlttCollector> {
 	public readonly format = "hltt";
-	private readonly edsl: ProgramAssembly;
+	public preStatSink = new HlttPreStatSink();
+	private programAssembly: null | ProgramAssembly = null;
 	private shared = new SharedGlyphPrograms();
 
-	constructor(pss: HlttPreStatSink) {
-		this.edsl = new ProgramAssembly({
-			maxFunctionDefs: pss.maxFunctionDefs,
-			maxStorage: pss.maxStorage,
-			maxTwilightPoints: pss.maxTwilightPoints,
-			stackHeight: pss.maxStack,
-			cvtSize: pss.cvtSize,
-			stackHeightMultiplier: 32,
-			maxStorageMultiplier: 32
-		});
-	}
+	constructor() {}
 	public dynamicCast<U>(tr: TypeRep<U>): undefined | U {
 		return implDynamicCast(tr, this, HlttCollector);
 	}
 
+	private getProgramAssembly() {
+		if (this.programAssembly) return this.programAssembly;
+		this.programAssembly = new ProgramAssembly({
+			maxFunctionDefs: this.preStatSink.maxFunctionDefs,
+			maxStorage: this.preStatSink.maxStorage,
+			maxTwilightPoints: this.preStatSink.maxTwilightPoints,
+			stackHeight: this.preStatSink.maxStack,
+			cvtSize: this.preStatSink.cvtSize,
+			stackHeightMultiplier: 32,
+			maxStorageMultiplier: 32
+		});
+		return this.programAssembly;
+	}
+
 	public createSession() {
-		return new HlttSessionImpl(this.edsl, this.shared);
+		const pa = this.getProgramAssembly();
+		return new HlttSessionImpl(pa, this.shared);
 	}
 
 	public getFunctionDefs<F>(format: InstrFormat<F>) {
+		const pa = this.getProgramAssembly();
 		const fpgmPrograms = new Map<symbol, F>();
-		for (const sy of this.edsl.scope.fpgm.symbols()) {
-			const ifn = this.edsl.scope.fpgm.resolve(sy);
-			const defFn = this.edsl.scope.fpgm.getDef(sy);
+		for (const sy of pa.scope.fpgm.symbols()) {
+			const ifn = pa.scope.fpgm.resolve(sy);
+			const defFn = pa.scope.fpgm.getDef(sy);
 			if (ifn == null || !defFn) continue;
-			const pr = defFn.computeDefinition(this.edsl.scope);
-			fpgmPrograms.set(sy, this.edsl.compileFunction(format, ifn, pr));
+			const pr = defFn.computeDefinition(pa.scope);
+			fpgmPrograms.set(sy, pa.compileFunction(format, ifn, pr));
 		}
 		return fpgmPrograms;
 	}
 
 	public getControlValueDefs() {
+		const pa = this.getProgramAssembly();
 		const cv: (undefined | Variation.Variance<number>)[] = [];
 		for (const [variable, valueArr] of this.shared.controlValues) {
-			const iCv = this.edsl.scope.cvt.resolve(variable);
+			const iCv = pa.scope.cvt.resolve(variable);
 			if (iCv === undefined) continue;
 			for (let offset = 0; offset < valueArr.length; offset++) {
 				cv[iCv + offset] = valueArr[offset] || 0;
@@ -63,8 +71,11 @@ export class HlttCollectorImpl implements Typable<HlttCollector> {
 		}
 		return cv;
 	}
-	public consolidate() {}
+	public async consolidate() {
+		return this;
+	}
 	public getStats() {
-		return this.edsl.getStats();
+		const pa = this.getProgramAssembly();
+		return pa.getStats();
 	}
 }

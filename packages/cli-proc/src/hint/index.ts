@@ -114,10 +114,18 @@ interface PreHintImplState<GID> {
 	logger: ILogger;
 	carry: PropertyBag;
 }
-async function preHintFont<GID>(pass: IHintingPass, st: PreHintImplState<GID>) {
-	const fontSourcePlugin = await getFontPlugin(st.options);
-	const fontSource = await fontSourcePlugin.loadFont(st.input, st.input);
 
+async function openFont<GID>(st: PreHintImplState<GID>) {
+	const fontSourcePlugin = await getFontPlugin(st.options);
+	const fontConn = await fontSourcePlugin.connectFont(st.input, st.input);
+	if (!fontConn) throw new Error(`Unable to connect to font: ${st.input}`);
+	const fontSource = await fontConn.openFontSource();
+	if (!fontSource) throw new Error(`Unable to connect to font: ${st.input}`);
+	return fontSource;
+}
+
+async function preHintFont<GID>(pass: IHintingPass, st: PreHintImplState<GID>) {
+	const fontSource = await openFont(st);
 	const hm = await pass.adopt(fontSource);
 	if (!hm || !hm.getPreTask) return;
 	const task = hm.getPreTask({
@@ -147,9 +155,7 @@ interface HintImplState<GID> extends PreHintImplState<GID> {
 }
 
 async function hintFont<GID>(hs: IHintStore, pass: IHintingPass, st: HintImplState<GID>) {
-	const fontSourcePlugin = await getFontPlugin(st.options);
-	const fontSource = await fontSourcePlugin.loadFont(st.input, st.input);
-
+	const fontSource = await openFont(st);
 	const hm = await pass.adopt(fontSource);
 	if (!hm) return;
 	const hsLocal = new MemoryHintStore();

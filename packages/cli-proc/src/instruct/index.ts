@@ -1,12 +1,13 @@
 import {
 	ConsoleLogger,
-	IFinalHintCollector,
+	IFinalHintSink,
 	IFinalHintFormat,
-	IFinalHintSession,
+	IFinalHintSinkSession,
 	IFontFormat,
 	IHintingPass,
 	IHintStoreProvider,
-	ILogger
+	ILogger,
+	IFinalHintStore
 } from "@chlorophytum/arch";
 
 import { getFontPlugin, getHintingPasses, getHintStoreProvider, ProcOptions } from "../env";
@@ -16,7 +17,7 @@ import { mainMidHint } from "./procs";
 interface ExportPlan {
 	fromPath: string;
 	toPath: string;
-	session: IFinalHintSession;
+	session: IFinalHintSinkSession;
 }
 export type InstructJob = [string, string, string];
 export async function doInstruct(options: ProcOptions, jobs: InstructJob[]) {
@@ -36,63 +37,60 @@ export async function doInstruct(options: ProcOptions, jobs: InstructJob[]) {
 	}
 
 	// Pre-stat
-	const preStatSink = await doPreStat(logger.bullet(" + "), FontFormat, FinalHintFormat, jobs);
+	const fhSink = await FinalHintFormat.createFinalHintSink();
+
+	await doPreStat(logger.bullet(" + "), FontFormat, fhSink, jobs);
 
 	// Instruct
-	const ttCol = await FinalHintFormat.createFinalHintCollector(preStatSink);
 	const exportPlans = await doInstructImpl(
 		logger.bullet(" + "),
 		HintStoreProvider,
-		FontFormat,
-		ttCol,
+		fhSink,
 		pass,
 		jobs
 	);
 
 	// Save
-	ttCol.consolidate();
-	await saveInstructions(logger.bullet(" + "), FontFormat, ttCol, exportPlans);
+	const fhSource = await fhSink.consolidate();
+	await saveInstructions(logger.bullet(" + "), FontFormat, fhSource, exportPlans);
 }
 
 async function doPreStat(
 	logger: ILogger,
 	FontFormat: IFontFormat,
-	FinalHintFormat: IFinalHintFormat,
+	sink: IFinalHintSink,
 	jobs: [string, string, string][]
 ) {
-	const preStatSink = await FinalHintFormat.createPreStatSink();
-	const preStatAnalyzer = await FontFormat.createPreStatAnalyzer(preStatSink);
-	if (!preStatAnalyzer) throw new TypeError(`Final hint format not supported by font.`);
 	for (const [font, input, output] of jobs) {
 		logger.log(`Pre-stating ${font}`);
-		await preStatAnalyzer.analyzeFontPreStat(font);
+		const fontConn = await FontFormat.connectFont(font, font);
+		if (!fontConn) throw new Error(`Unable to connect to font ${font}`);
+		const preStatAnalyzer = await fontConn.openPreStat(sink);
+		if (!preStatAnalyzer) throw new TypeError(`Final hint format not supported by font.`);
+		await preStatAnalyzer.preStat();
 	}
-	return preStatSink;
+	return sink;
 }
 async function doInstructImpl(
 	logger: ILogger,
-	provider: IHintStoreProvider,
-	FontFormat: IFontFormat,
-	ttCol: IFinalHintCollector,
+	hsProvider: IHintStoreProvider,
+	ttCol: IFinalHintSink,
 	pass: IHintingPass,
 	jobs: [string, string, string][]
 ) {
 	const exportPlans: ExportPlan[] = [];
 	for (const [font, input, output] of jobs) {
 		logger.log(`Compiling hints ${input}`);
-		const ttSessionConn = await FontFormat.createFinalHintSessionConnection(ttCol);
-		if (!ttSessionConn) throw new TypeError(`Final hint format not supported by font.`);
-		const ttSession = await ttSessionConn.connectFont(font);
-		if (!ttSession) throw new TypeError(`Final hint format not supported by font.`);
-		await readHintsToSession(provider, ttSession, input, pass);
-		exportPlans.push({ fromPath: font, toPath: output, session: ttSession });
+		const fhSession = await ttCol.createSession();
+		await readHintsToSession(hsProvider, fhSession, input, pass);
+		exportPlans.push({ fromPath: font, toPath: output, session: fhSession });
 	}
 	return exportPlans;
 }
 
 async function readHintsToSession(
 	provider: IHintStoreProvider,
-	ttSession: IFinalHintSession,
+	ttSession: IFinalHintSinkSession,
 	input: string,
 	pass: IHintingPass
 ) {
@@ -104,14 +102,17 @@ async function readHintsToSession(
 
 async function saveInstructions(
 	logger: ILogger,
-	FontFormatPlugin: IFontFormat,
-	ttCol: IFinalHintCollector,
+	FontFormat: IFontFormat,
+	fhSource: IFinalHintStore,
 	exportPlans: ExportPlan[]
 ) {
 	for (const plan of exportPlans) {
 		logger.log(`Instructing -> ${plan.toPath}`);
-		const integrator = await FontFormatPlugin.createFinalHintIntegrator(plan.fromPath);
-		await integrator.apply(ttCol, plan.session);
+		const fontConn = await FontFormat.connectFont(plan.fromPath, plan.fromPath);
+		if (!fontConn) throw new Error(`Unable to connect to font ${plan.fromPath}`);
+		const integrator = await fontConn.openFinalHintIntegrator();
+		if (!integrator) throw new Error(`Unable to connect to font ${plan.fromPath}`);
+		await integrator.apply(fhSource, plan.session);
 		await integrator.save(plan.toPath);
 	}
 }

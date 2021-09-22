@@ -1,6 +1,6 @@
-import { IFinalHintSession, IHintStore, PropertyBag } from "@chlorophytum/arch";
+import { IFinalHintSinkSession, IHintStore, PropertyBag } from "@chlorophytum/arch";
 
-export async function mainMidHint(store: IHintStore, fhs: IFinalHintSession) {
+export async function mainMidHint(store: IHintStore, fhs: IFinalHintSinkSession) {
 	const glyphList = await store.listGlyphs();
 	for (const gid of glyphList) {
 		const ck = await store.getGlyphHintsCacheKey(gid);

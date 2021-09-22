@@ -1,4 +1,4 @@
-import { IFinalHintSession, Variation } from "@chlorophytum/arch";
+import { IFinalHintSinkSession, Variation } from "@chlorophytum/arch";
 import { ProgramAssembly, TtStat } from "@chlorophytum/hltt-next";
 import { InstrFormat, StatOnly } from "@chlorophytum/hltt-next-backend";
 import { ProgramRecord } from "@chlorophytum/hltt-next-tr";
@@ -28,7 +28,7 @@ export interface HlttFinalHintStoreRep<F> {
 export const HlttSession = new TypeRep<HlttSession>(
 	"Chlorophytum::HlttFinalHintPlugin::HlttSession"
 );
-export interface HlttSession extends IFinalHintSession {
+export interface HlttSession extends IFinalHintSinkSession {
 	getPreProgram<F>(format: InstrFormat<F>): F;
 	listGlyphNames(): Iterable<string>;
 	getGlyphProgram<F>(

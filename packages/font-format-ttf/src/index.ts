@@ -1,42 +1,40 @@
 import {
-	IFinalHintCollector,
 	IFinalHintFormat,
-	IFinalHintPreStatSink,
+	IFinalHintSink,
+	IFontConnection,
 	IFontFormat,
 	Plugins
 } from "@chlorophytum/arch";
-import {
-	CHlttFinalHintFormat,
-	HlttCollector,
-	HlttPreStatSink
-} from "@chlorophytum/final-hint-format-hltt";
+import { CHlttFinalHintFormat, HlttCollector } from "@chlorophytum/final-hint-format-hltt";
 
 import { TtfFontLoader } from "./plugin-impl/font-loader";
 import { TtfInstrIntegrator } from "./plugin-impl/instruction-integrator";
 import { TtfPreStatAnalyzer } from "./plugin-impl/pre-stat";
-import { HlttHintSessionConnection } from "./plugin-impl/session-connection";
 
-export class TtfFontFormat implements IFontFormat {
-	public async loadFont(path: string, identifier: string) {
-		return await new TtfFontLoader(path, identifier).load();
-	}
-
-	public async createPreStatAnalyzer(pss: IFinalHintPreStatSink) {
-		const hlttPss = pss.dynamicCast(HlttPreStatSink);
-		if (hlttPss) return new TtfPreStatAnalyzer(hlttPss);
-		else return null;
-	}
-
-	public async createFinalHintSessionConnection(collector: IFinalHintCollector) {
-		const hlttCollector = collector.dynamicCast(HlttCollector);
-		if (hlttCollector) return new HlttHintSessionConnection(hlttCollector);
-		else return null;
-	}
-	public async createFinalHintIntegrator(fontPath: string) {
-		return new TtfInstrIntegrator(fontPath);
-	}
+class TtfFontFormat implements IFontFormat {
 	public async getFinalHintFormat(): Promise<IFinalHintFormat> {
 		return new CHlttFinalHintFormat();
+	}
+	public async connectFont(path: string, identifier: string) {
+		return new TtfFontConnection(path, identifier);
+	}
+}
+
+class TtfFontConnection implements IFontConnection {
+	constructor(private readonly path: string, private readonly identifier: string) {}
+
+	public async openFontSource() {
+		return await new TtfFontLoader(this.path, this.identifier).load();
+	}
+
+	public async openPreStat(sink: IFinalHintSink) {
+		const hlttSink = sink.dynamicCast(HlttCollector);
+		if (hlttSink) return new TtfPreStatAnalyzer(this.path, hlttSink);
+		else return null;
+	}
+
+	public async openFinalHintIntegrator() {
+		return new TtfInstrIntegrator(this.path);
 	}
 }
 

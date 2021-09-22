@@ -11,72 +11,120 @@ export * from "./property-bag";
 export * from "./tasks";
 export { Variation } from "./variation";
 
-// Font source
+/** A font format represents the format of fonts -- like TTF, Glyphs or UFO */
 export interface IFontFormat {
-	// IO
-	loadFont(path: string, identifier: string): Promise<IFontSource<any>>;
-
-	createPreStatAnalyzer(pss: IFinalHintPreStatSink): Promise<null | IFinalHintPreStatAnalyzer>;
-	createFinalHintSessionConnection(
-		collector: IFinalHintCollector
-	): Promise<null | IFinalHintSessionConnection>;
-	createFinalHintIntegrator(fontPath: string): Promise<IFinalHintIntegrator>;
+	/** Queries the preferred final hint format */
 	getFinalHintFormat(): Promise<IFinalHintFormat>;
+	/** Connect to / Load a font */
+	connectFont(path: string, identifier: string): Promise<null | IFontConnection>;
 }
-export interface IFinalHintSessionConnection {
-	connectFont(path: string): Promise<null | IFinalHintSession>;
+
+/** Represents a connection / link to a font. The font can be either a file or a
+ *  network resource
+ */
+export interface IFontConnection {
+	/** Open this font for hint analysis */
+	openFontSource(): Promise<null | IFontSource<any>>;
+	/** Open this font for pre-stating */
+	openPreStat(pss: IFinalHintSink): Promise<null | IFinalHintPreStatAnalyzer>;
+	/** Open this font for final hint integration */
+	openFinalHintIntegrator(): Promise<null | IFinalHintIntegrator>;
 }
+
+/** Performs pre-instructing stat for hints, usually collects metadata from fonts */
 export interface IFinalHintPreStatAnalyzer {
-	analyzeFontPreStat(path: string): Promise<void>;
+	preStat(): Promise<void>;
 }
+/** Performs final hint to font integration */
 export interface IFinalHintIntegrator {
-	apply(collector: IFinalHintCollector, fhs: IFinalHintSession): Promise<void>;
+	apply(collector: IFinalHintStore, fhs: IFinalHintSinkSession): Promise<void>;
 	save(output: string): Promise<void>;
 }
 
+/** A final hint format represents the format of hints stored in the fonts, like TT programs */
+export interface IFinalHintFormat {
+	/** Creates a sink for final hint connection */
+	createFinalHintSink(): Promise<IFinalHintSink>;
+}
+/** The storage of final hints */
+export interface IFinalHintStore extends Typable {
+	readonly format: string;
+}
+/** The sink of final hints. A sink can process multiple fonts */
+export interface IFinalHintSink extends Typable {
+	readonly format: string;
+	createSession(): IFinalHintSinkSession;
+	consolidate(): Promise<IFinalHintStore>;
+}
+/** A session of final hint sink, processes one font */
+export interface IFinalHintSinkSession extends Typable {
+	readonly format: string;
+	createGlyphProgramSink(
+		gid: string,
+		glyphCacheKey?: null | undefined | string
+	): Promise<IFinalHintProgramSink>;
+	createSharedProgramSink(type: string): Promise<IFinalHintProgramSink>;
+	consolidate(): void;
+}
+/** The final hint sink for one program */
+export interface IFinalHintProgramSink extends Typable {
+	readonly format: string;
+	save(): void;
+}
+
+/** Represents a font used for hint analysis */
 export interface IFontSource<GID> {
 	readonly format: string;
-	// Get font metadata
+	/** Get font metadata */
 	readonly metadata: IFontSourceMetadata;
-	// Get dimensions of variation
+	/** Get dimensions of variation */
 	getVariationDimensions(): Promise<ReadonlyArray<string>>;
-	// Get range and stops of this variation dimension
+	/** Get range and stops of this variation dimension */
 	getRangeAndStopsOfVariationDimension(
 		dim: string
 	): Promise<ReadonlyArray<readonly [number, number]> | null | undefined>;
-	// Conversion from user variation to normalized variation
-	// Input datatype is explicitly chosen to be different from normalized instance
+	/** Conversion from user variation to normalized variation.
+	 *  Input datatype is explicitly chosen to be different from normalized instance
+	 */
 	convertUserInstanceToNormalized(
 		user: Variation.UserInstance
 	): Promise<Variation.Instance | null | undefined>;
-	// Conversion from user master to normalized master
-	// Input datatype is explicitly chosen to be different from normalized instance
+	/** Conversion from user master to normalized master.
+	 *  Input datatype is explicitly chosen to be different from normalized instance
+	 */
 	convertUserMasterToNormalized(
 		user: Variation.UserMaster
 	): Promise<Variation.Master | null | undefined>;
-	// Get entry points
+	/** Get entry points */
 	getEntries(): Promise<ReadonlyArray<IFontEntry<GID>>>;
-	// Glyph names
+	/** Get a glyph from name */
 	getGlyphFromName(name: string): Promise<GID | undefined>;
+	/** Get the unique name of a glyph */
 	getUniqueGlyphName(glyph: GID): Promise<string | undefined>;
-	// Get master list
+	/** Get master list */
 	getGlyphMasters(glyph: GID): Promise<ReadonlyArray<Variation.MasterRep>>;
-	// Get geometry
+	/** Get geometry */
 	getGeometry(glyph: GID, instance: null | Variation.Instance): Promise<Glyph.Shape>;
-	// Get metric
+	/** Get metrics */
 	getMetric(glyph: GID, instance: null | Variation.Instance): Promise<Glyph.Metric>;
 }
+/** A font entry represents the entry point of a font,
+ *  usually a character set and glyph relationship set
+ */
 export interface IFontEntry<GID> {
-	// Glyph set and encoding
+	/** Query the set of glyphs form this entry */
 	getGlyphSet(): Promise<Set<GID>>;
+	/** Query the set of characters of this entry */
 	getCharacterSet(): Promise<Set<number>>;
+	/** Query all glyphs with encodings */
 	getEncodedGlyph(codePoint: number): Promise<GID | null | undefined>;
-	// Get related glyphs
+	/** Query related glyphs */
 	getRelatedGlyphs(
 		from: GID,
 		codePoint?: number
 	): Promise<Glyph.Relation<GID>[] | null | undefined>;
 }
+/** The metadata of fonts */
 export interface IFontSourceMetadata {
 	readonly identifier: string;
 	readonly upm: number;
@@ -159,31 +207,6 @@ export interface IHintingPass extends IParallelTaskFactory {
 }
 
 // Hint compilation (instructing)
-
-export interface IFinalHintFormat {
-	createFinalHintCollector(preStat: IFinalHintPreStatSink): Promise<IFinalHintCollector>;
-	createPreStatSink(): Promise<IFinalHintPreStatSink>;
-}
-export interface IFinalHintPreStatSink extends Typable {
-	settleDown(): void;
-}
-export interface IFinalHintCollector extends Typable {
-	readonly format: string;
-	consolidate(): void;
-}
-export interface IFinalHintSession extends Typable {
-	readonly format: string;
-	createGlyphProgramSink(
-		gid: string,
-		glyphCacheKey?: null | undefined | string
-	): Promise<IFinalHintProgramSink>;
-	createSharedProgramSink(type: string): Promise<IFinalHintProgramSink>;
-	consolidate(): void;
-}
-export interface IFinalHintProgramSink extends Typable {
-	readonly format: string;
-	save(): void;
-}
 
 // Logging
 export interface ILogger {

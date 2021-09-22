@@ -2,23 +2,21 @@
 import * as fs from "fs";
 
 import {
-	IFinalHintCollector,
 	IFinalHintFormat,
 	IFinalHintIntegrator,
 	IFinalHintPreStatAnalyzer,
-	IFinalHintPreStatSink,
-	IFinalHintSession,
-	IFinalHintSessionConnection,
+	IFinalHintSink,
+	IFinalHintSinkSession,
+	IFontConnection,
 	IFontFormat,
 	Plugins,
 	Variation
 } from "@chlorophytum/arch";
 import {
 	CHlttFinalHintFormat,
-	HlttCollector,
 	HlttFinalHintStoreRep,
-	HlttPreStatSink,
-	HlttSession
+	HlttSession,
+	HlttCollector
 } from "@chlorophytum/final-hint-format-hltt";
 import { FontForgeTextInstr } from "@chlorophytum/fontforge-instr";
 import { StreamJson } from "@chlorophytum/util-json";
@@ -26,54 +24,59 @@ import { StreamJson } from "@chlorophytum/util-json";
 import { OtdFontSource } from "./simple-otd-support";
 
 class OtdFontFormat implements IFontFormat {
-	public async loadFont(path: string, identifier: string) {
-		const inputStream = fs.createReadStream(path);
-		const otd = await StreamJson.parse(inputStream);
-		return new OtdFontSource(otd, identifier);
-	}
-
-	public async createPreStatAnalyzer(pss: IFinalHintPreStatSink) {
-		const hlttPss = pss.dynamicCast(HlttPreStatSink);
-		if (hlttPss) return new OtdHlttPreStatAnalyzer(hlttPss);
-		else return null;
-	}
-
-	public async createFinalHintSessionConnection(collector: IFinalHintCollector) {
-		const hlttCollector = collector.dynamicCast(HlttCollector);
-		if (hlttCollector) return new OtdHlttHintSessionConnection(hlttCollector);
-		else return null;
-	}
-	public async createFinalHintIntegrator(fontPath: string) {
-		return new OtdHlttIntegrator(fontPath);
-	}
 	public async getFinalHintFormat(): Promise<IFinalHintFormat> {
 		return new CHlttFinalHintFormat();
 	}
+	public async connectFont(path: string, identifier: string) {
+		return new OtdFontConnection(path, identifier);
+	}
 }
 
-class OtdHlttHintSessionConnection implements IFinalHintSessionConnection {
-	constructor(private readonly collector: HlttCollector) {}
-	public async connectFont(path: string): Promise<IFinalHintSession> {
-		return this.collector.createSession();
+class OtdFontConnection implements IFontConnection {
+	constructor(private readonly path: string, private readonly identifier: string) {}
+
+	public async openFontSource() {
+		const inputStream = fs.createReadStream(this.path);
+		const otd = await StreamJson.parse(inputStream);
+		return new OtdFontSource(otd, this.identifier);
+	}
+
+	public async openPreStat(sink: IFinalHintSink) {
+		const hlttSink = sink.dynamicCast(HlttCollector);
+		if (hlttSink) return new OtdHlttPreStatAnalyzer(this.path, hlttSink);
+		else return null;
+	}
+
+	public async openFinalHintIntegrator() {
+		return new OtdHlttIntegrator(this.path);
 	}
 }
 
 class OtdHlttPreStatAnalyzer implements IFinalHintPreStatAnalyzer {
-	constructor(private readonly preStat: HlttPreStatSink) {}
-	public async analyzeFontPreStat(font: string) {
-		const otd = await StreamJson.parse(fs.createReadStream(font));
+	constructor(private readonly path: string, private readonly sink: HlttCollector) {}
+	public async preStat() {
+		const otd = await StreamJson.parse(fs.createReadStream(this.path));
 		if (!otd.maxp) return;
-		this.preStat.maxFunctionDefs = Math.max(
-			this.preStat.maxFunctionDefs,
+		this.sink.preStatSink.maxFunctionDefs = Math.max(
+			this.sink.preStatSink.maxFunctionDefs,
 			otd.maxp.maxFunctionDefs || 0
 		);
-		this.preStat.maxTwilightPoints = Math.max(
-			this.preStat.maxTwilightPoints,
+		this.sink.preStatSink.maxTwilightPoints = Math.max(
+			this.sink.preStatSink.maxTwilightPoints,
 			otd.maxp.maxTwilightPoints || 0
 		);
-		this.preStat.maxStorage = Math.max(this.preStat.maxStorage, otd.maxp.maxStorage || 0);
-		this.preStat.maxStack = Math.max(this.preStat.maxStack, otd.maxp.maxStack || 0);
-		this.preStat.cvtSize = Math.max(this.preStat.cvtSize, otd.cvt_ ? otd.cvt_.length : 0);
+		this.sink.preStatSink.maxStorage = Math.max(
+			this.sink.preStatSink.maxStorage,
+			otd.maxp.maxStorage || 0
+		);
+		this.sink.preStatSink.maxStack = Math.max(
+			this.sink.preStatSink.maxStack,
+			otd.maxp.maxStack || 0
+		);
+		this.sink.preStatSink.cvtSize = Math.max(
+			this.sink.preStatSink.cvtSize,
+			otd.cvt_ ? otd.cvt_.length : 0
+		);
 	}
 }
 
@@ -88,7 +91,7 @@ class OtdHlttIntegrator implements IFinalHintIntegrator {
 		}
 	}
 
-	async apply(collector: IFinalHintCollector, session: IFinalHintSession) {
+	async apply(collector: IFinalHintSink, session: IFinalHintSinkSession) {
 		const hlttCollector = collector.dynamicCast(HlttCollector);
 		const hlttSession = session.dynamicCast(HlttSession);
 		if (hlttCollector && hlttSession) {
