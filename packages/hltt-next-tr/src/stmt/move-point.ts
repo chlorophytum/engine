@@ -1,13 +1,11 @@
 import { Assembler, TTI } from "@chlorophytum/hltt-next-backend";
-
 import { addPointIndex, pointRegisterNumber, setRpIfNeeded, setZone } from "../asm-util";
 import { ProgramScope } from "../scope";
 import { TrExp } from "../tr";
-
-import { TrStmtBase } from "./base";
+import { TrExprLikeStmtBase } from "./base";
 
 // Mdap : THandle -> Statement
-export class TrMdap extends TrStmtBase {
+export class TrMdap extends TrExprLikeStmtBase {
 	constructor(
 		private round: boolean,
 		private readonly point: TrExp,
@@ -15,7 +13,7 @@ export class TrMdap extends TrStmtBase {
 	) {
 		super();
 	}
-	public compile(asm: Assembler, ps: ProgramScope) {
+	protected compileImpl(asm: Assembler, ps: ProgramScope) {
 		this.point.compile(asm, ps);
 		setZone(asm, "zp0", this.fTwilight);
 		asm.prim(this.round ? TTI.MDAP_rnd : TTI.MDAP_noRnd, 1, 0);
@@ -25,7 +23,7 @@ export class TrMdap extends TrStmtBase {
 }
 
 // Miap : THandle, Cvt(Frac) -> Statement
-export class TrMiap extends TrStmtBase {
+export class TrMiap extends TrExprLikeStmtBase {
 	constructor(
 		private round: boolean,
 		private readonly point: TrExp,
@@ -34,7 +32,7 @@ export class TrMiap extends TrStmtBase {
 	) {
 		super();
 	}
-	public compile(asm: Assembler, ps: ProgramScope) {
+	protected compileImpl(asm: Assembler, ps: ProgramScope) {
 		addPointIndex(asm, ps, "zp0", this.point, this.fTwilight);
 		this.pCV.compile(asm, ps);
 		asm.prim(this.round ? TTI.MIAP_rnd : TTI.MIAP_noRnd, 2);
@@ -48,7 +46,7 @@ function mrpMask(rp0: boolean, minDist: boolean, round: boolean, distanceMode: 0
 }
 
 // Mdrp : THandle, THandle -> Statement
-export class TrMdrp extends TrStmtBase {
+export class TrMdrp extends TrExprLikeStmtBase {
 	constructor(
 		private rp0: boolean,
 		private minDist: boolean,
@@ -62,7 +60,7 @@ export class TrMdrp extends TrStmtBase {
 		super();
 	}
 
-	public compile(asm: Assembler, ps: ProgramScope) {
+	protected compileImpl(asm: Assembler, ps: ProgramScope) {
 		setRpIfNeeded(asm, ps, "zp0", "rp0", this.p0, this.p0Twilight);
 		addPointIndex(asm, ps, "zp1", this.point, this.pointTwilight);
 		asm.prim(TTI.MDRP_grey + mrpMask(this.rp0, this.minDist, this.round, this.distanceMode), 1);
@@ -77,7 +75,7 @@ export class TrMdrp extends TrStmtBase {
 }
 
 // Mirp : THandle, THandle, Cvt(Frac) -> Statement
-export class TrMirp extends TrStmtBase {
+export class TrMirp extends TrExprLikeStmtBase {
 	constructor(
 		private rp0: boolean,
 		private minDist: boolean,
@@ -92,7 +90,7 @@ export class TrMirp extends TrStmtBase {
 		super();
 	}
 
-	public compile(asm: Assembler, ps: ProgramScope) {
+	protected compileImpl(asm: Assembler, ps: ProgramScope) {
 		setRpIfNeeded(asm, ps, "zp0", "rp0", this.p0, this.p0Twilight);
 		addPointIndex(asm, ps, "zp1", this.point, this.pointTwilight);
 		this.pCV.compile(asm, ps);
@@ -109,7 +107,7 @@ export class TrMirp extends TrStmtBase {
 }
 
 // IP : THandle, THandle, THandle... -> Statement
-export class TrIp extends TrStmtBase {
+export class TrIp extends TrExprLikeStmtBase {
 	constructor(
 		private readonly p1: TrExp,
 		private readonly p1Twilight: boolean,
@@ -119,7 +117,7 @@ export class TrIp extends TrStmtBase {
 	) {
 		super();
 	}
-	public compile(asm: Assembler, ps: ProgramScope) {
+	protected compileImpl(asm: Assembler, ps: ProgramScope) {
 		setRpIfNeeded(asm, ps, "zp0", "rp1", this.p1, this.p1Twilight);
 		setRpIfNeeded(asm, ps, "zp1", "rp2", this.p2, this.p2Twilight);
 
@@ -148,7 +146,7 @@ class IpRun {
 
 	private setArity(n: number) {
 		if (n > 1) {
-			this.asm.push(n).prim(TTI.SLOOP, 1, 0);
+			this.asm.intro(n).prim(TTI.SLOOP, 1, 0);
 			this.asm.setRegister("loop", n);
 		}
 	}

@@ -104,11 +104,13 @@ export class HlttSessionImpl implements Typable<HlttSession> {
 			})
 			.computeDefinition(this.edsl.scope);
 		this.preProgramSegments = [];
+		this.getPreProgram(StatOnly);
 	}
 	private populateFpgm() {
 		// Perform compilation to populate FPGM entries
-		this.getPreProgram(StatOnly);
-		for (const gid of this.listGlyphNames()) this.getGlyphProgram(gid, StatOnly);
+		for (const gid of this.listGlyphNames()) {
+			this.getGlyphProgram(gid, StatOnly);
+		}
 	}
 
 	public *listGlyphNames() {

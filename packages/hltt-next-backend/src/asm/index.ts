@@ -49,7 +49,7 @@ export default class Assembler {
 		this.updateMaxStackHeight();
 		return this;
 	}
-	public push(...xs: PushValue[]) {
+	private push(...xs: PushValue[]) {
 		this.added(xs.length);
 		this.rawPush(...xs);
 		return this;
@@ -222,7 +222,7 @@ export default class Assembler {
 				const unstable = ir.codeGen(xs, rounds);
 				offsetChanged = offsetChanged || !!unstable;
 			}
-		} while (offsetChanged && rounds < 8);
+		} while (offsetChanged && rounds < 64);
 		if (offsetChanged) throw new Error("Cannot stabilize label offsets.");
 		return xs.getResult();
 	}

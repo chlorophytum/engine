@@ -22,12 +22,13 @@ test("Stmt: Variable set", t => {
 		PUSHB_1 1
 		ADD
 		WS
-			PUSHB_2 0 0
+			PUSHB_1 0
 			RS
 			PUSHB_1 1
 			SUB
 			PUSHB_1 3
 			WS
+			PUSHB_1 0
 			RS
 			PUSHB_1 1
 			SUB

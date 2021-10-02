@@ -1,17 +1,13 @@
 import { Assembler } from "@chlorophytum/hltt-next-backend";
-
+import { TrExprLikeStmtBase } from "./base";
 import { ProgramScope } from "../scope";
 import { TrExp } from "../tr";
 
-import { TrStmtBase } from "./base";
-
-export class TrExprStmt extends TrStmtBase {
+export class TrExprStmt extends TrExprLikeStmtBase {
 	constructor(private readonly expr: TrExp) {
 		super();
 	}
-	compile(asm: Assembler, ps: ProgramScope) {
-		const h0 = asm.softBlockBegin();
+	protected compileImpl(asm: Assembler, ps: ProgramScope) {
 		this.expr.compile(asm, ps);
-		asm.softBlockEnd(h0);
 	}
 }

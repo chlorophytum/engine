@@ -1,15 +1,13 @@
 import { Assembler, TTI } from "@chlorophytum/hltt-next-backend";
-
 import { ProgramScope } from "../scope";
 import { TrExp, TrVar } from "../tr";
+import { TrExprLikeStmtBase } from "./base";
 
-import { TrStmtBase } from "./base";
-
-export class TrArrayInit extends TrStmtBase {
+export class TrArrayInit extends TrExprLikeStmtBase {
 	constructor(readonly arr: TrVar, private readonly parts: TrExp[], private complex?: boolean) {
 		super();
 	}
-	compile(asm: Assembler, ps: ProgramScope) {
+	protected compileImpl(asm: Assembler, ps: ProgramScope) {
 		this.arr.compilePtr(asm, ps);
 		for (let j = 0; j < this.parts.length; j++) {
 			this.parts[j].compile(asm, ps);
@@ -17,7 +15,7 @@ export class TrArrayInit extends TrStmtBase {
 		// Stack: pArray a b c ... x
 		for (let k = 0; k < this.parts.length; k++) {
 			asm.needAccurateStackHeight();
-			asm.push(this.parts.length - k - 1, this.parts.length + 2 - k);
+			asm.intro(this.parts.length - k - 1, this.parts.length + 2 - k);
 			asm.prim(TTI.CINDEX).deleted(1).added(1);
 			// pArray a b c ... x pArray
 			asm.prim(TTI.ADD).deleted(2).added(1);
@@ -29,11 +27,11 @@ export class TrArrayInit extends TrStmtBase {
 	}
 }
 
-export class TrArrayInitGetVariation extends TrStmtBase {
+export class TrArrayInitGetVariation extends TrExprLikeStmtBase {
 	constructor(readonly arr: TrVar) {
 		super();
 	}
-	public compile(asm: Assembler, ps: ProgramScope) {
+	protected compileImpl(asm: Assembler, ps: ProgramScope) {
 		const arity = ps.global.getVariationArity;
 
 		this.arr.compilePtr(asm, ps);
@@ -42,7 +40,7 @@ export class TrArrayInitGetVariation extends TrStmtBase {
 		// Stack: pArray a b c ... x
 		for (let k = 0; k < arity; k++) {
 			asm.needAccurateStackHeight();
-			asm.push(arity - k - 1, arity + 2 - k);
+			asm.intro(arity - k - 1, arity + 2 - k);
 			asm.prim(TTI.CINDEX).deleted(1).added(1);
 			// pArray a b c ... x pArray
 			asm.prim(TTI.ADD).deleted(2).added(1);

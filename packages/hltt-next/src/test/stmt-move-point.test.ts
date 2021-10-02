@@ -17,10 +17,12 @@ test("Stmt: MDAP 1", t => {
 		t,
 		f1,
 		`
-            PUSHB_5 3 0 2 1 1
+            PUSHB_2 1 1
             SZP0
             MDAP_noRnd
+			PUSHB_1 2
             MDAP_noRnd
+			PUSHB_2 3 0
             SZP0
             MDAP_noRnd
         `
@@ -38,12 +40,14 @@ test("Stmt: MDRP", t => {
 		t,
 		f1,
 		`
-            PUSHB_7 3 1 3 2 1 1 1
+            PUSHB_4 2 1 1 1
             SRP0
             SZP0
             SZP1
             MDRP_grey
+			PUSHB_1 3
             MDRP_grey
+			PUSHB_2 3 1
             SRP0
             MDRP_grey
         `
@@ -59,14 +63,13 @@ test("Stmt: IP", t => {
 		t,
 		f1,
 		`
-		NPUSHB 9 4 5 0 3 1 1 2 1 1
+		NPUSHB 10 4 5 0 2 3 1 1 2 1 1
 		SRP1
 		SZP0
 		SRP2
 		SZP1
 		SZP2
 		IP
-		PUSHB_1 2
 		SLOOP
 		SZP2
 		IP

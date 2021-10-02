@@ -14,6 +14,7 @@ export class TrLastReturn extends TrStmtBase {
 		return true;
 	}
 	compile(asm: Assembler, ps: ProgramScope) {
+		asm.label();
 		if (this.val) {
 			this.val.compile(asm, ps);
 			const h = asm.needAccurateStackHeight();
@@ -61,9 +62,8 @@ export class TrReturn extends TrLastReturn {
 		if (!ps.exitLabel) throw new TypeError("Exit label not defined");
 		super.compile(asm, ps);
 		const here = asm.createLabel();
-		asm.push(asm.createLabelDifference(here, ps.exitLabel));
+		asm.intro(asm.createLabelDifference(here, ps.exitLabel));
 		asm.blockBegin(here);
-		asm.prim(TTI.JMPR);
-		asm.deleted(1);
+		asm.prim(TTI.JMPR).deleted(1);
 	}
 }

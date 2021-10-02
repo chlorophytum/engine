@@ -9,3 +9,12 @@ export abstract class TrStmtBase implements TrStmt {
 	}
 	abstract compile(asm: Assembler, ps: ProgramScope): void;
 }
+
+export abstract class TrExprLikeStmtBase extends TrStmtBase {
+	protected abstract compileImpl(asm: Assembler, ps: ProgramScope): void;
+	compile(asm: Assembler, ps: ProgramScope) {
+		const h0 = asm.softBlockBegin();
+		this.compileImpl(asm, ps);
+		asm.softBlockEnd(h0);
+	}
+}

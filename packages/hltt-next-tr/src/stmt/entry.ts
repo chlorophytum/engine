@@ -1,9 +1,7 @@
 import { Assembler, TTI } from "@chlorophytum/hltt-next-backend";
-
 import { ProgramScope } from "../scope";
 import * as StdLib from "../std-lib";
-
-import { TrStmtBase } from "./base";
+import { TrExprLikeStmtBase, TrStmtBase } from "./base";
 
 export class TrEntry extends TrStmtBase {
 	compile(asm: Assembler, ps: ProgramScope) {
@@ -20,9 +18,9 @@ export class TrEntry extends TrStmtBase {
 	}
 }
 
-export class TrRootEntry extends TrStmtBase {
-	compile(asm: Assembler, ps: ProgramScope) {
-		asm.push(
+export class TrRootEntry extends TrExprLikeStmtBase {
+	protected compileImpl(asm: Assembler, ps: ProgramScope) {
+		asm.intro(
 			ps.global.sp,
 			ps.global.storageStackFrameStart +
 				ps.global.storageStackFrameSize +

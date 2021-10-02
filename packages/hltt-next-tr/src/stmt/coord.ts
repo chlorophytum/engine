@@ -1,12 +1,10 @@
 import { Assembler, TTI } from "@chlorophytum/hltt-next-backend";
-
 import { setZone } from "../asm-util";
 import { ProgramScope } from "../scope";
 import { TrExp } from "../tr";
+import { TrExprLikeStmtBase } from "./base";
 
-import { TrStmtBase } from "./base";
-
-export class TrScfs extends TrStmtBase {
+export class TrScfs extends TrExprLikeStmtBase {
 	constructor(
 		private readonly z: TrExp,
 		private readonly fTwilight: boolean,
@@ -14,7 +12,7 @@ export class TrScfs extends TrStmtBase {
 	) {
 		super();
 	}
-	compile(asm: Assembler, ps: ProgramScope) {
+	protected compileImpl(asm: Assembler, ps: ProgramScope) {
 		this.z.compile(asm, ps);
 		this.dist.compile(asm, ps);
 		setZone(asm, "zp2", this.fTwilight);

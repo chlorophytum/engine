@@ -1,16 +1,14 @@
 import { Assembler, TTI } from "@chlorophytum/hltt-next-backend";
-
 import { setZone } from "../asm-util";
 import { ProgramScope } from "../scope";
 import { TrExp } from "../tr";
+import { TrExprLikeStmtBase } from "./base";
 
-import { TrStmtBase } from "./base";
-
-export class TrDeltas extends TrStmtBase {
+export class TrDeltas extends TrExprLikeStmtBase {
 	constructor(readonly op: TTI, private readonly targets: [TrExp, boolean, TrExp][]) {
 		super();
 	}
-	public compile(asm: Assembler, ps: ProgramScope) {
+	protected compileImpl(asm: Assembler, ps: ProgramScope) {
 		const run = new TwilightRun(ps, this.op, asm);
 		for (const [z, tw, arg] of this.targets) {
 			run.intro(z, tw, arg);

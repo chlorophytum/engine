@@ -49,13 +49,16 @@ export class ProgramAssembly {
 
 	public compileFunction<F>(format: InstrFormat<F>, iFn: number, pr: ProgramRecord) {
 		const asm = new Assembler();
-		asm.push(iFn).prim(TTI.FDEF, 1, 0);
-
 		const [ps, tr] = pr;
 		ps.exitLabel = asm.createLabel();
-		tr.compile(asm, ps);
-		asm.label(ps.exitLabel);
-		asm.prim(TTI.ENDF, 0, 0);
+
+		{
+			asm.intro(iFn).prim(TTI.FDEF, 1, 0);
+			tr.compile(asm, ps);
+			asm.label(ps.exitLabel);
+			asm.prim(TTI.ENDF, 0, 0);
+		}
+
 		this.updateStat(ps, asm.maxStackHeight);
 		return asm.codeGen(format.createSink());
 	}
