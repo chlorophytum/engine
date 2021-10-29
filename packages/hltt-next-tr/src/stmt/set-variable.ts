@@ -1,6 +1,8 @@
 import { Assembler } from "@chlorophytum/hltt-next-backend";
+
 import { ProgramScope } from "../scope";
 import { TrExp, TrVar } from "../tr";
+
 import { TrExprLikeStmtBase } from "./base";
 
 export class TrSetVariable extends TrExprLikeStmtBase {

@@ -1,6 +1,8 @@
 import { Assembler, TTI } from "@chlorophytum/hltt-next-backend";
+
 import { ProgramScope } from "../scope";
 import { TrExp, TrVar } from "../tr";
+
 import { TrExprLikeStmtBase } from "./base";
 
 export class TrArrayInit extends TrExprLikeStmtBase {

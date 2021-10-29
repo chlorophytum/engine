@@ -1,6 +1,8 @@
 import { Assembler, TTI } from "@chlorophytum/hltt-next-backend";
+
 import { ProgramScope } from "../scope";
 import * as StdLib from "../std-lib";
+
 import { TrExprLikeStmtBase, TrStmtBase } from "./base";
 
 export class TrEntry extends TrStmtBase {

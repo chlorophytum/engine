@@ -1,7 +1,9 @@
 import { Assembler } from "@chlorophytum/hltt-next-backend";
-import { TrExprLikeStmtBase } from "./base";
+
 import { ProgramScope } from "../scope";
 import { TrExp } from "../tr";
+
+import { TrExprLikeStmtBase } from "./base";
 
 export class TrExprStmt extends TrExprLikeStmtBase {
 	constructor(private readonly expr: TrExp) {
