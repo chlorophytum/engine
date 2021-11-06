@@ -1,6 +1,6 @@
 import { InstrSink, TTI } from "../instr";
 
-import { CPushValue, PushValue, TtAsmInstr } from "./asm-instr";
+import { IPushValue, PushValue, TtAsmInstr } from "./asm-instr";
 import { TtCPushValueRef, TtLabel, TtLabelDifference } from "./label";
 import { PrimIR, PseudoPrimIR } from "./prim";
 import { PushSequence } from "./push";
@@ -201,7 +201,7 @@ export default class Assembler {
 	public createLabelDifference(a: TtLabel, b: TtLabel) {
 		return new TtLabelDifference(a, b);
 	}
-	public refValue(cpv: CPushValue) {
+	public refValue(cpv: IPushValue) {
 		this.ir(new TtCPushValueRef(cpv));
 		return this;
 	}

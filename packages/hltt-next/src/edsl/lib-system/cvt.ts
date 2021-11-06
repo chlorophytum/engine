@@ -12,7 +12,9 @@ class CvDeclaration<T extends TArith> implements Decl {
 	public readonly symbol = Symbol();
 
 	register(gs: GlobalScope) {
-		if (!gs.cvt.haveDeclared(this.symbol)) gs.cvt.declare(this.size, this.symbol);
+		if (!gs.cvt.haveDeclared(this.symbol)) {
+			gs.cvt.declare(this.size, this.symbol);
+		}
 		return this.symbol;
 	}
 }

@@ -16,12 +16,14 @@ export type RawCallableFunc<Ts extends TT[], Tr extends TT> = (
 ) => Expr<Tr>;
 export type CallableFunc<Ts extends TT[], Tr extends TT> = ProgramDef &
 	RawCallableFunc<Ts, Tr> & {
+		debugName: (n: string) => CallableFunc<Ts, Tr>;
 		def: (fb: FuncBody<Ts, Tr>) => CallableFunc<Ts, Tr>;
 	};
 
 export type RawCallableProc<Ts extends TT[]> = (...xs: WrapExprOrLiteral<Ts>) => Stmt;
 export type CallableProc<Ts extends TT[]> = ProgramDef &
 	RawCallableProc<Ts> & {
+		debugName: (n: string) => CallableProc<Ts>;
 		returns: <Tr extends TT>(t: Tr) => CallableFunc<Ts, Tr>;
 		def: (fp: ProcBody<Ts>) => CallableProc<Ts>;
 	};

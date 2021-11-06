@@ -23,8 +23,8 @@ test("Libs: Recursion", t => {
 });
 
 test("Libs: Mutual Recursion", t => {
-	const f1 = Func(Int);
-	const f2 = Func(Int);
+	const f1 = Func(Int).debugName("f1");
+	const f2 = Func(Int).debugName("f2");
 	f1.def(function* ($, x) {
 		yield f2(1);
 	});
@@ -46,6 +46,25 @@ test("Libs: Mutual Recursion", t => {
 			f2,
 			`
 			PUSHB_2 1 1
+			CALL
+			POP
+        	`
+		]
+	);
+	MultiStmtTestLoop.relocatable(
+		t,
+		[
+			f1,
+			`
+			PUSHW_2 1 {Function f2: 0}
+			CALL
+			POP
+			`
+		],
+		[
+			f2,
+			`
+			PUSHW_2 1 {Function f1: 1}
 			CALL
 			POP
         	`

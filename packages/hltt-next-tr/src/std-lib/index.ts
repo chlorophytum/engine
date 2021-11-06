@@ -3,7 +3,7 @@ import { Assembler, TTI } from "@chlorophytum/hltt-next-backend";
 import { ProgramScope } from "../scope";
 import { TrStmt } from "../tr";
 
-export const PtrLocal = Symbol("Stdlib_PtrLocal");
+export const PtrLocal = Symbol("HLTT::Stdlib::PtrLocal");
 export class TrStdLib_PtrLocal implements TrStmt {
 	willReturnAfter() {
 		return false;
@@ -23,7 +23,7 @@ export class TrStdLib_PtrLocal implements TrStmt {
 	}
 }
 
-export const AbiProlog = Symbol("StdLib_AbiProlog");
+export const AbiProlog = Symbol("HLTT::StdLib::AbiProlog");
 export class TrStdLib_AbiProlog implements TrStmt {
 	willReturnAfter() {
 		return false;
@@ -47,7 +47,7 @@ export class TrStdLib_AbiProlog implements TrStmt {
 	}
 }
 
-export const AbiEpilog = Symbol("StdLib_AbiEpilog");
+export const AbiEpilog = Symbol("HLTT::StdLib::AbiEpilog");
 export class TrStdLib_AbiEpilog implements TrStmt {
 	willReturnAfter() {
 		return false;
@@ -72,7 +72,7 @@ export class TrStdLib_AbiEpilog implements TrStmt {
 	}
 }
 
-export const AbiEpilogPR = Symbol("StdLib_AbiEpilog_PopReturn");
+export const AbiEpilogPR = Symbol("HLTT::StdLib::AbiEpilog_PopReturn");
 export class TrStdLib_AbiEpilogPR implements TrStmt {
 	willReturnAfter() {
 		return false;
@@ -90,7 +90,7 @@ export class TrStdLib_AbiEpilogPR implements TrStmt {
 	}
 }
 
-export const AbiEpilogPNR = Symbol("StdLib_AbiEpilog_PopNoReturn");
+export const AbiEpilogPNR = Symbol("HLTT::StdLib::AbiEpilog_PopNoReturn");
 export class TrStdLib_AbiEpilogPNR implements TrStmt {
 	willReturnAfter() {
 		return false;

@@ -27,25 +27,35 @@ import {
 } from "./interfaces";
 
 export function Func<Ts extends TT[]>(...parameterSig: Ts): CallableProc<Ts> {
-	const decl = new ProcedureDeclaration(parameterSig);
+	return procDef(null, parameterSig);
+}
+
+function procDef<Ts extends TT[]>(debugName: null | string, parameterSig: Ts): CallableProc<Ts> {
+	const decl = new ProcedureDeclaration(debugName, parameterSig);
 	const callable = Object.assign((...xs: WrapExprOrLiteral<Ts>) => decl.createCall(xs), {
 		get symbol() {
 			return decl.symbol;
 		},
+		debugName: (name: string) => procDef(name, parameterSig),
 		register: (gs: GlobalScope) => decl.register(gs),
 		computeDefinition: (gs: GlobalScope) => decl.computeDefinition(gs),
 		def: (fb: ProcBody<Ts>) => ((decl.body = fb), callable),
-		returns: <Tr extends TT>(tr: Tr) => funcDef(parameterSig, tr)
+		returns: <Tr extends TT>(tr: Tr) => funcDef(debugName, parameterSig, tr)
 	});
 	return callable;
 }
 
-function funcDef<Ts extends TT[], Tr extends TT>(parameterSig: Ts, ret: Tr): CallableFunc<Ts, Tr> {
-	const decl = new FunctionDeclaration(parameterSig, ret);
+function funcDef<Ts extends TT[], Tr extends TT>(
+	debugName: null | string,
+	parameterSig: Ts,
+	ret: Tr
+): CallableFunc<Ts, Tr> {
+	const decl = new FunctionDeclaration(debugName, parameterSig, ret);
 	const callable = Object.assign((...xs: WrapExprOrLiteral<Ts>) => decl.createCall(xs), {
 		get symbol() {
 			return decl.symbol;
 		},
+		debugName: (name: string) => funcDef(name, parameterSig, ret),
 		register: (gs: GlobalScope) => decl.register(gs),
 		computeDefinition: (gs: GlobalScope) => decl.computeDefinition(gs),
 		def: (fb: FuncBody<Ts, Tr>) => ((decl.body = fb), callable)
@@ -54,9 +64,16 @@ function funcDef<Ts extends TT[], Tr extends TT>(parameterSig: Ts, ret: Tr): Cal
 }
 
 class FunctionDeclaration<Ts extends TT[], Tr extends TT> implements ProgramDef {
-	constructor(public readonly argumentTypes: Ts, public readonly returnType: Tr) {}
 	public body: null | FuncBody<Ts, Tr> = null;
-	public readonly symbol = Symbol();
+	public readonly symbol: symbol;
+
+	constructor(
+		debugName: null | string,
+		public readonly parameterSig: Ts,
+		public readonly returnType: Tr
+	) {
+		this.symbol = Symbol(debugName || undefined);
+	}
 
 	register(gs: GlobalScope) {
 		populateInterfaceImpl(gs, this.symbol, this);
@@ -69,20 +86,23 @@ class FunctionDeclaration<Ts extends TT[], Tr extends TT> implements ProgramDef 
 		const ps = new ProgramScope(gs, false);
 		const pps = new FuncScopeProxy<Tr>(this.returnType, ps);
 
-		const params = initParams(ps, this.argumentTypes) as WrapExpr<Ts>;
+		const params = initParams(ps, this.parameterSig) as WrapExpr<Ts>;
 		const sBody = Array.from(this.body(pps, ...params)).map(x => castExprStmt(x).tr);
 		const trBody = new TrSeq(true, sBody).asFunctionBody(ps);
 		return [ps, trBody];
 	}
 	createCall(args: (number | boolean | Expr<TT>)[]): Expr<Tr> {
-		return ExprImpl.create(this.returnType, createCallImpl(this, this.argumentTypes, args, 1));
+		return ExprImpl.create(this.returnType, createCallImpl(this, this.parameterSig, args, 1));
 	}
 }
 
 class ProcedureDeclaration<Ts extends TT[]> implements ProgramDef {
-	constructor(public readonly argumentTypes: Ts) {}
 	public body: null | ProcBody<Ts> = null;
-	public readonly symbol = Symbol();
+	public readonly symbol: symbol;
+
+	constructor(debugName: null | string, public readonly parameterSig: Ts) {
+		this.symbol = Symbol(debugName || undefined);
+	}
 
 	register(gs: GlobalScope) {
 		populateInterfaceImpl(gs, this.symbol, this);
@@ -95,13 +115,13 @@ class ProcedureDeclaration<Ts extends TT[]> implements ProgramDef {
 		const ps = new ProgramScope(gs, true);
 		const pps = new ProcScopeProxy(ps);
 
-		const params = initParams(ps, this.argumentTypes) as WrapExpr<Ts>;
+		const params = initParams(ps, this.parameterSig) as WrapExpr<Ts>;
 		const sBody = Array.from(this.body(pps, ...params)).map(x => castExprStmt(x).tr);
 		const trBody = new TrSeq(true, sBody).asFunctionBody(ps);
 		return [ps, trBody];
 	}
 	createCall(args: (number | boolean | Expr<TT>)[]) {
-		return new Stmt(new TrExprStmt(createCallImpl(this, this.argumentTypes, args, 0)));
+		return new Stmt(new TrExprStmt(createCallImpl(this, this.parameterSig, args, 0)));
 	}
 }
 

@@ -1,6 +1,10 @@
 import { IFinalHintSink, IFinalHintStore, Variation } from "@chlorophytum/arch";
 import { ProgramAssembly, TtStat } from "@chlorophytum/hltt-next";
-import { InstrFormat } from "@chlorophytum/hltt-next-backend";
+import {
+	InstrFormat,
+	offsetRelocatablePushValue,
+	resolveRelocatablePushValue
+} from "@chlorophytum/hltt-next-backend";
 import { implDynamicCast, Typable, TypeRep } from "typable";
 
 import { HlttPreStatSink } from "./pre-stat-sink";
@@ -16,13 +20,17 @@ export interface HlttCollector extends IFinalHintSink, IFinalHintStore {
 	getStats(): TtStat;
 }
 
+export interface HlttCollectorOptions {
+	generateRelocatableCode?: boolean;
+}
+
 export class HlttCollectorImpl implements Typable<HlttCollector> {
 	public readonly format = "hltt";
 	public preStatSink = new HlttPreStatSink();
 	private programAssembly: null | ProgramAssembly = null;
 	private shared = new SharedGlyphPrograms();
 
-	constructor() {}
+	constructor(private readonly options: HlttCollectorOptions) {}
 	public dynamicCast<U>(tr: TypeRep<U>): undefined | U {
 		return implDynamicCast(tr, this, HlttCollector);
 	}
@@ -30,6 +38,7 @@ export class HlttCollectorImpl implements Typable<HlttCollector> {
 	private getProgramAssembly() {
 		if (this.programAssembly) return this.programAssembly;
 		this.programAssembly = new ProgramAssembly({
+			generateRelocatableCode: this.options.generateRelocatableCode,
 			maxFunctionDefs: this.preStatSink.maxFunctionDefs,
 			maxStorage: this.preStatSink.maxStorage,
 			maxTwilightPoints: this.preStatSink.maxTwilightPoints,
@@ -66,7 +75,8 @@ export class HlttCollectorImpl implements Typable<HlttCollector> {
 			const iCv = pa.scope.cvt.resolve(variable);
 			if (iCv === undefined) continue;
 			for (let offset = 0; offset < valueArr.length; offset++) {
-				cv[iCv + offset] = valueArr[offset] || 0;
+				const idx = resolveRelocatablePushValue(offsetRelocatablePushValue(iCv, offset));
+				cv[idx] = valueArr[offset] || 0;
 			}
 		}
 		return cv;

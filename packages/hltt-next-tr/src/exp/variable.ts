@@ -1,4 +1,4 @@
-import { Assembler, TTI } from "@chlorophytum/hltt-next-backend";
+import { Assembler, offsetRelocatablePushValue, TTI } from "@chlorophytum/hltt-next-backend";
 
 import { Decl, ProgramScope } from "../scope";
 import * as StdLib from "../std-lib";
@@ -97,7 +97,7 @@ export class TrGlobalPtr implements TrExp {
 	compile(asm: Assembler, ps: ProgramScope) {
 		const id = ps.global.storage.resolve(this.symbol);
 		if (id == null) throw new Error(`Global storage ${String(this.symbol)} not declared.`);
-		asm.intro(id + this.offset);
+		asm.intro(offsetRelocatablePushValue(id, this.offset));
 	}
 }
 
@@ -113,7 +113,7 @@ export class TrCvtPtr implements TrExp {
 		const symbol = this.decl.register(ps.global);
 		const id = ps.global.cvt.resolve(symbol);
 		if (id == null) throw new Error(`Cvt ${String(symbol)} not declared.`);
-		asm.intro(id + this.offset);
+		asm.intro(offsetRelocatablePushValue(id, this.offset));
 	}
 }
 

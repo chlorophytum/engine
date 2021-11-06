@@ -260,13 +260,26 @@ export enum TTI {
 export interface InstrFormat<R> {
 	createSink(): InstrSink<R>;
 }
+
+export enum RelocationScope {
+	Abi,
+	Function,
+	Cv,
+	GlobalStorage,
+	Twilight
+}
+export type RelocationSymbol = {
+	scope: RelocationScope;
+	symbol: symbol;
+	offset: number;
+};
 export interface InstrSink<R> {
 	getResult(): R;
 	getLength(): number;
 	reset(): void;
 	addOp(x: TTI): void;
-	addByte(x: number): void;
-	addWord(x: number): void;
+	addByte(x: number, relocationSymbol?: null | undefined | RelocationSymbol): void;
+	addWord(x: number, relocationSymbol?: null | undefined | RelocationSymbol): void;
 }
 
 export class BinaryInstrSink implements InstrSink<Uint8Array> {
@@ -314,12 +327,24 @@ export class TextInstrSink implements InstrSink<string> {
 		this.s += "\n" + (this.fOffset ? this.size + " : " : "") + TTI[x] + " ";
 		this.size++;
 	}
-	addByte(x: number) {
-		this.s += (x & 0xff) + " ";
+	addByte(x: number, rs: RelocationSymbol) {
+		let sX = String(x & 0xff);
+		if (rs) {
+			const sOffset = rs.offset ? `+${rs.offset}` : ``;
+			const sReloc = `${RelocationScope[rs.scope]} ${rs.symbol.description}${sOffset}`;
+			sX = `{${sReloc}: ${sX}}`;
+		}
+		this.s += sX + " ";
 		this.size++;
 	}
-	addWord(x: number) {
-		this.s += ((x << 16) >> 16) + " ";
+	addWord(x: number, rs: RelocationSymbol) {
+		let sX = String((x << 16) >> 16);
+		if (rs) {
+			const sOffset = rs.offset ? `+${rs.offset}` : ``;
+			const sReloc = `${RelocationScope[rs.scope]} ${rs.symbol.description}${sOffset}`;
+			sX = `{${sReloc}: ${sX}}`;
+		}
+		this.s += sX + " ";
 		this.size += 2;
 	}
 }

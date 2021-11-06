@@ -1,8 +1,14 @@
-import { TtLabel } from "@chlorophytum/hltt-next-backend";
+import {
+	RelocatablePushValue,
+	RelocationScope,
+	TtLabel,
+	TtRelocatable
+} from "@chlorophytum/hltt-next-backend";
 
 import { TrStmt } from "./tr";
 
 export interface GsBaseStats {
+	generateRelocatableCode: boolean;
 	varDimensionCount: number;
 	fpgm: number;
 	cvt: number;
@@ -24,13 +30,31 @@ export type ProgramDef = Def<ProgramRecord>;
 export class GlobalScope {
 	constructor(bases: GsBaseStats) {
 		// Initialize SP storage index and GETVARIATION arity
-		this.sp = bases.storage;
+		this.sp = bases.generateRelocatableCode
+			? new TtRelocatable(RelocationScope.Abi, Symbol("HLTT::ABI::SP"), bases.storage, 0)
+			: bases.storage;
 		this.getVariationArity = bases.varDimensionCount;
 		// Initialize symbol tables
-		this.storage = new SimpleSymbolTable(1 + bases.storage);
-		this.cvt = new SimpleSymbolTable(bases.cvt);
-		this.fpgm = new DefinesSymbolTable<ProgramDef>(bases.fpgm);
-		this.twilightPoints = new SimpleSymbolTable(bases.twilights);
+		this.storage = new RelocatableSymbolTable(
+			RelocationScope.GlobalStorage,
+			bases.generateRelocatableCode,
+			1 + bases.storage
+		);
+		this.cvt = new RelocatableSymbolTable(
+			RelocationScope.Cv,
+			bases.generateRelocatableCode,
+			bases.cvt
+		);
+		this.fpgm = new DefinesSymbolTable<ProgramDef>(
+			RelocationScope.Function,
+			bases.generateRelocatableCode,
+			bases.fpgm
+		);
+		this.twilightPoints = new RelocatableSymbolTable(
+			RelocationScope.Twilight,
+			bases.generateRelocatableCode,
+			bases.twilights
+		);
 	}
 	public get storageStackFrameStart() {
 		return this.storage.base;
@@ -38,12 +62,12 @@ export class GlobalScope {
 	public get storageStackFrameSize() {
 		return this.storage.size;
 	}
-	public readonly sp: number;
+	public readonly sp: RelocatablePushValue;
 	public readonly getVariationArity: number;
-	public readonly storage: SimpleSymbolTable;
-	public readonly cvt: SimpleSymbolTable;
+	public readonly storage: RelocatableSymbolTable;
+	public readonly cvt: RelocatableSymbolTable;
 	public readonly fpgm: DefinesSymbolTable<ProgramDef>;
-	public readonly twilightPoints: SimpleSymbolTable;
+	public readonly twilightPoints: RelocatableSymbolTable;
 }
 
 export class ProgramScope {
@@ -60,13 +84,13 @@ export class ProgramScope {
 }
 
 // Symbol tables
-export class SimpleSymbolTable {
+export abstract class SymbolTableBase<T> {
 	constructor(public readonly base: number) {
 		this.m_size = base;
 	}
 
-	private m_size: number;
-	private readonly mapping = new Map<symbol, number>();
+	protected m_size: number;
+	protected readonly mapping = new Map<symbol, number>();
 
 	public get size() {
 		return this.m_size;
@@ -83,38 +107,44 @@ export class SimpleSymbolTable {
 		return symbol;
 	}
 
-	resolve(symbol: symbol) {
+	abstract resolve(symbol: symbol): undefined | T;
+}
+
+export class SimpleSymbolTable extends SymbolTableBase<number> {
+	constructor(base: number) {
+		super(base);
+	}
+
+	resolve(symbol: symbol): undefined | number {
 		return this.mapping.get(symbol);
 	}
 }
 
+export class RelocatableSymbolTable extends SymbolTableBase<RelocatablePushValue> {
+	constructor(
+		private readonly scope: RelocationScope,
+		protected readonly fRelocatable: boolean,
+		base: number
+	) {
+		super(base);
+	}
+
+	resolve(symbol: symbol): undefined | RelocatablePushValue {
+		const s = this.mapping.get(symbol);
+		if (s != null && this.fRelocatable) {
+			return new TtRelocatable(this.scope, symbol, s, 0);
+		} else {
+			return s;
+		}
+	}
+}
+
 // Symbol table with defines
-export class DefinesSymbolTable<T> {
-	constructor(public readonly base: number) {
-		this.m_size = base;
+export class DefinesSymbolTable<T> extends RelocatableSymbolTable {
+	constructor(scope: RelocationScope, fRelocatable: boolean, base: number) {
+		super(scope, fRelocatable, base);
 	}
-
-	private m_size: number;
-	private readonly mapping = new Map<symbol, number>();
-	private readonly definitions = new Map<symbol, T>();
-
-	public get size() {
-		return this.m_size;
-	}
-	symbols() {
-		return this.mapping.keys();
-	}
-	haveDeclared(symbol: symbol) {
-		return this.mapping.has(symbol);
-	}
-	declare(varSize: number, symbol: symbol) {
-		this.mapping.set(symbol, this.m_size);
-		this.m_size += varSize;
-		return symbol;
-	}
-	resolve(symbol: symbol) {
-		return this.mapping.get(symbol);
-	}
+	protected readonly definitions = new Map<symbol, T>();
 
 	enumDef(): IterableIterator<[symbol, T]> {
 		return this.definitions[Symbol.iterator]();

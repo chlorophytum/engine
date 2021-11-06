@@ -2,19 +2,35 @@ import { Assembler, TextInstr, TextInstrSink } from "@chlorophytum/hltt-next-bac
 import { Def, GlobalScope, ProgramRecord } from "@chlorophytum/hltt-next-tr";
 import { ExecutionContext } from "ava";
 
-export function StmtTestLoop(
-	t: ExecutionContext<unknown>,
-	f1: Def<ProgramRecord>,
-	compiled: string
-) {
-	return MultiStmtTestLoop(t, [f1, compiled]);
-}
+export const StmtTestLoop = Object.assign(
+	(t: ExecutionContext<unknown>, f1: Def<ProgramRecord>, compiled: string) => {
+		return MultiStmtTestLoopImpl(t, false, [[f1, compiled]]);
+	},
+	{
+		relocatable(t: ExecutionContext<unknown>, f1: Def<ProgramRecord>, compiled: string) {
+			return MultiStmtTestLoopImpl(t, true, [[f1, compiled]]);
+		}
+	}
+);
 
-export function MultiStmtTestLoop(
+export const MultiStmtTestLoop = Object.assign(
+	(t: ExecutionContext<unknown>, ...pairs: [Def<ProgramRecord>, string][]) => {
+		return MultiStmtTestLoopImpl(t, false, pairs);
+	},
+	{
+		relocatable(t: ExecutionContext<unknown>, ...pairs: [Def<ProgramRecord>, string][]) {
+			return MultiStmtTestLoopImpl(t, true, pairs);
+		}
+	}
+);
+
+function MultiStmtTestLoopImpl(
 	t: ExecutionContext<unknown>,
-	...pairs: [Def<ProgramRecord>, string][]
+	generateRelocatableCode: boolean,
+	pairs: [Def<ProgramRecord>, string][]
 ) {
 	const gs = new GlobalScope({
+		generateRelocatableCode,
 		varDimensionCount: 0,
 		fpgm: 0,
 		cvt: 0,

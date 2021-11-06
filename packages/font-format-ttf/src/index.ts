@@ -5,15 +5,20 @@ import {
 	IFontFormat,
 	Plugins
 } from "@chlorophytum/arch";
-import { CHlttFinalHintFormat, HlttCollector } from "@chlorophytum/final-hint-format-hltt";
+import {
+	CHlttFinalHintFormat,
+	HlttCollector,
+	HlttFinalHintFormatOptions
+} from "@chlorophytum/final-hint-format-hltt";
 
 import { TtfFontLoader } from "./plugin-impl/font-loader";
 import { TtfInstrIntegrator } from "./plugin-impl/instruction-integrator";
 import { TtfPreStatAnalyzer } from "./plugin-impl/pre-stat";
 
 class TtfFontFormat implements IFontFormat {
+	constructor(private readonly options: HlttFinalHintFormatOptions) {}
 	public async getFinalHintFormat(): Promise<IFinalHintFormat> {
-		return new CHlttFinalHintFormat();
+		return new CHlttFinalHintFormat(this.options);
 	}
 	public async connectFont(path: string, identifier: string) {
 		return new TtfFontConnection(path, identifier);
@@ -39,5 +44,9 @@ class TtfFontConnection implements IFontConnection {
 }
 
 export const FontFormatPlugin: Plugins.IFontFormatPlugin = {
-	load: async () => new TtfFontFormat()
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	load: async (loader: Plugins.IAsyncModuleLoader, parameters: any) =>
+		new TtfFontFormat({
+			generateRelocatableCode: Boolean(parameters?.generateRelocatableCode)
+		})
 };

@@ -1,4 +1,4 @@
-import { CPushValue, TtAsmInstr } from "./asm-instr";
+import { IPushValue, TtAsmInstr } from "./asm-instr";
 
 export class TtLabel implements TtAsmInstr {
 	offset: number = 0;
@@ -12,7 +12,7 @@ export class TtLabel implements TtAsmInstr {
 	}
 }
 
-export class TtLabelDifference implements CPushValue {
+export class TtLabelDifference implements IPushValue {
 	constructor(private a: TtLabel, private b: TtLabel) {}
 	get allowByte() {
 		return this.b.allowByte && this.a.allowByte;
@@ -20,10 +20,13 @@ export class TtLabelDifference implements CPushValue {
 	resolve() {
 		return this.b.offset - this.a.offset;
 	}
+	asRelocatable() {
+		return undefined;
+	}
 }
 
 export class TtCPushValueRef implements TtAsmInstr {
-	constructor(private cpv: CPushValue) {}
+	constructor(private cpv: IPushValue) {}
 	last: number | undefined = undefined;
 	codeGen() {
 		const current = this.cpv.resolve();

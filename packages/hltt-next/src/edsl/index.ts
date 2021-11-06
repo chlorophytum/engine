@@ -1,4 +1,4 @@
-import { Assembler, InstrFormat, TextInstr, TTI } from "@chlorophytum/hltt-next-backend";
+import { Assembler, InstrFormat, RelocatablePushValue, TTI } from "@chlorophytum/hltt-next-backend";
 import { AnyStmt } from "@chlorophytum/hltt-next-stmt";
 import { GlobalScope, ProgramRecord, ProgramScope } from "@chlorophytum/hltt-next-tr";
 
@@ -8,6 +8,7 @@ import { RootProgramDeclaration } from "./lib-system/programs";
 import { ProgramScopeProxy } from "./scope-proxy";
 
 export interface TtStat {
+	generateRelocatableCode?: boolean;
 	stackHeight?: number;
 	stackHeightMultiplier?: number;
 	maxStorage?: number;
@@ -21,6 +22,7 @@ export interface TtStat {
 export class ProgramAssembly {
 	constructor(private readonly stat: TtStat) {
 		this.scope = new GlobalScope({
+			generateRelocatableCode: stat.generateRelocatableCode || false,
 			fpgm: stat.maxFunctionDefs || 0,
 			twilights: stat.maxTwilightPoints || 0,
 			storage: stat.maxStorage || 0,
@@ -47,7 +49,11 @@ export class ProgramAssembly {
 		return asm.codeGen(format.createSink());
 	}
 
-	public compileFunction<F>(format: InstrFormat<F>, iFn: number, pr: ProgramRecord) {
+	public compileFunction<F>(
+		format: InstrFormat<F>,
+		iFn: RelocatablePushValue,
+		pr: ProgramRecord
+	) {
 		const asm = new Assembler();
 		const [ps, tr] = pr;
 		ps.exitLabel = asm.createLabel();

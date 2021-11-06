@@ -16,7 +16,8 @@ import {
 	CHlttFinalHintFormat,
 	HlttFinalHintStoreRep,
 	HlttSession,
-	HlttCollector
+	HlttCollector,
+	HlttFinalHintFormatOptions
 } from "@chlorophytum/final-hint-format-hltt";
 import { FontForgeTextInstr } from "@chlorophytum/fontforge-instr";
 import { StreamJson } from "@chlorophytum/util-json";
@@ -24,8 +25,9 @@ import { StreamJson } from "@chlorophytum/util-json";
 import { OtdFontSource } from "./simple-otd-support";
 
 class OtdFontFormat implements IFontFormat {
+	constructor(private readonly options: HlttFinalHintFormatOptions) {}
 	public async getFinalHintFormat(): Promise<IFinalHintFormat> {
-		return new CHlttFinalHintFormat();
+		return new CHlttFinalHintFormat(this.options);
 	}
 	public async connectFont(path: string, identifier: string) {
 		return new OtdFontConnection(path, identifier);
@@ -176,5 +178,8 @@ class OtdHlttIntegrator implements IFinalHintIntegrator {
 }
 
 export const FontFormatPlugin: Plugins.IFontFormatPlugin = {
-	load: async () => new OtdFontFormat()
+	load: async (loader: Plugins.IAsyncModuleLoader, parameters: any) =>
+		new OtdFontFormat({
+			generateRelocatableCode: Boolean(parameters?.generateRelocatableCode)
+		})
 };
