@@ -269,9 +269,9 @@ export enum RelocationScope {
 	Twilight
 }
 export type RelocationSymbol = {
-	scope: RelocationScope;
-	symbol: symbol;
-	offset: number;
+	readonly scope: RelocationScope;
+	readonly symbol: symbol;
+	readonly offset: number;
 };
 export interface InstrSink<R> {
 	getResult(): R;

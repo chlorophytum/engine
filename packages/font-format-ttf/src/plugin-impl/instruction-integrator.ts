@@ -7,7 +7,7 @@ import {
 import * as fs from "fs-extra";
 import { FontIo, Ot, Tag } from "ot-builder";
 
-import { BufferInstr } from "../support/buffer-instr";
+import { BufferInstr, BufferWithRelocations } from "../support/buffer-instr";
 import { GlyphSetWrapper, VarWrapper } from "../support/otb-support";
 
 export class TtfInstrIntegrator implements IFinalHintIntegrator {
@@ -63,9 +63,12 @@ export class TtfInstrIntegrator implements IFinalHintIntegrator {
 		}
 	}
 
-	private readonly instructionCache: Map<string, Buffer> = new Map();
-	private createHintRep(col: HlttCollector, fhs: HlttSession): HlttFinalHintStoreRep<Buffer> {
-		const glyf: { [key: string]: Buffer } = {};
+	private readonly instructionCache: Map<string, BufferWithRelocations> = new Map();
+	private createHintRep(
+		col: HlttCollector,
+		fhs: HlttSession
+	): HlttFinalHintStoreRep<BufferWithRelocations> {
+		const glyf: { [key: string]: BufferWithRelocations } = {};
 		for (const gid of fhs.listGlyphNames()) {
 			glyf[gid] = fhs.getGlyphProgram(gid, BufferInstr, this.instructionCache);
 		}
@@ -75,22 +78,27 @@ export class TtfInstrIntegrator implements IFinalHintIntegrator {
 		return { stats: col.getStats(), fpgm, prep, glyf, cvt };
 	}
 
-	private updateSharedInstructions(ttf: Ot.Font.Ttf, store: HlttFinalHintStoreRep<Buffer>) {
-		ttf.fpgm = new Ot.Fpgm.Table(
-			Buffer.concat([ttf.fpgm ? ttf.fpgm.instructions : Buffer.alloc(0), ...store.fpgm])
-		);
-		ttf.prep = new Ot.Fpgm.Table(
-			Buffer.concat([ttf.prep ? ttf.prep.instructions : Buffer.alloc(0), ...store.prep])
-		);
+	private updateSharedInstructions(
+		ttf: Ot.Font.Ttf,
+		store: HlttFinalHintStoreRep<BufferWithRelocations>
+	) {
+		const brFpgm = BufferWithRelocations.combine(ttf.fpgm?.instructions, store.fpgm);
+		const brPrep = BufferWithRelocations.combine(ttf.prep?.instructions, store.prep);
+		ttf.fpgm = new Ot.Fpgm.Table(brFpgm.buffer);
+		ttf.prep = new Ot.Fpgm.Table(brPrep.buffer);
 	}
-	private updateGlyphInstructions(ttf: Ot.Font.Ttf, store: HlttFinalHintStoreRep<Buffer>) {
+	private updateGlyphInstructions(
+		ttf: Ot.Font.Ttf,
+		store: HlttFinalHintStoreRep<BufferWithRelocations>
+	) {
 		const glyphBimap = new GlyphSetWrapper(ttf);
 		for (const [gn, glyph] of glyphBimap) {
 			const hint = store.glyf[gn];
-			if (hint) glyph.hints = new Ot.Glyph.TtInstruction(hint);
+			if (!hint) continue;
+			glyph.hints = new Ot.Glyph.TtInstruction(hint.buffer);
 		}
 	}
-	private updateMaxp(ttf: Ot.Font.Ttf, store: HlttFinalHintStoreRep<Buffer>) {
+	private updateMaxp(ttf: Ot.Font.Ttf, store: HlttFinalHintStoreRep<BufferWithRelocations>) {
 		ttf.maxp.maxZones = 2;
 		ttf.maxp.maxFunctionDefs = Math.min(
 			0xffff,
@@ -110,7 +118,7 @@ export class TtfInstrIntegrator implements IFinalHintIntegrator {
 		);
 	}
 
-	private updateCvt(ttf: Ot.Font.Ttf, store: HlttFinalHintStoreRep<Buffer>) {
+	private updateCvt(ttf: Ot.Font.Ttf, store: HlttFinalHintStoreRep<BufferWithRelocations>) {
 		const varWrapper = new VarWrapper(ttf);
 		const mc = new Ot.Var.ValueFactory();
 		if (!ttf.cvt) ttf.cvt = new Ot.Cvt.Table();

@@ -19,26 +19,12 @@ export class TrLastReturn extends TrStmtBase {
 			this.val.compile(asm, ps);
 			const h = asm.needAccurateStackHeight();
 			if (h > 1) {
-				const ifnPop = ps.global.fpgm.resolve(StdLib.AbiEpilogPR);
-				if (ifnPop) {
-					asm.intro(h - 1);
-					asm.intro(ifnPop);
-					asm.prim(TTI.LOOPCALL, h + 2, 1);
-				} else {
-					StdLib.TrStdLib_AbiEpilogPR.inline(asm, ps, h - 1);
-				}
+				StdLib.TrStdLib_AbiEpilogPR.inline(asm, ps, h - 1);
 			}
 		} else {
 			const h = asm.needAccurateStackHeight();
 			if (h > 0) {
-				const ifnPop = ps.global.fpgm.resolve(StdLib.AbiEpilogPNR);
-				if (ifnPop) {
-					asm.intro(h);
-					asm.intro(ifnPop);
-					asm.prim(TTI.LOOPCALL, h + 2, 0);
-				} else {
-					StdLib.TrStdLib_AbiEpilogPNR.inline(asm, ps, h);
-				}
+				StdLib.TrStdLib_AbiEpilogPNR.inline(asm, ps, h);
 			}
 		}
 		if (ps.storageStackFrameSize) {

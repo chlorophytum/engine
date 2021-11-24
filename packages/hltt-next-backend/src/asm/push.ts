@@ -78,29 +78,31 @@ class Run {
 			}
 		}
 	}
-	flush<R>(seq: InstrSink<R>) {
+	flush<R>(sink: InstrSink<R>) {
 		if (!this.values.length) return;
 		if (this.isByte) {
 			if (this.values.length <= 8) {
-				seq.addOp(TTI.PUSHB_1 + this.values.length - 1);
+				sink.addOp(TTI.PUSHB_1 + this.values.length - 1);
 			} else {
-				seq.addOp(TTI.NPUSHB);
-				seq.addByte(this.values.length);
+				sink.addOp(TTI.NPUSHB);
+				sink.addByte(this.values.length);
 			}
 			for (let i = 0; i < this.values.length; i++) {
-				seq.addByte(this.values[i], this.relocationSymbols[i]);
+				sink.addByte(this.values[i], this.relocationSymbols[i]);
 			}
 		} else {
 			if (this.values.length <= 8) {
-				seq.addOp(TTI.PUSHW_1 + this.values.length - 1);
+				sink.addOp(TTI.PUSHW_1 + this.values.length - 1);
 			} else {
-				seq.addOp(TTI.NPUSHW);
-				seq.addByte(this.values.length);
+				sink.addOp(TTI.NPUSHW);
+				sink.addByte(this.values.length);
 			}
 			for (let i = 0; i < this.values.length; i++) {
-				seq.addWord(this.values[i], this.relocationSymbols[i]);
+				sink.addWord(this.values[i], this.relocationSymbols[i]);
 			}
 		}
-		this.values.length = 0; // Clear values
+		// Clear values and relocation symbols
+		this.values.length = 0;
+		this.relocationSymbols.length = 0;
 	}
 }
