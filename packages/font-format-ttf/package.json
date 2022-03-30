@@ -1,6 +1,6 @@
 {
 	"name": "@chlorophytum/font-format-ttf",
-	"version": "0.40.1",
+	"version": "0.40.2",
 	"description": "",
 	"main": "lib/index.js",
 	"typings": "lib/index.d.ts",
@@ -11,13 +11,13 @@
 	"author": "Renzhi Li (aka. Belleve Invis)",
 	"license": "MIT",
 	"dependencies": {
-		"@chlorophytum/arch": "0.40.1",
-		"@chlorophytum/final-hint-format-hltt": "0.40.1",
-		"@chlorophytum/font-opentype": "0.40.1",
-		"@chlorophytum/hltt-next": "0.40.1",
-		"@chlorophytum/hltt-next-backend": "0.40.1",
-		"@chlorophytum/hltt-next-tr": "0.40.1",
-		"@chlorophytum/util-json": "0.40.1",
+		"@chlorophytum/arch": "0.40.2",
+		"@chlorophytum/final-hint-format-hltt": "0.40.2",
+		"@chlorophytum/font-opentype": "0.40.2",
+		"@chlorophytum/hltt-next": "0.40.2",
+		"@chlorophytum/hltt-next-backend": "0.40.2",
+		"@chlorophytum/hltt-next-tr": "0.40.2",
+		"@chlorophytum/util-json": "0.40.2",
 		"fs-extra": "^9.0.1",
 		"ot-builder": "^1.0.0",
 		"tslib": "^2.0.1"
