@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 const fs = require("fs");
 const path = require("path");
+
 const stringify = require("json-stringify-pretty-compact");
 
 const PACKAGES_DIR = path.join(__dirname, "../packages");
@@ -44,13 +46,10 @@ fs.writeFileSync(
 		author: "Renzhi Li (aka. Belleve Invis)",
 		license: "MIT",
 		dependencies: {
-			tslib: "^1.9.3"
+			tslib: "^2.0.1"
 		},
 		devDependencies: {
-			ava: "^1.4.1"
-		},
-		ava: {
-			files: ["lib/**/*.test.js"]
+			ava: "^4.1.0"
 		},
 		publishConfig: {
 			access: "public"

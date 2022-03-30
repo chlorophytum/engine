@@ -12,7 +12,6 @@ class GlobalStorageImpl<T extends TT> implements Decl {
 
 	register(gs: GlobalScope) {
 		if (!gs.storage.haveDeclared(this.symbol)) {
-			console.log(this.symbol);
 			gs.storage.declare(this.size, this.symbol);
 		}
 		return this.symbol;

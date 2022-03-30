@@ -20,7 +20,10 @@ test("Master collection tests", async t => {
 	const font = await loadFont("SourceSerifVariable-Roman.ttf");
 	const entry = (await font.getEntries())[0];
 	const a = await entry.getEncodedGlyph(0x61);
-	if (!a) return t.fail("Glyph a not exist. Return");
+	if (!a) {
+		t.fail("Glyph a not exist. Return");
+		return;
+	}
 	t.deepEqual(await font.getGlyphMasters(a), [
 		{ peak: { "wght#0": -1 }, master: { otVar: { "wght#0": { min: -1, peak: -1, max: 0 } } } },
 		{ peak: { "wght#0": 1 }, master: { otVar: { "wght#0": { min: 0, peak: 1, max: 1 } } } }
@@ -31,7 +34,10 @@ test("Instance conversion", async t => {
 	const font = await loadFont("AdobeVFPrototype.ttf");
 	const entry = (await font.getEntries())[0];
 	const a = await entry.getEncodedGlyph(0x61);
-	if (!a) return t.fail("Glyph a not exist. Return");
+	if (!a) {
+		t.fail("Glyph a not exist. Return");
+		return;
+	}
 
 	async function testValMap(a: number, b: number) {
 		const ax = await font.convertUserInstanceToNormalized({ user: { "wght#0": a } });

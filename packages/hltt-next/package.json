@@ -19,9 +19,6 @@
 		"@chlorophytum/hltt-next-type-system": "0.40.1",
 		"tslib": "^2.0.1"
 	},
-	"devDependencies": {
-		"@types/json-stable-stringify": "^1.0.32"
-	},
 	"publishConfig": {
 		"access": "public"
 	}
