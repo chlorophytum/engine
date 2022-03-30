@@ -5,6 +5,7 @@ import {
 	TrCvt,
 	TrCvtPtr,
 	TrExp,
+	TrGlobalPtr,
 	TrLocalPtr,
 	TrOffsetPtr,
 	TrSetVariable,
@@ -80,6 +81,16 @@ export class LocalVarExprImpl extends CoercedVarImpl {
 
 	static fromSymbol<T extends TT>(ty: T, s: symbol): Expr<T> & ExprVarStore<T> {
 		return new LocalVarExprImpl(ty, s) as unknown as Expr<T> & ExprVarStore<T>;
+	}
+}
+
+export class GlobalVarExprImpl extends CoercedVarImpl {
+	protected constructor(type: TT, public readonly decl: Decl) {
+		super(type, Store, TrStorage, new TrGlobalPtr(decl, 0), new TrConst(0));
+	}
+
+	static fromDecl<T extends TT>(ty: T, s: Decl): Expr<T> & ExprVarStore<T> {
+		return new GlobalVarExprImpl(ty, s) as unknown as Expr<T> & ExprVarStore<T>;
 	}
 }
 

@@ -1,13 +1,12 @@
 import {
 	ConsoleLogger,
 	IFinalHintSink,
-	IFinalHintFormat,
 	IFinalHintSinkSession,
+	IFinalHintStore,
 	IFontFormat,
 	IHintingPass,
 	IHintStoreProvider,
-	ILogger,
-	IFinalHintStore
+	ILogger
 } from "@chlorophytum/arch";
 
 import { getFontPlugin, getHintingPasses, getHintStoreProvider, ProcOptions } from "../env";

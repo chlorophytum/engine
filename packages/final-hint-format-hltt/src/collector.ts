@@ -3,7 +3,8 @@ import { ProgramAssembly, TtStat } from "@chlorophytum/hltt-next";
 import {
 	InstrFormat,
 	offsetRelocatablePushValue,
-	resolveRelocatablePushValue
+	resolveRelocatablePushValue,
+	StatOnly
 } from "@chlorophytum/hltt-next-backend";
 import { implDynamicCast, Typable, TypeRep } from "typable";
 
@@ -21,7 +22,8 @@ export interface HlttCollector extends IFinalHintSink, IFinalHintStore {
 }
 
 export interface HlttCollectorOptions {
-	generateRelocatableCode?: boolean;
+	generateRelocatableCode?: null | undefined | boolean;
+	stackPointerStorageID?: null | undefined | number;
 }
 
 export class HlttCollectorImpl implements Typable<HlttCollector> {
@@ -37,10 +39,20 @@ export class HlttCollectorImpl implements Typable<HlttCollector> {
 
 	private getProgramAssembly() {
 		if (this.programAssembly) return this.programAssembly;
+
+		const stackPointerStorageID =
+			this.options.stackPointerStorageID ?? this.preStatSink.maxStorage;
+		const volatileStorageStart = Math.max(
+			1 + stackPointerStorageID,
+			1 + this.preStatSink.maxStorage
+		);
+
 		this.programAssembly = new ProgramAssembly({
-			generateRelocatableCode: this.options.generateRelocatableCode,
+			generateRelocatableCode: !!this.options.generateRelocatableCode,
+			stackPointerStorageID: stackPointerStorageID,
+			varDimensionCount: this.preStatSink.varDimensionCount,
 			maxFunctionDefs: this.preStatSink.maxFunctionDefs,
-			maxStorage: this.preStatSink.maxStorage,
+			maxStorage: volatileStorageStart,
 			maxTwilightPoints: this.preStatSink.maxTwilightPoints,
 			stackHeight: this.preStatSink.maxStack,
 			cvtSize: this.preStatSink.cvtSize,
@@ -82,6 +94,9 @@ export class HlttCollectorImpl implements Typable<HlttCollector> {
 		return cv;
 	}
 	public async consolidate() {
+		// Populate definitions used by function bodies, notably global storage's total size
+		this.getFunctionDefs(StatOnly);
+		this.getProgramAssembly().consolidate();
 		return this;
 	}
 	public getStats() {

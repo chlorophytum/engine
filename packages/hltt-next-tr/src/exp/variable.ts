@@ -87,16 +87,17 @@ export class TrLocalPtr implements TrExp {
 }
 
 export class TrGlobalPtr implements TrExp {
-	constructor(private readonly symbol: symbol, private readonly offset: number) {}
+	constructor(private readonly decl: Decl, private readonly offset: number) {}
 	isConstant() {
 		return undefined;
 	}
 	withOffset(offset: number) {
-		return new TrGlobalPtr(this.symbol, this.offset + offset);
+		return new TrGlobalPtr(this.decl, this.offset + offset);
 	}
 	compile(asm: Assembler, ps: ProgramScope) {
-		const id = ps.global.storage.resolve(this.symbol);
-		if (id == null) throw new Error(`Global storage ${String(this.symbol)} not declared.`);
+		const symbol = this.decl.register(ps.global);
+		const id = ps.global.storage.resolve(symbol);
+		if (id == null) throw new Error(`Global storage ${String(symbol)} not declared.`);
 		asm.intro(offsetRelocatablePushValue(id, this.offset));
 	}
 }

@@ -46,7 +46,5 @@ class TtfFontConnection implements IFontConnection {
 export const FontFormatPlugin: Plugins.IFontFormatPlugin = {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	load: async (loader: Plugins.IAsyncModuleLoader, parameters: any) =>
-		new TtfFontFormat({
-			generateRelocatableCode: Boolean(parameters?.generateRelocatableCode)
-		})
+		new TtfFontFormat(CHlttFinalHintFormat.rectifyOptions(parameters))
 };

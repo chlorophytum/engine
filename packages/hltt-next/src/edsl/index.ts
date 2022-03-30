@@ -8,27 +8,34 @@ import { RootProgramDeclaration } from "./lib-system/programs";
 import { ProgramScopeProxy } from "./scope-proxy";
 
 export interface TtStat {
-	generateRelocatableCode?: boolean;
-	stackHeight?: number;
-	stackHeightMultiplier?: number;
-	maxStorage?: number;
-	maxStorageMultiplier?: number;
-	maxFunctionDefs?: number;
-	maxTwilightPoints?: number;
-	cvtSize?: number;
-	varDimensionCount?: number;
+	generateRelocatableCode: boolean;
+	stackPointerStorageID: number;
+	varDimensionCount: number;
+
+	stackHeight: number;
+	stackHeightMultiplier: number;
+	maxStorage: number;
+	maxStorageMultiplier: number;
+	maxFunctionDefs: number;
+	maxTwilightPoints: number;
+	cvtSize: number;
 }
 
 export class ProgramAssembly {
 	constructor(private readonly stat: TtStat) {
-		this.scope = new GlobalScope({
-			generateRelocatableCode: stat.generateRelocatableCode || false,
-			fpgm: stat.maxFunctionDefs || 0,
-			twilights: stat.maxTwilightPoints || 0,
-			storage: stat.maxStorage || 0,
-			cvt: stat.cvtSize || 0,
-			varDimensionCount: stat.varDimensionCount || 0
-		});
+		this.scope = new GlobalScope(
+			{
+				generateRelocatableCode: stat.generateRelocatableCode,
+				stackPointerStorageID: stat.stackPointerStorageID
+			},
+			{
+				varDimensionCount: stat.varDimensionCount,
+				fpgmBase: stat.maxFunctionDefs,
+				twilightsBase: stat.maxTwilightPoints,
+				storageBase: stat.maxStorage,
+				cvtBase: stat.cvtSize
+			}
+		);
 		addStdLib(this.scope);
 	}
 
@@ -88,6 +95,9 @@ export class ProgramAssembly {
 		);
 	}
 
+	public consolidate() {
+		this.scope.lockSymbolTables();
+	}
 	public getStats() {
 		return this.stat;
 	}

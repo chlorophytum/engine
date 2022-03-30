@@ -7,13 +7,17 @@ import {
 
 import { TrStmt } from "./tr";
 
-export interface GsBaseStats {
+export interface GsOptions {
 	generateRelocatableCode: boolean;
+	stackPointerStorageID: number;
+}
+
+export interface GsStats {
 	varDimensionCount: number;
-	fpgm: number;
-	cvt: number;
-	storage: number;
-	twilights: number;
+	fpgmBase: number;
+	cvtBase: number;
+	storageBase: number;
+	twilightsBase: number;
 }
 
 export interface Decl {
@@ -28,39 +32,64 @@ export type ProgramRecord = [ProgramScope, TrStmt];
 export type ProgramDef = Def<ProgramRecord>;
 
 export class GlobalScope {
-	constructor(bases: GsBaseStats) {
-		// Initialize SP storage index and GETVARIATION arity
-		this.sp = bases.generateRelocatableCode
-			? new TtRelocatable(RelocationScope.Abi, Symbol("HLTT::ABI::SP"), bases.storage, 0)
-			: bases.storage;
-		this.getVariationArity = bases.varDimensionCount;
-		// Initialize symbol tables
+	constructor(private readonly options: GsOptions, stats: GsStats) {
+		if (stats.storageBase <= options.stackPointerStorageID)
+			throw new Error("Unreachable! stoage base <= #HLTT::ABI::SP");
+
+		// SP storage index
+		this.sp = options.generateRelocatableCode
+			? new TtRelocatable(
+					RelocationScope.Abi,
+					Symbol("HLTT::ABI::SP"),
+					options.stackPointerStorageID,
+					0
+			  )
+			: options.stackPointerStorageID;
+
+		// GETVARIATION arity
+		this.getVariationArity = stats.varDimensionCount;
+
+		// Symbol tables
 		this.storage = new RelocatableSymbolTable(
 			RelocationScope.GlobalStorage,
-			bases.generateRelocatableCode,
-			1 + bases.storage
+			options.generateRelocatableCode,
+			stats.storageBase
 		);
 		this.cvt = new RelocatableSymbolTable(
 			RelocationScope.Cv,
-			bases.generateRelocatableCode,
-			bases.cvt
+			options.generateRelocatableCode,
+			stats.cvtBase
 		);
 		this.fpgm = new DefinesSymbolTable<ProgramDef>(
 			RelocationScope.Function,
-			bases.generateRelocatableCode,
-			bases.fpgm
+			options.generateRelocatableCode,
+			stats.fpgmBase
 		);
 		this.twilightPoints = new RelocatableSymbolTable(
 			RelocationScope.Twilight,
-			bases.generateRelocatableCode,
-			bases.twilights
+			options.generateRelocatableCode,
+			stats.twilightsBase
 		);
 	}
-	public get storageStackFrameStart() {
-		return this.storage.base;
+	public getVolatileZoneStartValue() {
+		// Note: the value below is accurate if and only if all programs are consolidated
+		//       since it depends on the total length of the global storages
+		if (this.options.generateRelocatableCode) {
+			return new TtRelocatable(
+				RelocationScope.Abi,
+				Symbol("HLTT::ABI::VolatileStorageStart"),
+				this.storage.base + this.storage.size,
+				0
+			);
+		} else {
+			return this.storage.base + this.storage.size;
+		}
 	}
-	public get storageStackFrameSize() {
-		return this.storage.size;
+	public lockSymbolTables() {
+		this.storage.lock();
+		this.cvt.lock();
+		this.fpgm.lock();
+		this.twilightPoints.lock();
 	}
 	public readonly sp: RelocatablePushValue;
 	public readonly getVariationArity: number;
@@ -89,6 +118,7 @@ export abstract class SymbolTableBase<T> {
 		this.m_size = base;
 	}
 
+	protected m_locked = false;
 	protected m_size: number;
 	protected readonly mapping = new Map<symbol, number>();
 
@@ -101,7 +131,12 @@ export abstract class SymbolTableBase<T> {
 	haveDeclared(symbol: symbol) {
 		return this.mapping.has(symbol);
 	}
+
+	lock() {
+		this.m_locked = true;
+	}
 	declare(varSize: number, symbol: symbol) {
+		if (this.m_locked) throw new Error("Unreachable: Symbol table locked");
 		this.mapping.set(symbol, this.m_size);
 		this.m_size += varSize;
 		return symbol;

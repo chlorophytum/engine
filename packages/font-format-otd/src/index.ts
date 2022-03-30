@@ -179,7 +179,5 @@ class OtdHlttIntegrator implements IFinalHintIntegrator {
 
 export const FontFormatPlugin: Plugins.IFontFormatPlugin = {
 	load: async (loader: Plugins.IAsyncModuleLoader, parameters: any) =>
-		new OtdFontFormat({
-			generateRelocatableCode: Boolean(parameters?.generateRelocatableCode)
-		})
+		new OtdFontFormat(CHlttFinalHintFormat.rectifyOptions(parameters))
 };

@@ -1,4 +1,4 @@
-import { Assembler, TTI } from "@chlorophytum/hltt-next-backend";
+import { Assembler, offsetRelocatablePushValue, TTI } from "@chlorophytum/hltt-next-backend";
 
 import { ProgramScope } from "../scope";
 import * as StdLib from "../std-lib";
@@ -24,9 +24,10 @@ export class TrRootEntry extends TrExprLikeStmtBase {
 	protected compileImpl(asm: Assembler, ps: ProgramScope) {
 		asm.intro(
 			ps.global.sp,
-			ps.global.storageStackFrameStart +
-				ps.global.storageStackFrameSize +
+			offsetRelocatablePushValue(
+				ps.global.getVolatileZoneStartValue(),
 				ps.storageStackFrameSize
+			)
 		);
 		asm.prim(TTI.WS, 2, 0);
 	}

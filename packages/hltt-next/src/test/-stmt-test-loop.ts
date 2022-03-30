@@ -29,14 +29,19 @@ function MultiStmtTestLoopImpl(
 	generateRelocatableCode: boolean,
 	pairs: [Def<ProgramRecord>, string][]
 ) {
-	const gs = new GlobalScope({
-		generateRelocatableCode,
-		varDimensionCount: 0,
-		fpgm: 0,
-		cvt: 0,
-		storage: 0,
-		twilights: 0
-	});
+	const gs = new GlobalScope(
+		{
+			generateRelocatableCode,
+			stackPointerStorageID: 0
+		},
+		{
+			varDimensionCount: 0,
+			fpgmBase: 0,
+			cvtBase: 0,
+			storageBase: 1,
+			twilightsBase: 0
+		}
+	);
 	for (const [f1, compiled] of pairs) {
 		const [ps, tr] = f1.computeDefinition(gs);
 		const asm = new Assembler();
