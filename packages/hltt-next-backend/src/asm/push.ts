@@ -11,7 +11,7 @@ export class PushSequence implements TtAsmInstr {
 		for (const x of xs) this.values.push(x);
 	}
 
-	public codeGen<R>(seq: InstrSink<R>) {
+	public codeGen<R>(sink: InstrSink<R>) {
 		const values = this.values;
 		const run = new Run();
 		if (values.length) {
@@ -20,11 +20,11 @@ export class PushSequence implements TtAsmInstr {
 				const next = j + 1 < values.length ? values[j + 1] : cur;
 				const accepted = run.tryAccept(cur, next);
 				if (!accepted) {
-					run.flush(seq);
+					run.flush(sink);
 					run.init(cur);
 				}
 			}
-			run.flush(seq);
+			run.flush(sink);
 		}
 	}
 	toBuffer() {
@@ -39,7 +39,7 @@ class Run {
 	relocationSymbols: (null | RelocationSymbol)[] = [];
 	isByte: boolean = false;
 
-	private pushValue(x: PushValue) {
+	private accept(x: PushValue) {
 		if (typeof x === "number") {
 			this.values.push(x);
 			this.relocationSymbols.push(null);
@@ -57,14 +57,14 @@ class Run {
 	}
 
 	init(x: PushValue) {
-		this.pushValue(x);
+		this.accept(x);
 		this.isByte = this.pvIsByte(x);
 	}
 	tryAccept(x: PushValue, next: PushValue) {
 		if (this.values.length >= 0xff) return false; // too many args
 		if (this.isByte) {
 			if (this.pvIsByte(x)) {
-				this.pushValue(x);
+				this.accept(x);
 				return true;
 			} else {
 				return false;
@@ -73,14 +73,16 @@ class Run {
 			if (this.pvIsByte(x) && this.pvIsByte(next)) {
 				return false;
 			} else {
-				this.pushValue(x);
+				this.accept(x);
 				return true;
 			}
 		}
 	}
 	flush<R>(sink: InstrSink<R>) {
 		if (!this.values.length) return;
-		if (this.isByte) {
+		if (sink.addPushSequence) {
+			sink.addPushSequence(this.values, this.relocationSymbols);
+		} else if (this.isByte) {
 			if (this.values.length <= 8) {
 				sink.addOp(TTI.PUSHB_1 + this.values.length - 1);
 			} else {

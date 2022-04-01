@@ -50,7 +50,7 @@ export namespace LinkChain {
 			const hc = this;
 			this.sink.addSegment(function* ($) {
 				for (let j = 1; j < hc.pts.length; j++) {
-					yield Mdrp(ptIndex[j - 1], ptIndex[j]);
+					yield Mdrp.rp0(ptIndex[j - 1], ptIndex[j]);
 				}
 			});
 		}

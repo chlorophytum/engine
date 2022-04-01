@@ -1,8 +1,8 @@
-import { InstrSink, TTI } from "../instr";
+import { InstrSink, RelocationScope, TTI } from "../instr";
 
 import { IPushValue, PushValue, TtAsmInstr } from "./asm-instr";
-import { TtCPushValueRef, TtLabel, TtLabelDifference } from "./label";
-import { PrimIR, PseudoPrimIR } from "./prim";
+import { ProgramBoundary, TtCPushValueRef, TtLabel, TtLabelDifference } from "./label";
+import { JumpIR, PrimIR, PseudoPrimIR } from "./prim";
 import { PushSequence } from "./push";
 
 // We track accessible to optimize positions of PUSH instructions
@@ -78,6 +78,12 @@ export default class Assembler {
 	}
 	public prim(x: TTI, deleted: number = 0, added: number = 0) {
 		this.ir(new PrimIR(x));
+		this.deleted(deleted);
+		this.added(added);
+		return this;
+	}
+	public jumpPrim(x: TTI, offset: TtLabelDifference, deleted: number = 0, added: number = 0) {
+		this.ir(new JumpIR(x, offset));
 		this.deleted(deleted);
 		this.added(added);
 		return this;
@@ -180,6 +186,12 @@ export default class Assembler {
 		if (ref) this.ir(ref);
 		return this.balanceStack(h);
 	}
+	public programBegin() {
+		this.ir(new ProgramBoundary(RelocationScope.ProgramBegin));
+	}
+	public programEnd() {
+		this.ir(new ProgramBoundary(RelocationScope.ProgramEnd));
+	}
 
 	// Register management
 	public getRegister<K extends keyof Registers>(r: K): number | undefined {
@@ -195,7 +207,7 @@ export default class Assembler {
 		this.registers = {};
 	}
 
-	public createLabel() {
+	public createLabel(fExport?: boolean) {
 		return new TtLabel();
 	}
 	public createLabelDifference(a: TtLabel, b: TtLabel) {

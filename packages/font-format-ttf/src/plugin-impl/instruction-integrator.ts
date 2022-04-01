@@ -1,8 +1,8 @@
 import { IFinalHintIntegrator, IFinalHintSink, IFinalHintSinkSession } from "@chlorophytum/arch";
 import {
+	HlttCollector,
 	HlttFinalHintStoreRep,
-	HlttSession,
-	HlttCollector
+	HlttSession
 } from "@chlorophytum/final-hint-format-hltt";
 import * as fs from "fs-extra";
 import { FontIo, Ot, Tag } from "ot-builder";
@@ -53,11 +53,12 @@ export class TtfInstrIntegrator implements IFinalHintIntegrator {
 			if (!this.ttf || !Ot.Font.isTtf(this.ttf)) {
 				throw new Error("Invalid font format");
 			}
-			const store = this.createHintRep(hlttCollector, hlttSession);
-			this.updateSharedInstructions(this.ttf, store);
-			this.updateCvt(this.ttf, store);
-			this.updateGlyphInstructions(this.ttf, store);
-			this.updateMaxp(this.ttf, store);
+			const hrBytes = this.createHintRep(hlttCollector, hlttSession);
+
+			this.updateSharedInstructions(this.ttf, hrBytes);
+			this.updateCvt(this.ttf, hrBytes);
+			this.updateGlyphInstructions(this.ttf, hrBytes);
+			this.updateMaxp(this.ttf, hrBytes);
 		} else {
 			throw new TypeError("Final hint format not supported.");
 		}
@@ -80,51 +81,52 @@ export class TtfInstrIntegrator implements IFinalHintIntegrator {
 
 	private updateSharedInstructions(
 		ttf: Ot.Font.Ttf,
-		store: HlttFinalHintStoreRep<BufferWithRelocations>
+		hrBytes: HlttFinalHintStoreRep<BufferWithRelocations>
 	) {
-		const brFpgm = BufferWithRelocations.combine(ttf.fpgm?.instructions, store.fpgm);
-		const brPrep = BufferWithRelocations.combine(ttf.prep?.instructions, store.prep);
+		const brFpgm = BufferWithRelocations.combine(ttf.fpgm?.instructions, hrBytes.fpgm);
+		const brPrep = BufferWithRelocations.combine(ttf.prep?.instructions, hrBytes.prep);
 		ttf.fpgm = new Ot.Fpgm.Table(brFpgm.buffer);
 		ttf.prep = new Ot.Fpgm.Table(brPrep.buffer);
 	}
 	private updateGlyphInstructions(
 		ttf: Ot.Font.Ttf,
-		store: HlttFinalHintStoreRep<BufferWithRelocations>
+		hrBytes: HlttFinalHintStoreRep<BufferWithRelocations>
 	) {
 		const glyphBimap = new GlyphSetWrapper(ttf);
 		for (const [gn, glyph] of glyphBimap) {
-			const hint = store.glyf[gn];
+			const hint = hrBytes.glyf[gn];
 			if (!hint) continue;
 			glyph.hints = new Ot.Glyph.TtInstruction(hint.buffer);
 		}
 	}
-	private updateMaxp(ttf: Ot.Font.Ttf, store: HlttFinalHintStoreRep<BufferWithRelocations>) {
+	private updateMaxp(ttf: Ot.Font.Ttf, hrBytes: HlttFinalHintStoreRep<BufferWithRelocations>) {
 		ttf.maxp.maxZones = 2;
 		ttf.maxp.maxFunctionDefs = Math.min(
 			0xffff,
-			Math.max(ttf.maxp.maxFunctionDefs || 0, store.stats.maxFunctionDefs || 0)
+			Math.max(ttf.maxp.maxFunctionDefs || 0, hrBytes.stats.maxFunctionDefs || 0)
 		);
 		ttf.maxp.maxStackElements = Math.min(
 			0xffff,
-			Math.max(ttf.maxp.maxStackElements || 0, store.stats.stackHeight || 0)
+			Math.max(ttf.maxp.maxStackElements || 0, hrBytes.stats.stackHeight || 0)
 		);
 		ttf.maxp.maxStorage = Math.min(
 			0xffff,
-			Math.max(ttf.maxp.maxStorage || 0, store.stats.maxStorage || 0)
+			Math.max(ttf.maxp.maxStorage || 0, hrBytes.stats.maxStorage || 0)
 		);
 		ttf.maxp.maxTwilightPoints = Math.min(
 			0xffff,
-			Math.max(ttf.maxp.maxTwilightPoints || 0, store.stats.maxTwilightPoints || 0)
+			Math.max(ttf.maxp.maxTwilightPoints || 0, hrBytes.stats.maxTwilightPoints || 0)
 		);
 	}
 
-	private updateCvt(ttf: Ot.Font.Ttf, store: HlttFinalHintStoreRep<BufferWithRelocations>) {
+	private updateCvt(ttf: Ot.Font.Ttf, hrBytes: HlttFinalHintStoreRep<BufferWithRelocations>) {
 		const varWrapper = new VarWrapper(ttf);
 		const mc = new Ot.Var.ValueFactory();
+
 		if (!ttf.cvt) ttf.cvt = new Ot.Cvt.Table();
 		const cvtMask: boolean[] = [];
-		for (let j = 0; j < store.cvt.length; j++) {
-			const item = store.cvt[j];
+		for (let j = 0; j < hrBytes.cvt.length; j++) {
+			const item = hrBytes.cvt[j];
 			if (!item) {
 				cvtMask[j] = false;
 			} else {

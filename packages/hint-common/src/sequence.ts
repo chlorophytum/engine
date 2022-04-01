@@ -3,7 +3,7 @@ import {
 	IHint,
 	IHintCompiler,
 	IHintFactory,
-	IHintTraveller,
+	IHintTraveler,
 	PropertyBag
 } from "@chlorophytum/arch";
 
@@ -23,8 +23,8 @@ export namespace Sequence {
 			}
 			return new Compiler(compilers);
 		}
-		public traverse(bag: PropertyBag, traveller: IHintTraveller) {
-			for (const ch of this.children) traveller.traverse(bag, ch);
+		public traverse(bag: PropertyBag, traveler: IHintTraveler) {
+			for (const ch of this.children) traveler.traverse(bag, ch);
 		}
 	}
 

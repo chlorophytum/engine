@@ -75,7 +75,7 @@ export class HlttCollectorImpl implements Typable<HlttCollector> {
 			const defFn = pa.scope.fpgm.getDef(sy);
 			if (ifn == null || !defFn) continue;
 			const pr = defFn.computeDefinition(pa.scope);
-			fpgmPrograms.set(sy, pa.compileFunction(format, ifn, pr));
+			fpgmPrograms.set(sy, pa.compileFunction("Fn" + ifn, format, ifn, pr));
 		}
 		return fpgmPrograms;
 	}

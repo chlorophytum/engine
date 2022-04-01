@@ -34,5 +34,5 @@ export namespace WellKnownGeometryKind {
 	export function CreateRefKind(id: string): Geometry.PointRefKind {
 		return Object.assign((z: number) => ({ kind: id, id: z }), { kind: id });
 	}
-	export const Identity = CreateRefKind("Chlorophytum::WellKnownGeometryKind::Identity");
+	export const PointID = CreateRefKind("PointID");
 }

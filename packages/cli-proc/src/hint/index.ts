@@ -59,7 +59,7 @@ export async function doHint(options: HintOptions, jobs: HintJob[]) {
 		for (let jid = 0; jid < jobs.length; jid++) {
 			const [input, output] = jobs[jid];
 			const hsProvider = await getHintStoreProvider(options);
-			const hintStore = await hsProvider.connectWrite(output, pass);
+			const hintStore = await hsProvider.connectWrite(output, pass, input);
 			await hintFont(hintStore, pass, {
 				round: 0,
 				fontIndex: jid,

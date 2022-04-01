@@ -258,7 +258,7 @@ export enum TTI {
 }
 
 export interface InstrFormat<R> {
-	createSink(): InstrSink<R>;
+	createSink(name: string): InstrSink<R>;
 }
 
 export enum RelocationScope {
@@ -266,7 +266,11 @@ export enum RelocationScope {
 	Function,
 	Cv,
 	GlobalStorage,
-	Twilight
+	Twilight,
+	JumpLabel,
+	JumpOffset,
+	ProgramBegin,
+	ProgramEnd
 }
 export type RelocationSymbol = {
 	readonly scope: RelocationScope;
@@ -277,9 +281,18 @@ export interface InstrSink<R> {
 	getResult(): R;
 	getLength(): number;
 	reset(): void;
+
 	addOp(x: TTI): void;
 	addByte(x: number, relocationSymbol?: null | undefined | RelocationSymbol): void;
 	addWord(x: number, relocationSymbol?: null | undefined | RelocationSymbol): void;
+
+	// Optional -- for tracking labels and jumps
+	addPushSequence?(
+		xs: number[],
+		relocationSymbols: (null | undefined | RelocationSymbol)[]
+	): void;
+	addLabel?(labelSymbol: RelocationSymbol): void;
+	addJumpOp?(x: TTI, offsetSymbol: RelocationSymbol, labelSymbol: RelocationSymbol): void;
 }
 
 export class BinaryInstrSink implements InstrSink<Uint8Array> {
@@ -331,7 +344,8 @@ export class TextInstrSink implements InstrSink<string> {
 		let sX = String(x & 0xff);
 		if (rs) {
 			const sOffset = rs.offset ? `+${rs.offset}` : ``;
-			const sReloc = `${RelocationScope[rs.scope]} ${rs.symbol.description}${sOffset}`;
+			const suffix = rs.symbol.description ? " " + rs.symbol.description : "";
+			const sReloc = `${RelocationScope[rs.scope]}${suffix}${sOffset}`;
 			sX = `{${sReloc}: ${sX}}`;
 		}
 		this.s += sX + " ";
@@ -341,7 +355,8 @@ export class TextInstrSink implements InstrSink<string> {
 		let sX = String((x << 16) >> 16);
 		if (rs) {
 			const sOffset = rs.offset ? `+${rs.offset}` : ``;
-			const sReloc = `${RelocationScope[rs.scope]} ${rs.symbol.description}${sOffset}`;
+			const suffix = rs.symbol.description ? " " + rs.symbol.description : "";
+			const sReloc = `${RelocationScope[rs.scope]}${suffix}${sOffset}`;
 			sX = `{${sReloc}: ${sX}}`;
 		}
 		this.s += sX + " ";

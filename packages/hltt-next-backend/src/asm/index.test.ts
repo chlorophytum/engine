@@ -78,7 +78,7 @@ test("TtSink 5 (Labels)", t => {
 
 	t.deepEqual(
 		[...asm.codeGen(new BinaryInstrSink())],
-		[TTI.PUSHB_1, 6, TTI.PUSHB_3, 4, 3, 2, TTI.POP, TTI.POP, TTI.POP, TTI.SVTCA_x]
+		[TTI.PUSHW_1, 0, 6, TTI.PUSHB_3, 4, 3, 2, TTI.POP, TTI.POP, TTI.POP, TTI.SVTCA_x]
 	);
 });
 test("TtSink 6a (High rising)", t => {

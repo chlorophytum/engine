@@ -48,8 +48,9 @@ export class TrReturn extends TrLastReturn {
 		if (!ps.exitLabel) throw new TypeError("Exit label not defined");
 		super.compile(asm, ps);
 		const here = asm.createLabel();
-		asm.intro(asm.createLabelDifference(here, ps.exitLabel));
-		asm.blockBegin(here);
-		asm.prim(TTI.JMPR).deleted(1);
+		const diff = asm.createLabelDifference(here, ps.exitLabel);
+		asm.intro(diff);
+		asm.label(here);
+		asm.jumpPrim(TTI.JMPR, diff).deleted(1);
 	}
 }

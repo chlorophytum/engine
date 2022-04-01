@@ -3,7 +3,7 @@ import { IHint, IHintStore } from "@chlorophytum/arch";
 export class MemoryHintStore implements IHintStore {
 	public glyphHints = new Map<string, IHint>();
 	public glyphHintCacheKeys = new Map<string, string>();
-	public sharedHintTypes = new Map<string, IHint>();
+	public sharedHints = new Map<string, IHint>();
 
 	public async listGlyphs() {
 		return this.glyphHints.keys();
@@ -21,13 +21,13 @@ export class MemoryHintStore implements IHintStore {
 		this.glyphHintCacheKeys.set(glyph, ck);
 	}
 	public async listSharedTypes() {
-		return this.sharedHintTypes.keys();
+		return this.sharedHints.keys();
 	}
 	public async getSharedHints(type: string) {
-		return this.sharedHintTypes.get(type);
+		return this.sharedHints.get(type);
 	}
 	public async setSharedHints(type: string, hint: IHint) {
-		this.sharedHintTypes.set(type, hint);
+		this.sharedHints.set(type, hint);
 	}
 	public async commitChanges() {}
 	public async disconnect() {}

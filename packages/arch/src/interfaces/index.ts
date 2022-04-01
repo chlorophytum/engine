@@ -53,7 +53,7 @@ export interface IFinalHintStore extends Typable {
 /** The sink of final hints. A sink can process multiple fonts */
 export interface IFinalHintSink extends Typable {
 	readonly format: string;
-	createSession(): IFinalHintSinkSession;
+	createSession(font: string, input: string, output: string): IFinalHintSinkSession;
 	consolidate(): Promise<IFinalHintStore>;
 }
 /** A session of final hint sink, processes one font */
@@ -132,8 +132,16 @@ export interface IFontSourceMetadata {
 
 // Hint store
 export interface IHintStoreProvider {
-	connectRead(identifier: string, passes: IHintingPass): Promise<IHintStore>;
-	connectWrite(identifier: string, passes: IHintingPass): Promise<IHintStore>;
+	connectRead(
+		identifier: string,
+		passes: IHintingPass,
+		fontIdentifier?: string
+	): Promise<IHintStore>;
+	connectWrite(
+		identifier: string,
+		passes: IHintingPass,
+		fontIdentifier?: string
+	): Promise<IHintStore>;
 }
 export interface IHintStore {
 	listGlyphs(): Promise<Iterable<string>>;
@@ -153,11 +161,12 @@ export interface IHintStore {
 export interface IHint {
 	toJSON(): any;
 	createCompiler(bag: PropertyBag, font: IFinalHintProgramSink): IHintCompiler | null | undefined;
-	traverse(bag: PropertyBag, traveller: IHintTraveller): void;
+	traverse(bag: PropertyBag, traveler: IHintTraveler): void;
 }
-export interface IHintTraveller {
+export interface IHintTraveler {
 	traverse(bag: PropertyBag, hint: IHint): void;
 }
+export interface IHintTraveller extends IHintTraveler {}
 export interface IHintFactory {
 	readonly type: string;
 	readJson(json: any, general: IHintFactory): IHint | null | undefined;

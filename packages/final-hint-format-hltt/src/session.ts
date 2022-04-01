@@ -119,9 +119,9 @@ export class HlttSessionImpl implements Typable<HlttSession> {
 	}
 	public getPreProgram<F>(format: InstrFormat<F>) {
 		if (!this.preProgram) {
-			return format.createSink().getResult();
+			return format.createSink("PREP").getResult();
 		} else {
-			return this.edsl.compileProgram(format, this.preProgram);
+			return this.edsl.compileProgram("PREP", format, this.preProgram);
 		}
 	}
 	public getGlyphProgram<F>(
@@ -135,18 +135,18 @@ export class HlttSessionImpl implements Typable<HlttSession> {
 			if (existing) return existing;
 			const glyphProgram = this.shared.programs.get(ck);
 			if (glyphProgram) {
-				const instr = this.edsl.compileProgram(format, glyphProgram);
+				const instr = this.edsl.compileProgram("GLYF", format, glyphProgram);
 				if (cache) cache.set(ck, instr);
 				return instr;
 			} else {
-				return format.createSink().getResult();
+				return format.createSink("GLYF").getResult();
 			}
 		} else {
 			const glyphProgram = this.glyphPrograms.get(gid);
 			if (glyphProgram) {
-				return this.edsl.compileProgram(format, glyphProgram);
+				return this.edsl.compileProgram("GLYF", format, glyphProgram);
 			} else {
-				return format.createSink().getResult();
+				return format.createSink("GLYF").getResult();
 			}
 		}
 	}

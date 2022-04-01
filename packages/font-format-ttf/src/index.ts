@@ -48,3 +48,5 @@ export const FontFormatPlugin: Plugins.IFontFormatPlugin = {
 	load: async (loader: Plugins.IAsyncModuleLoader, parameters: any) =>
 		new TtfFontFormat(CHlttFinalHintFormat.rectifyOptions(parameters))
 };
+
+export { GlyphSetWrapper } from "./support/otb-support";

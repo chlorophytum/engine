@@ -10,8 +10,10 @@ export class TrSetVariable extends TrExprLikeStmtBase {
 		super();
 	}
 	protected compileImpl(asm: Assembler, ps: ProgramScope) {
+		const h0 = asm.softBlockBegin();
 		this.variable.compilePtr(asm, ps);
 		this.value.compile(asm, ps);
 		this.variable.compileSet(asm, ps);
+		asm.softBlockEnd(h0);
 	}
 }

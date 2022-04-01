@@ -45,18 +45,21 @@ export class ProgramAssembly {
 		return new RootProgramDeclaration(body);
 	}
 
-	public compileProgram<F>(format: InstrFormat<F>, pr: ProgramRecord) {
+	public compileProgram<F>(name: string, format: InstrFormat<F>, pr: ProgramRecord) {
 		const [ps, tr] = pr;
 		const asm = new Assembler();
 
 		ps.exitLabel = asm.createLabel();
+		asm.programBegin();
 		tr.compile(asm, ps);
 		asm.label(ps.exitLabel);
+		asm.programEnd();
 		this.updateStat(ps, asm.maxStackHeight);
-		return asm.codeGen(format.createSink());
+		return asm.codeGen(format.createSink(name));
 	}
 
 	public compileFunction<F>(
+		name: string,
 		format: InstrFormat<F>,
 		iFn: RelocatablePushValue,
 		pr: ProgramRecord
@@ -67,13 +70,15 @@ export class ProgramAssembly {
 
 		{
 			asm.intro(iFn).prim(TTI.FDEF, 1, 0);
+			asm.programBegin();
 			tr.compile(asm, ps);
 			asm.label(ps.exitLabel);
+			asm.programEnd();
 			asm.prim(TTI.ENDF, 0, 0);
 		}
 
 		this.updateStat(ps, asm.maxStackHeight);
-		return asm.codeGen(format.createSink());
+		return asm.codeGen(format.createSink(name));
 	}
 
 	private updateStat(ls: ProgramScope, maxStack: number) {

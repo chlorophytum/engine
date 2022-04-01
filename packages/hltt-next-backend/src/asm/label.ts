@@ -1,27 +1,58 @@
+import { InstrSink, RelocationScope } from "../instr";
+
 import { IPushValue, TtAsmInstr } from "./asm-instr";
+import { TtRelocatable } from "./relocatable";
 
 export class TtLabel implements TtAsmInstr {
-	offset: number = 0;
-	allowByte: boolean = true;
-	codeGen() {}
+	public readonly symbol;
+	public offset: number = 0;
+	constructor() {
+		this.symbol = Symbol();
+	}
+	codeGen<R>(sink: InstrSink<R>) {
+		if (sink.addLabel) {
+			sink.addLabel(this.resolveSymbol());
+		}
+	}
+	resolveSymbol() {
+		return {
+			scope: RelocationScope.JumpLabel,
+			symbol: this.symbol,
+			offset: 0
+		};
+	}
 	setOffset(x: number, round: number) {
 		const offsetChanged = this.offset !== x;
 		this.offset = x;
-		this.allowByte = round < 4;
 		return offsetChanged;
 	}
 }
 
+export class ProgramBoundary implements TtAsmInstr {
+	private readonly symbol;
+	constructor(private readonly scope: RelocationScope) {
+		this.symbol = Symbol();
+	}
+	codeGen<R>(sink: InstrSink<R>) {
+		if (sink.addLabel) {
+			sink.addLabel({ scope: this.scope, symbol: this.symbol, offset: 0 });
+		}
+	}
+}
+
 export class TtLabelDifference implements IPushValue {
-	constructor(private a: TtLabel, private b: TtLabel) {}
+	public readonly symbol;
+	constructor(public from: TtLabel, public to: TtLabel) {
+		this.symbol = Symbol();
+	}
 	get allowByte() {
-		return this.b.allowByte && this.a.allowByte;
+		return false;
 	}
 	resolve() {
-		return this.b.offset - this.a.offset;
+		return this.to.offset - this.from.offset;
 	}
 	asRelocatable() {
-		return undefined;
+		return new TtRelocatable(RelocationScope.JumpOffset, this.symbol, 0, 0);
 	}
 }
 

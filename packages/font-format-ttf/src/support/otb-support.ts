@@ -242,7 +242,7 @@ class GeometryEvaluator {
 	private zid: number;
 	private nextPointRef() {
 		if (this.parent) this.parent.nextPointRef();
-		return WellKnownGeometryKind.Identity(this.zid++);
+		return WellKnownGeometryKind.PointID(this.zid++);
 	}
 
 	private children: GeometryEvaluator[] = [];

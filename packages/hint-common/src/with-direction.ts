@@ -3,7 +3,7 @@ import {
 	IHint,
 	IHintCompiler,
 	IHintFactory,
-	IHintTraveller,
+	IHintTraveler,
 	PropertyBag
 } from "@chlorophytum/arch";
 import { HlttProgramSink } from "@chlorophytum/final-hint-format-hltt";
@@ -42,8 +42,8 @@ export namespace WithDirection {
 
 			return null;
 		}
-		public traverse(bag: PropertyBag, traveller: IHintTraveller) {
-			traveller.traverse(this.createInnerBag(bag), this.inner);
+		public traverse(bag: PropertyBag, traveler: IHintTraveler) {
+			traveler.traverse(this.createInnerBag(bag), this.inner);
 		}
 	}
 	export function Y(inner: IHint) {

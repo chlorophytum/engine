@@ -53,7 +53,7 @@ class OtdHsSupport {
 		const obj = {
 			glyphs: this.hintMapToDict(hs.glyphHints),
 			glyphHintCacheKeys: this.stringMapToDict(hs.glyphHintCacheKeys),
-			sharedHints: this.hintMapToDict(hs.sharedHintTypes)
+			sharedHints: this.hintMapToDict(hs.sharedHints)
 		};
 		return StreamJsonZip.stringify(obj, output);
 	}

@@ -80,8 +80,8 @@ async function doInstructImpl(
 	const exportPlans: ExportPlan[] = [];
 	for (const [font, input, output] of jobs) {
 		logger.log(`Compiling hints ${input}`);
-		const fhSession = await ttCol.createSession();
-		await readHintsToSession(hsProvider, fhSession, input, pass);
+		const fhSession = await ttCol.createSession(font, input, output);
+		await readHintsToSession(hsProvider, fhSession, font, input, pass);
 		exportPlans.push({ fromPath: font, toPath: output, session: fhSession });
 	}
 	return exportPlans;
@@ -90,10 +90,11 @@ async function doInstructImpl(
 async function readHintsToSession(
 	provider: IHintStoreProvider,
 	ttSession: IFinalHintSinkSession,
+	font: string,
 	input: string,
 	pass: IHintingPass
 ) {
-	const hs = await provider.connectRead(input, pass);
+	const hs = await provider.connectRead(input, pass, font);
 	await mainMidHint(hs, ttSession);
 	ttSession.consolidate();
 	await hs.disconnect();

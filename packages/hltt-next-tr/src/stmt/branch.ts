@@ -4,19 +4,11 @@ import { ProgramScope } from "../scope";
 import { TrExp, TrStmt } from "../tr";
 
 import { TrStmtBase } from "./base";
+import { TrSeq } from "./sequence";
 
-export class TrAlternative extends TrStmtBase {
-	public constructor(private readonly parts: TrStmt[]) {
-		super();
-	}
-	public willReturnAfter() {
-		const last = this.parts[this.parts.length - 1];
-		return last && last.willReturnAfter();
-	}
-	public compile(asm: Assembler, ps: ProgramScope) {
-		const hBegin = asm.blockBegin();
-		for (const part of this.parts) part.compile(asm, ps);
-		asm.blockEnd(hBegin);
+export class TrAlternative extends TrSeq {
+	public constructor(parts: TrStmt[]) {
+		super(true, parts);
 	}
 }
 
@@ -65,16 +57,18 @@ export class TrWhile extends TrStmtBase {
 		const hBegin = asm.blockBegin(lBeforeLoop);
 		{
 			{
-				asm.intro(asm.createLabelDifference(lBeforeBody, lAfterLoop));
+				const diff = asm.createLabelDifference(lBeforeBody, lAfterLoop);
+				asm.intro(diff);
 				this.condition.compile(asm, ps);
-				asm.blockBegin(lBeforeBody);
-				asm.prim(TTI.JROF).deleted(2);
+				asm.label(lBeforeBody);
+				asm.jumpPrim(TTI.JROF, diff).deleted(2);
 			}
 			{
 				this.consequent.compile(asm, ps);
-				asm.intro(asm.createLabelDifference(lAfterBody, lBeforeLoop));
+				const diff = asm.createLabelDifference(lAfterBody, lBeforeLoop);
+				asm.intro(diff);
 				asm.label(lAfterBody);
-				asm.prim(TTI.JMPR).deleted(1);
+				asm.jumpPrim(TTI.JMPR, diff).deleted(1);
 			}
 		}
 		asm.blockEnd(hBegin, lAfterLoop);
@@ -96,10 +90,11 @@ export class TrDoWhile extends TrStmtBase {
 			}
 			{
 				const lBeforeJump = asm.createLabel();
-				asm.intro(asm.createLabelDifference(lBeforeJump, lBeforeLoop));
+				const diff = asm.createLabelDifference(lBeforeJump, lBeforeLoop);
+				asm.intro(diff);
 				this.condition.compile(asm, ps);
-				asm.blockBegin(lBeforeJump);
-				asm.prim(TTI.JROT).deleted(2);
+				asm.label(lBeforeJump);
+				asm.jumpPrim(TTI.JROT, diff).deleted(2);
 			}
 		}
 		asm.blockEnd(hBegin, lAfterLoop);

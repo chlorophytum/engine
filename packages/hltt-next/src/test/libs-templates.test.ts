@@ -93,7 +93,7 @@ test("Libs: Template Mutual Recursion", t => {
 		CALL
 		SWAP
 		POP
-		PUSHB_1 1
+		PUSHW_1 {JumpOffset: 1}
 		JMPR
         `
 		],
@@ -105,7 +105,7 @@ test("Libs: Template Mutual Recursion", t => {
 		CALL
 		SWAP
 		POP
-		PUSHB_1 1
+		PUSHW_1 {JumpOffset: 1}
 		JMPR
         `
 		],
@@ -117,7 +117,7 @@ test("Libs: Template Mutual Recursion", t => {
 		CALL
 		SWAP
 		POP
-		PUSHB_1 1
+		PUSHW_1 {JumpOffset: 1}
 		JMPR
         `
 		],
@@ -129,7 +129,7 @@ test("Libs: Template Mutual Recursion", t => {
 		CALL
 		SWAP
 		POP
-		PUSHB_1 1
+		PUSHW_1 {JumpOffset: 1}
 		JMPR
         `
 		]

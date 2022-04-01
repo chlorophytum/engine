@@ -56,7 +56,7 @@ test("Stmt: If 2", t => {
 			POP
 			SWAP
 			POP
-			PUSHB_1 19
+			PUSHW_1 {JumpOffset: 20}
 			JMPR
 			PUSHB_2 0 0
 		ELSE
@@ -67,7 +67,7 @@ test("Stmt: If 2", t => {
 			POP
 			SWAP
 			POP
-			PUSHB_1 5
+			PUSHW_1 {JumpOffset: 5}
 			JMPR
 			PUSHB_2 0 0
 		EIF

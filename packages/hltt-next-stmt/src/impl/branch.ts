@@ -30,6 +30,10 @@ function castBool(x: boolean | Expr<Bool>) {
 	else return x;
 }
 
+export function StatementBlock(body: StmtBody) {
+	return new Stmt(new TrAlternative(reduceStmtBody(body).map(x => x.tr)));
+}
+
 export function If(x: boolean | Expr<Bool>) {
 	return new IfStmt(castBool(x), null, null);
 }

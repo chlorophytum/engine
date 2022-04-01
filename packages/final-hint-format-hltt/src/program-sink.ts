@@ -19,6 +19,8 @@ export const HlttProgramSink = new TypeRep<HlttProgramSink>(
 	"Chlorophytum::HlttFinalHintPlugin::HlttProgramSink"
 );
 export interface HlttProgramSink extends IFinalHintProgramSink {
+	createBranch(): HlttProgramSink;
+	buildProgram($: ProgramScopeProxy): Iterable<AnyStmt>;
 	addSegment(gen: ProgramGenerator): void;
 	setDefaultControlValue(
 		expr: ExprVarCvt<TT>,
@@ -38,6 +40,9 @@ export class HlttProgramSinkImpl implements Typable<HlttProgramSink> {
 		return implDynamicCast(tr, this, HlttProgramSink);
 	}
 
+	public createBranch(): HlttProgramSink {
+		return new HlttBranchSinkImpl(this);
+	}
 	public addSegment(gen: ProgramGenerator) {
 		this.generators.push(gen);
 	}
@@ -59,7 +64,7 @@ export class HlttProgramSinkImpl implements Typable<HlttProgramSink> {
 			$ => this.buildCvt($)
 		);
 	}
-	private *buildProgram($: ProgramScopeProxy) {
+	public *buildProgram($: ProgramScopeProxy): IterableIterator<AnyStmt> {
 		for (const gen of this.generators) yield* gen($);
 	}
 	private *buildCvt($: ProgramAssembly): IterableIterator<[Decl, Variation.Variance<number>[]]> {
@@ -68,7 +73,38 @@ export class HlttProgramSinkImpl implements Typable<HlttProgramSink> {
 		}
 	}
 	public resolveGlyphPoint(from: Geometry.PointReference): Expr<GlyphPoint> {
-		if (from.kind === WellKnownGeometryKind.Identity.kind) return glyphPoint(from.id);
+		if (from.kind === WellKnownGeometryKind.PointID.kind) return glyphPoint(from.id);
 		throw new Error("Unable to resolve point. Not inside Geometry.");
+	}
+}
+
+export class HlttBranchSinkImpl implements Typable<HlttProgramSink> {
+	public readonly format = "hltt::branch";
+	private readonly generators: ProgramGenerator[] = [];
+
+	constructor(private readonly parent: HlttProgramSink) {}
+
+	public dynamicCast<U>(tr: TypeRep<U>): undefined | U {
+		return implDynamicCast(tr, this, HlttProgramSink);
+	}
+
+	public createBranch(): HlttProgramSink {
+		return new HlttBranchSinkImpl(this);
+	}
+	public *buildProgram($: ProgramScopeProxy): IterableIterator<AnyStmt> {
+		for (const gen of this.generators) yield* gen($);
+	}
+	public save() {}
+	public addSegment(gen: ProgramGenerator) {
+		this.generators.push(gen);
+	}
+	public setDefaultControlValue(
+		expr: ExprVarCvt<TT>,
+		...values: (number | Variation.Variance<number>)[]
+	) {
+		return this.parent.setDefaultControlValue(expr, ...values);
+	}
+	public resolveGlyphPoint(from: Geometry.PointReference): Expr<GlyphPoint> {
+		return this.parent.resolveGlyphPoint(from);
 	}
 }

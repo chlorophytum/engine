@@ -51,7 +51,7 @@ function MultiStmtTestLoopImpl(
 			asm.blockEnd(h0);
 		}
 		if (!ps.isProcedure) {
-			ps.exitLabel = asm.createLabel();
+			ps.exitLabel = asm.createLabel(true);
 			tr.compile(asm, ps);
 			asm.label(ps.exitLabel);
 		}

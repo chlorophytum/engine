@@ -139,7 +139,7 @@ export class OtdSupport
 						type: z.on
 							? Geometry.GlyphPointType.Corner
 							: Geometry.GlyphPointType.Quadratic,
-						references: [WellKnownGeometryKind.Identity(zid++)]
+						references: [WellKnownGeometryKind.PointID(zid++)]
 					});
 				}
 				c1.push(contour);

@@ -10,6 +10,8 @@ export class TrExprStmt extends TrExprLikeStmtBase {
 		super();
 	}
 	protected compileImpl(asm: Assembler, ps: ProgramScope) {
+		const h0 = asm.softBlockBegin();
 		this.expr.compile(asm, ps);
+		asm.softBlockEnd(h0);
 	}
 }
