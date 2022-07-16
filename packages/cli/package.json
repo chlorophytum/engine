@@ -1,6 +1,6 @@
 {
 	"name": "@chlorophytum/cli",
-	"version": "0.41.10",
+	"version": "0.41.11",
 	"description": "",
 	"main": "lib/index.js",
 	"typings": "lib/index.d.ts",
@@ -14,10 +14,10 @@
 	"author": "Renzhi Li (aka. Belleve Invis)",
 	"license": "MIT",
 	"dependencies": {
-		"@chlorophytum/arch": "0.41.10",
-		"@chlorophytum/cli-proc": "0.41.10",
-		"@chlorophytum/hint-store-memory": "0.41.10",
-		"@chlorophytum/util-json": "0.41.10",
+		"@chlorophytum/arch": "0.41.11",
+		"@chlorophytum/cli-proc": "0.41.11",
+		"@chlorophytum/hint-store-memory": "0.41.11",
+		"@chlorophytum/util-json": "0.41.11",
 		"commander": "^4.1.0",
 		"json5": "^2.1.1",
 		"lodash": "^4.17.14",
