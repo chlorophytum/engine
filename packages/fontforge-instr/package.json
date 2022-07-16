@@ -1,6 +1,6 @@
 {
 	"name": "@chlorophytum/fontforge-instr",
-	"version": "0.41.5",
+	"version": "0.41.10",
 	"description": "",
 	"main": "lib/index.js",
 	"typings": "lib/index.d.ts",
@@ -11,8 +11,8 @@
 	"author": "Renzhi Li (aka. Belleve Invis)",
 	"license": "MIT",
 	"dependencies": {
-		"@chlorophytum/arch": "0.41.5",
-		"@chlorophytum/hltt-next-backend": "0.41.5",
+		"@chlorophytum/arch": "0.41.10",
+		"@chlorophytum/hltt-next-backend": "0.41.10",
 		"tslib": "^2.0.1"
 	},
 	"publishConfig": {
